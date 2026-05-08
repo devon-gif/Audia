@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LifeBuoy, Mail, PlayCircle, ChevronDown, Zap, Rss,
-  CreditCard, BookOpen, MessageCircle,
+  CreditCard, BookOpen, MessageCircle, Send, CheckCircle, Loader2,
 } from "lucide-react";
+import { supabase } from "@/utils/supabase/client";
 
 // ─── FAQ Data ────────────────────────────────────────────────────────────────
 
@@ -69,7 +70,108 @@ It pulls the show's RSS feed and lists the 20 most recent episodes — including
 You can also toggle 'Auto-Distill' for any show in the Episode Vault header. Once enabled, new episodes will be automatically summarized and added to your Library (requires an active subscription).`,
   },
 ];
+// ─── Contact Form ────────────────────────────────────────────────────────────
 
+function ContactForm({ defaultEmail }: { defaultEmail: string }) {
+  const [email, setEmail] = useState(defaultEmail);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    if (defaultEmail && !email) setEmail(defaultEmail);
+  }, [defaultEmail, email]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), message: message.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Something went wrong.");
+      setSent(true);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center py-4 gap-3">
+        <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl flex items-center justify-center">
+          <CheckCircle size={20} className="text-emerald-400" />
+        </div>
+        <div>
+          <p className="text-xs font-bold text-white mb-1">Message received.</p>
+          <p className="text-[11px] text-zinc-400 leading-relaxed max-w-[200px] mx-auto">
+            The Audia team will reply to your email shortly.
+          </p>
+        </div>
+        <button
+          onClick={() => { setSent(false); setMessage(""); setError(null); }}
+          className="text-[11px] text-zinc-500 hover:text-orange-400 transition-colors font-medium"
+        >
+          Send another message →
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
+      <div>
+        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
+          Your Email
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder="you@example.com"
+          className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-600 outline-none transition-all"
+        />
+      </div>
+      <div>
+        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
+          Message
+        </label>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          required
+          rows={3}
+          placeholder="Describe your issue…"
+          className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-600 outline-none transition-all resize-none"
+        />
+      </div>
+      {error && (
+        <p className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-1.5">
+          ⚠ {error}
+        </p>
+      )}
+      <button
+        type="submit"
+        disabled={loading || !email.trim() || !message.trim()}
+        className="flex items-center justify-center gap-2 w-full py-2 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl text-white font-bold text-xs shadow-[0_0_12px_rgba(255,120,0,0.2)] hover:shadow-[0_0_20px_rgba(255,120,0,0.35)] hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+      >
+        {loading ? (
+          <><Loader2 size={13} className="animate-spin" /> Sending…</>
+        ) : (
+          <><Send size={12} /> Send Message</>
+        )}
+      </button>
+    </form>
+  );
+}
 // ─── Accordion item ───────────────────────────────────────────────────────────
 
 function FaqItem({ faq }: { faq: typeof FAQS[number] }) {
@@ -127,6 +229,14 @@ function FaqItem({ faq }: { faq: typeof FAQS[number] }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HelpPage() {
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) setUserEmail(user.email);
+    });
+  }, []);
+
   return (
     <div className="flex-1 overflow-auto">
       <div className="max-w-2xl mx-auto px-8 py-8">
@@ -143,13 +253,7 @@ export default function HelpPage() {
             </div>
           </div>
           <p className="text-sm text-zinc-500 leading-relaxed ml-[52px]">
-            Everything you need to get the most out of Audia. Can&apos;t find your answer?{" "}
-            <a
-              href="mailto:devon@audia.ai?subject=Audia%20Support%20Request"
-              className="text-orange-400 hover:text-orange-300 transition-colors"
-            >
-              We reply within 24 hours.
-            </a>
+            Browse the FAQ or send us a message — we reply within 24 hours.
           </p>
         </div>
 
@@ -176,28 +280,22 @@ export default function HelpPage() {
             </div>
           </a>
 
-          {/* Contact Support */}
-          <a
-            href="mailto:devon@audia.ai?subject=Audia%20Support%20Request"
-            className="group relative flex flex-col justify-between p-5 bg-orange-500/[0.06] hover:bg-orange-500/[0.10] border border-orange-500/20 hover:border-orange-500/40 rounded-2xl transition-all duration-200 shadow-[0_0_0_0_rgba(255,102,0,0)] hover:shadow-[0_0_24px_rgba(255,102,0,0.12)]"
-          >
-            {/* Subtle corner glow */}
-            <div className="absolute top-0 right-0 w-16 h-16 bg-orange-500/10 rounded-full blur-2xl pointer-events-none" />
+          {/* Contact Support — inline form */}
+          <div className="relative flex flex-col p-5 bg-orange-500/[0.05] border border-orange-500/20 rounded-2xl overflow-hidden">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="relative">
-              <div className="w-9 h-9 bg-orange-500/15 border border-orange-500/30 rounded-xl flex items-center justify-center mb-4">
-                <Mail size={17} className="text-orange-400" />
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-7 h-7 bg-orange-500/15 border border-orange-500/25 rounded-lg flex items-center justify-center shrink-0">
+                  <Mail size={13} className="text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white leading-none">Message Support</p>
+                  <p className="text-[10px] text-orange-500/70 mt-0.5">support@audia.ai</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-bold text-white mb-1">Contact Support</p>
-                <p className="text-[11px] text-zinc-400 leading-snug">
-                  Email our team directly. Human replies, no bots.
-                </p>
-              </div>
-              <div className="mt-3 text-[10px] font-semibold text-orange-500/70 uppercase tracking-widest group-hover:text-orange-400 transition-colors">
-                devon@audia.ai →
-              </div>
+              <ContactForm defaultEmail={userEmail} />
             </div>
-          </a>
+          </div>
         </div>
 
         {/* Divider */}
@@ -215,18 +313,16 @@ export default function HelpPage() {
         </div>
 
         {/* Footer CTA */}
-        <div className="mt-10 p-5 bg-white/[0.02] border border-white/[0.05] rounded-2xl flex items-center justify-between gap-4">
+        <div className="mt-10 p-5 bg-white/[0.02] border border-white/[0.05] rounded-2xl flex items-center gap-4">
+          <div className="w-8 h-8 shrink-0 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center justify-center">
+            <Mail size={14} className="text-orange-400" />
+          </div>
           <div>
             <p className="text-sm font-semibold text-white mb-0.5">Still stuck?</p>
-            <p className="text-[11px] text-zinc-500">We read every message and respond within one business day.</p>
+            <p className="text-[11px] text-zinc-500">
+              Use the contact form above — we read every message and respond within one business day.
+            </p>
           </div>
-          <a
-            href="mailto:devon@audia.ai?subject=Audia%20Support%20Request"
-            className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl text-white font-bold text-xs shadow-[0_0_16px_rgba(255,120,0,0.25)] hover:scale-[1.02] hover:shadow-[0_0_24px_rgba(255,120,0,0.35)] transition-all"
-          >
-            <Mail size={13} />
-            Email Us
-          </a>
         </div>
 
       </div>

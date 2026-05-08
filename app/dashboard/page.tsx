@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePlayer } from "@/contexts/PlayerContext";
+import GlobalPlayer from "@/app/components/dashboard/GlobalPlayer";
 import LibraryView from "@/app/components/LibraryView";
 import PodcastGrid from "@/app/components/PodcastGrid";
 import BillingPage from "@/app/dashboard/billing/page";
@@ -104,13 +106,9 @@ export default function DashboardPage() {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [stageIndex, setStageIndex] = useState(0);
   const [briefResult, setBriefResult] = useState<BriefResult | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audioProgress, setAudioProgress] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Global audio player — persists across view changes
-  const [globalAudio, setGlobalAudio] = useState<{ url: string; title: string } | null>(null);
+  // Global audio player — via PlayerContext (persists across view/route changes)
+  const { load: loadTrack, isPlaying, progress: audioProgress, duration: audioDuration, toggle: toggleAudio, dismiss: dismissAudio } = usePlayer();
 
   // Search results (when input is a text query, not a URL)
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
@@ -214,29 +212,10 @@ export default function DashboardPage() {
     router.push("/");
   };
 
-  const toggleAudio = () => {
-    const el = audioRef.current;
-    if (!el) return;
-    if (isPlaying) { el.pause(); setIsPlaying(false); }
-    else { el.play(); setIsPlaying(true); }
-  };
-
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   };
-  // Auto-play the audio brief as soon as it loads
-  useEffect(() => {
-    if (globalAudio?.url && audioRef.current) {
-      audioRef.current.load();
-      const el = audioRef.current;
-      const onCanPlay = () => {
-        el.play().then(() => setIsPlaying(true)).catch(() => {});
-        el.removeEventListener("canplaythrough", onCanPlay);
-      };
-      el.addEventListener("canplaythrough", onCanPlay);
-    }
-  }, [globalAudio?.url]);
   const toastCounter = useRef(0);
 
   const showToast = (message: string, type: Toast["type"] = "error") => {
@@ -381,14 +360,7 @@ export default function DashboardPage() {
   };
 
   const handlePlayLibraryBrief = (url: string, title: string) => {
-    // Stop current playback then load new track
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-      setAudioProgress(0);
-      setAudioDuration(0);
-    }
-    setGlobalAudio({ url, title });
+    loadTrack({ url, title });
   };
 
   const handleSummarize = async () => {
@@ -429,7 +401,7 @@ export default function DashboardPage() {
       setBriefResult(data as BriefResult);
       // Load audio into global player
       if (data.briefAudioUrl) {
-        setGlobalAudio({ url: data.briefAudioUrl, title: "Audia Brief" });
+        loadTrack({ url: data.briefAudioUrl, title: "Audia Brief" });
       }
       // Optimistically increment local credit counter
       setMonthlyGenerations(prev => prev + 1);
@@ -671,85 +643,8 @@ export default function DashboardPage() {
         {/* ── Main content column ── */}
         <div className="flex-1 flex flex-col overflow-y-auto justify-start items-start">
 
-        {/* ── Global Audio Player ── always visible when audio is loaded, persists across views */}
-        {globalAudio && (
-          <>
-            <audio
-              ref={audioRef}
-              src={globalAudio.url}
-              onTimeUpdate={(e) => setAudioProgress(e.currentTarget.currentTime)}
-              onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
-              onEnded={() => setIsPlaying(false)}
-            />
-            <div className={`shrink-0 mx-6 mt-4 mb-0 relative bg-black/50 backdrop-blur-2xl border rounded-2xl px-5 py-3.5 transition-all duration-500 ${
-              isPlaying
-                ? "border-orange-500/40 shadow-[0_0_30px_rgba(255,102,0,0.18)]"
-                : "border-white/10"
-            }`}>
-              {isPlaying && (
-                <div className="absolute inset-0 rounded-2xl bg-orange-500/[0.04] animate-pulse pointer-events-none" />
-              )}
-              <div className="relative z-10 flex items-center gap-4">
-                {/* Play/Pause */}
-                <button
-                  onClick={toggleAudio}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
-                    isPlaying
-                      ? "bg-orange-500 shadow-[0_0_18px_rgba(255,102,0,0.5)] scale-105"
-                      : "bg-white/10 border border-white/20 hover:bg-white/20"
-                  }`}
-                >
-                  {isPlaying ? (
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="white">
-                      <rect x="3" y="2" width="4" height="12" rx="1"/>
-                      <rect x="9" y="2" width="4" height="12" rx="1"/>
-                    </svg>
-                  ) : (
-                    <Play size={14} fill="white" className="text-white ml-0.5" />
-                  )}
-                </button>
-
-                {/* Track label + progress */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest truncate">{globalAudio.title}</span>
-                    <span className={`text-[10px] font-mono shrink-0 ml-3 ${
-                      isPlaying ? "text-orange-500/80" : "text-zinc-500"
-                    }`}>
-                      {isPlaying ? "Playing…" : audioDuration ? formatTime(audioDuration) : "--:--"}
-                    </span>
-                  </div>
-                  <div
-                    className="h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer"
-                    onClick={(e) => {
-                      if (!audioRef.current || !audioDuration) return;
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      audioRef.current.currentTime = ((e.clientX - rect.left) / rect.width) * audioDuration;
-                    }}
-                  >
-                    <div
-                      className="h-full bg-gradient-to-r from-[#FF7A00] to-[#FF4400] rounded-full transition-all duration-100"
-                      style={{ width: audioDuration ? `${(audioProgress / audioDuration) * 100}%` : "0%" }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-[9px] font-mono text-zinc-600">{formatTime(audioProgress)}</span>
-                    <span className="text-[9px] font-mono text-zinc-600">{audioDuration ? formatTime(audioDuration) : "--:--"}</span>
-                  </div>
-                </div>
-
-                {/* Dismiss */}
-                <button
-                  onClick={() => { audioRef.current?.pause(); setIsPlaying(false); setGlobalAudio(null); setAudioProgress(0); setAudioDuration(0); }}
-                  className="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-white/5 transition-all shrink-0"
-                  title="Close player"
-                >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 1l8 8M9 1L1 9"/></svg>
-                </button>
-              </div>
-            </div>
-          </>
-        )}
+        {/* ── Global Audio Player ── rendered from context, persists across view/route changes */}
+        <GlobalPlayer />
 
         {/* ── View content ── */}
         {activeView === "new-summary" ? (

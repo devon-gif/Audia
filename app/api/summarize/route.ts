@@ -80,11 +80,37 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required field: "url"' }, { status: 400 });
   }
 
+  // ── 2b. Cache check ───────────────────────────────────────────────────────
+  // Return a previous generation instantly — no OpenAI calls, no credit spend.
+  const { data: cached } = await supabase
+    .from("audio_generations")
+    .select("id, summary_text, brief_audio_url, transcript_text")
+    .eq("source_url", url)
+    .eq("voice", voiceId)
+    .eq("status", "completed")
+    .not("summary_text", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (cached?.summary_text) {
+    console.log("[summarize] cache HIT — id=%s voice=%s", cached.id, voiceId);
+    return NextResponse.json({
+      id: cached.id,
+      brief: cached.summary_text,
+      audioUrl: cached.brief_audio_url ?? null,
+      briefAudioUrl: cached.brief_audio_url ?? null,
+      transcriptLength: cached.transcript_text?.length ?? 0,
+      newMonthlyGenerations: isDeveloper ? null : monthlyGenerations,
+      fromCache: true,
+    });
+  }
+
   // ── 3. Create a pending DB record ─────────────────────────────────────────
   const userId = user.id; // captured once — user is non-null past auth check above
   const { data: generation } = await supabase
     .from("audio_generations")
-    .insert({ user_id: userId, source_url: url, brief_length: length, status: "processing" })
+    .insert({ user_id: userId, source_url: url, brief_length: length, status: "processing", voice: voiceId })
     .select("id")
     .single();
 

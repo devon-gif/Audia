@@ -18,30 +18,10 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
-      // Apple Podcasts / iTunes artwork
+      // Apple Podcasts / iTunes artwork — wildcard covers all isN.mzstatic.com CDN shards
       {
         protocol: "https",
-        hostname: "is1.mzstatic.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "is2.mzstatic.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "is3.mzstatic.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "is4.mzstatic.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "is5.mzstatic.com",
+        hostname: "**.mzstatic.com",
         pathname: "/**",
       },
     ],

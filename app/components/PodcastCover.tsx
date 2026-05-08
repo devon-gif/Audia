@@ -70,7 +70,7 @@ export default function PodcastCover({
           sizes={`${size}px`}
           className={`object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
           onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
+          onError={() => { setFailed(true); setLoaded(false); }}
           unoptimized={false}
         />
       )}

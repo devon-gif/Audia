@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, ArrowRight, Play, Layout, Sparkles,
   Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
-  Globe, Compass, Volume2,
+  Globe, Compass, Volume2, Star,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -378,7 +378,7 @@ export default function DashboardPage() {
       // Optimistic add
       setFavoriteShows(prev => new Set([...prev, feedUrl]));
       setFavoriteShowObjects(prev => new Map([...prev, [feedUrl, row]]));
-      showToast(`${showName} added to automated delivery!`, "info");
+      showToast(`Show Added! You'll now receive automated AI summaries for new episodes.`, "info");
       // Persist insert
       if (userId) {
         const { error } = await supabase.from("user_favorites").upsert(
@@ -1049,19 +1049,32 @@ export default function DashboardPage() {
                         {searchResults.length > 0 && (
                           <div className="grid grid-cols-3 gap-3">
                             {searchResults.map((r) => (
-                              <button
-                                key={r.trackId}
-                                onClick={() => handleShowSelect({ name: r.trackName, artwork: r.artworkUrl600, feedUrl: r.feedUrl })}
-                                className="group flex items-center gap-3 p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-orange-500/30 rounded-xl transition-all text-left"
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={r.artworkUrl600} alt={r.trackName} className="w-10 h-10 rounded-lg object-cover shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="text-xs font-semibold text-white truncate">{r.trackName}</p>
-                                  <p className="text-[10px] text-zinc-500 truncate">{r.artistName}</p>
-                                </div>
-                                <ArrowRight size={11} className="text-zinc-600 group-hover:text-orange-400 shrink-0 ml-auto transition-colors" />
-                              </button>
+                              <div key={r.trackId} className="relative group">
+                                <button
+                                  onClick={() => handleShowSelect({ name: r.trackName, artwork: r.artworkUrl600, feedUrl: r.feedUrl })}
+                                  className="w-full flex items-center gap-3 p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-orange-500/30 rounded-xl transition-all text-left"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={r.artworkUrl600} alt={r.trackName} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-semibold text-white truncate">{r.trackName}</p>
+                                    <p className="text-[10px] text-zinc-500 truncate">{r.artistName}</p>
+                                  </div>
+                                  <ArrowRight size={11} className="text-zinc-600 group-hover:text-orange-400 shrink-0 transition-colors" />
+                                </button>
+                                {/* Star / Favorite button */}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleFavoriteToggle({ trackId: r.trackId, name: r.trackName, artwork: r.artworkUrl600, feedUrl: r.feedUrl }); }}
+                                  title={favoriteShows.has(r.feedUrl) ? "Remove from favorites" : "Add to favorites"}
+                                  className="absolute top-2 right-9 p-1 rounded-lg transition-all hover:scale-110 active:scale-95 opacity-0 group-hover:opacity-100"
+                                >
+                                  <Star
+                                    size={13}
+                                    className={favoriteShows.has(r.feedUrl) ? "text-orange-400" : "text-zinc-500 hover:text-orange-400"}
+                                    fill={favoriteShows.has(r.feedUrl) ? "currentColor" : "none"}
+                                  />
+                                </button>
+                              </div>
                             ))}
                           </div>
                         )}
@@ -1105,6 +1118,8 @@ export default function DashboardPage() {
           ) : activeView === "discover" ? (
             <DiscoverView
               onSelectShow={handleShowSelect}
+              favoriteRssUrls={favoriteShows}
+              onFavoriteToggle={(show) => handleFavoriteToggle({ trackId: 0, name: show.name, artwork: show.artwork ?? "", feedUrl: show.feedUrl! })}
             />
           ) : activeView === "help" ? (
             <div className="px-8 py-6 w-full">

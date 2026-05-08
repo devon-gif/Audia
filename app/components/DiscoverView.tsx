@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { fetchPodcastArtwork } from "@/utils/fetchPodcastArtwork";
-import { Loader2, Compass } from "lucide-react";
+import { Loader2, Compass, Star } from "lucide-react";
 import type { ShowSelection } from "@/app/components/PodcastGrid";
 
 const FEATURED_SHOWS = [
@@ -41,9 +41,11 @@ interface ShowCard {
 
 interface Props {
   onSelectShow: (show: ShowSelection) => void;
+  favoriteRssUrls?: Set<string>;
+  onFavoriteToggle?: (show: ShowSelection & { feedUrl: string }) => void;
 }
 
-export default function DiscoverView({ onSelectShow }: Props) {
+export default function DiscoverView({ onSelectShow, favoriteRssUrls = new Set(), onFavoriteToggle }: Props) {
   const [shows, setShows] = useState<ShowCard[]>(
     FEATURED_SHOWS.map((s) => ({ ...s, artwork: null, feedUrl: null, loaded: false }))
   );
@@ -119,42 +121,63 @@ export default function DiscoverView({ onSelectShow }: Props) {
       <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6">
         {filtered.map((show) => {
           const isLoading = loadingShow === show.name;
+          const isFaved = show.feedUrl ? favoriteRssUrls.has(show.feedUrl) : false;
           return (
-            <button
-              key={show.name}
-              onClick={() => handleClick(show)}
-              disabled={isLoading}
-              title={show.name}
-              className="group flex flex-col items-center gap-2 p-2 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] border border-transparent hover:border-orange-500/20 transition-all"
-            >
-              {/* Artwork */}
-              <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/[0.06] shadow-md group-hover:shadow-[0_0_20px_rgba(255,102,0,0.15)] transition-shadow">
-                {show.artwork ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={show.artwork}
-                    alt={show.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
-                    <span className="text-xl font-black text-zinc-600">{show.name.charAt(0)}</span>
+            <div key={show.name} className="relative group">
+              <button
+                onClick={() => handleClick(show)}
+                disabled={isLoading}
+                title={show.name}
+                className="w-full flex flex-col items-center gap-2 p-2 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] border border-transparent hover:border-orange-500/20 transition-all"
+              >
+                {/* Artwork */}
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/[0.06] shadow-md group-hover:shadow-[0_0_20px_rgba(255,102,0,0.15)] transition-shadow">
+                  {show.artwork ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={show.artwork}
+                      alt={show.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
+                      <span className="text-xl font-black text-zinc-600">{show.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  {/* Hover overlay / loading */}
+                  <div className="absolute inset-0 bg-orange-500/0 group-hover:bg-orange-500/8 transition-colors duration-300 flex items-center justify-center">
+                    {isLoading && <Loader2 size={20} className="text-white animate-spin drop-shadow-lg" />}
                   </div>
-                )}
-                {/* Hover overlay / loading */}
-                <div className="absolute inset-0 bg-orange-500/0 group-hover:bg-orange-500/8 transition-colors duration-300 flex items-center justify-center">
-                  {isLoading && <Loader2 size={20} className="text-white animate-spin drop-shadow-lg" />}
                 </div>
-              </div>
 
-              {/* Label */}
-              <div className="w-full text-center px-0.5">
-                <p className="text-[11px] font-semibold text-zinc-300 group-hover:text-white transition-colors leading-tight line-clamp-2">
-                  {show.name}
-                </p>
-                <p className="text-[9px] text-zinc-600 mt-0.5 uppercase tracking-wider">{show.category}</p>
-              </div>
-            </button>
+                {/* Label */}
+                <div className="w-full text-center px-0.5">
+                  <p className="text-[11px] font-semibold text-zinc-300 group-hover:text-white transition-colors leading-tight line-clamp-2">
+                    {show.name}
+                  </p>
+                  <p className="text-[9px] text-zinc-600 mt-0.5 uppercase tracking-wider">{show.category}</p>
+                </div>
+              </button>
+
+              {/* Star / Favorite button */}
+              {show.feedUrl && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); if (show.feedUrl) onFavoriteToggle?.({ name: show.name, artwork: show.artwork, feedUrl: show.feedUrl }); }}
+                  title={isFaved ? "Remove from favorites" : "Add to favorites"}
+                  className={`absolute top-3 right-3 p-1.5 rounded-lg backdrop-blur-sm transition-all hover:scale-110 active:scale-95 ${
+                    isFaved
+                      ? "opacity-100 bg-black/40"
+                      : "opacity-0 group-hover:opacity-100 bg-black/30 hover:bg-black/50"
+                  }`}
+                >
+                  <Star
+                    size={13}
+                    className={isFaved ? "text-orange-400" : "text-white/70 hover:text-orange-400"}
+                    fill={isFaved ? "currentColor" : "none"}
+                  />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>

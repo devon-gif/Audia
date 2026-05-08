@@ -10,6 +10,9 @@ import { supabase } from "@/utils/supabase/client";
 import LibraryView from "@/app/components/LibraryView";
 import PodcastGrid from "@/app/components/PodcastGrid";
 import BillingPage from "@/app/dashboard/billing/page";
+import EpisodeVault from "@/app/components/EpisodeVault";
+import type { Episode } from "@/app/api/episodes/route";
+import type { ShowSelection } from "@/app/components/PodcastGrid";
 
 type VoiceName = "Rachel" | "Sarah" | "Marcus" | "George";
 
@@ -95,6 +98,11 @@ export default function DashboardPage() {
 
   // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
+
+  // Episode Vault
+  const [vaultShow, setVaultShow] = useState<ShowSelection | null>(null);
+  const [vaultEpisodes, setVaultEpisodes] = useState<Episode[]>([]);
+  const [vaultLoading, setVaultLoading] = useState(false);
 
   // Onboarding: true once the DB trigger has created the profiles row
   const [profileReady, setProfileReady] = useState(false);
@@ -211,6 +219,34 @@ export default function DashboardPage() {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleShowSelect = async (show: ShowSelection) => {
+    setVaultShow(show);
+    setVaultEpisodes([]);
+    if (!show.feedUrl) {
+      showToast("No RSS feed found for this show.", "info");
+      return;
+    }
+    setVaultLoading(true);
+    try {
+      const res = await fetch(`/api/episodes?feedUrl=${encodeURIComponent(show.feedUrl)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to load episodes");
+      setVaultEpisodes(data.episodes ?? []);
+    } catch (err) {
+      showToast((err as Error).message);
+      setVaultShow(null);
+    } finally {
+      setVaultLoading(false);
+    }
+  };
+
+  const handleEpisodeSelect = (audioUrl: string) => {
+    setUrlInput(audioUrl);
+    setVaultShow(null);
+    setVaultEpisodes([]);
+    setSearchResults(null);
   };
 
   const devLog = (msg: string) =>
@@ -701,7 +737,10 @@ export default function DashboardPage() {
                         )}
                       </div>
                     )}
-                    <PodcastGrid onSelect={(name) => setUrlInput(name)} />
+                    <PodcastGrid
+                      onSelect={(name) => setUrlInput(name)}
+                      onSelectShow={handleShowSelect}
+                    />
                   </>
                 )}
               </div>
@@ -738,6 +777,18 @@ export default function DashboardPage() {
         </div>
 
       </div>
+
+      {/* ── Episode Vault ── */}
+      {vaultShow && (
+        <EpisodeVault
+          showName={vaultShow.name}
+          artworkUrl={vaultShow.artwork}
+          episodes={vaultEpisodes}
+          loading={vaultLoading}
+          onSelect={handleEpisodeSelect}
+          onClose={() => { setVaultShow(null); setVaultEpisodes([]); }}
+        />
+      )}
 
       {/* ── Pro Gate Modal ── */}
       {showProModal && (

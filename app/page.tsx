@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, Mic, Layout, Share2, ArrowRight, Play, Pause,
   FileText, ArrowLeft, Download, Zap, Headphones, Shield, Sparkles, Star, Check,
@@ -72,6 +73,7 @@ export default function LandingPage() {
   const [activeView, setActiveView] = useState<"new-summary" | "library">("new-summary");
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const router = useRouter();
 
   const handleSummarize = () => {
@@ -669,12 +671,39 @@ export default function LandingPage() {
         {/* --- PRICING SECTION --- */}
         <section id="pricing" className="py-24 relative">
           <div className="max-w-6xl mx-auto px-6 md:px-12">
-            <div className="text-center mb-16">
+            <div className="text-center mb-8">
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-white">Simple, transparent pricing</h2>
-              <p className="text-orange-100/60 text-lg max-w-2xl mx-auto">Start distilling knowledge for free. Upgrade when you need the power of AI voice.</p>
+              <p className="text-orange-100/60 text-lg max-w-2xl mx-auto mb-8">Start distilling knowledge for free. Upgrade when you need the power of AI voice.</p>
+              
+              {/* Billing Toggle */}
+              <div className="inline-flex items-center p-1 bg-white/[0.03] backdrop-blur-sm border border-white/10 rounded-full">
+                <button
+                  onClick={() => setBillingCycle("monthly")}
+                  className={`relative px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                    billingCycle === "monthly"
+                      ? "bg-white/10 text-white shadow-lg"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingCycle("yearly")}
+                  className={`relative px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                    billingCycle === "yearly"
+                      ? "bg-white/10 text-white shadow-lg"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Yearly
+                  <span className="px-2 py-0.5 bg-[#FF6600] text-white text-[10px] font-bold rounded-full uppercase tracking-wide">
+                    Save 20%
+                  </span>
+                </button>
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center mt-12">
               
               {/* Free Tier - Deep Glass */}
               <div className="p-10 rounded-[2.5rem] bg-white/5 backdrop-blur-[45px] border border-white/10 flex flex-col h-full">
@@ -693,7 +722,37 @@ export default function LandingPage() {
               <div className="p-10 rounded-[2.5rem] bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-[45px] border border-orange-500/50 flex flex-col h-full transform md:-translate-y-4 shadow-[0_0_40px_rgba(249,115,22,0.15)] relative">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-orange-500 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-orange-500/30">Popular</div>
                 <div className="text-orange-400 font-bold tracking-widest uppercase text-xs mb-4 flex items-center gap-2"><Sparkles size={14}/> Pro</div>
-                <div className="text-5xl font-bold mb-4 text-white font-mono tracking-tighter">$4.99<span className="text-lg text-orange-100/50 font-normal font-sans">/mo</span></div>
+                {/* Price with Animation */}
+                <div className="flex items-baseline gap-1 mb-1">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={billingCycle}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="text-5xl font-bold text-white font-mono tracking-tighter tabular-nums"
+                    >
+                      ${billingCycle === "monthly" ? "4.99" : "3.99"}
+                    </motion.span>
+                  </AnimatePresence>
+                  <span className="text-lg text-orange-100/50 font-normal font-sans">/mo</span>
+                </div>
+                {/* Billed annually subtext */}
+                <AnimatePresence>
+                  {billingCycle === "yearly" && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-orange-100/40 text-xs mb-8"
+                    >
+                      Billed as $47.88/yr
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+                {billingCycle === "monthly" && <div className="h-5 mb-8" />}
                 <p className="text-orange-100/60 mb-8 text-sm">The sweet spot for daily commuters and builders.</p>
                 <div className="flex-1 flex flex-col gap-4 mb-8">
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> 5 Summaries per month</div>
@@ -701,20 +760,78 @@ export default function LandingPage() {
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Export to Notion / Obsidian</div>
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Mobile PWA integration</div>
                 </div>
-                <Link href="/signup" className="w-full py-4 rounded-xl bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/40 transition-all font-semibold text-white shadow-lg shadow-orange-500/25 text-center block">Upgrade to Pro</Link>
+                <button 
+                  onClick={() => {
+                    const priceId = billingCycle === "monthly" 
+                      ? process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY 
+                      : process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY;
+                    if (priceId) {
+                      router.push(`/api/checkout?priceId=${priceId}&billingCycle=${billingCycle}`);
+                    } else {
+                      router.push("/signup");
+                    }
+                  }}
+                  className="w-full py-4 rounded-xl bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/40 transition-all font-semibold text-white shadow-lg shadow-orange-500/25 text-center block"
+                >
+                  {billingCycle === "yearly" ? "START YEARLY PLAN" : "Upgrade to Pro"}
+                </button>
               </div>
 
               {/* Elite Tier - Deep Glass */}
               <div className="p-10 rounded-[2.5rem] bg-white/5 backdrop-blur-[45px] border border-white/10 flex flex-col h-full">
                 <div className="text-orange-500 font-bold tracking-widest uppercase text-xs mb-4">Elite</div>
-                <div className="text-5xl font-bold mb-4 font-mono tracking-tighter">$9.99<span className="text-lg text-orange-100/50 font-normal font-sans">/mo</span></div>
+                {/* Price with Animation */}
+                <div className="flex items-baseline gap-1 mb-1">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={billingCycle}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="text-5xl font-bold font-mono tracking-tighter tabular-nums"
+                    >
+                      ${billingCycle === "monthly" ? "9.99" : "7.99"}
+                    </motion.span>
+                  </AnimatePresence>
+                  <span className="text-lg text-orange-100/50 font-normal font-sans">/mo</span>
+                </div>
+                {/* Billed annually subtext */}
+                <AnimatePresence>
+                  {billingCycle === "yearly" && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-orange-100/40 text-xs mb-8"
+                    >
+                      Billed as $95.88/yr
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+                {billingCycle === "monthly" && <div className="h-5 mb-8" />}
                 <p className="text-orange-100/60 mb-8 text-sm">For power users who need infinite signal.</p>
                 <div className="flex-1 flex flex-col gap-4 mb-8">
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Unlimited Summaries</div>
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Custom AI Voice Clones</div>
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Priority iMac Server Queue</div>
                 </div>
-                <Link href="/signup" className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10 transition-all font-semibold text-white border border-white/5 text-center block">Get Elite</Link>
+                <button 
+                  onClick={() => {
+                    const priceId = billingCycle === "monthly" 
+                      ? process.env.NEXT_PUBLIC_STRIPE_ELITE_MONTHLY 
+                      : process.env.NEXT_PUBLIC_STRIPE_ELITE_YEARLY;
+                    if (priceId) {
+                      router.push(`/api/checkout?priceId=${priceId}&billingCycle=${billingCycle}`);
+                    } else {
+                      router.push("/signup");
+                    }
+                  }}
+                  className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10 transition-all font-semibold text-white border border-white/5 text-center block"
+                >
+                  {billingCycle === "yearly" ? "START YEARLY PLAN" : "Get Elite"}
+                </button>
               </div>
 
             </div>

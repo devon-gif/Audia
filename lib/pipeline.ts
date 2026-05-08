@@ -65,6 +65,12 @@ export interface PipelineOptions {
   /** ElevenLabs voice ID. Falls back to DEFAULT_VOICE_ID. */
   voiceId?: string;
   /**
+   * Output language for GPT distillation and TTS. Defaults to "en".
+   * When set to "es", the LLM is instructed to produce Spanish output and
+   * ElevenLabs uses eleven_multilingual_v2.
+   */
+  targetLanguage?: "en" | "es";
+  /**
    * ID of an existing `audio_generations` row to keep updated with live status.
    * Pass null/undefined when the cron creates its own record inline.
    */
@@ -91,6 +97,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<PipelineResult
     sourceUrl,
     length = "5m",
     voiceId = DEFAULT_VOICE_ID,
+    targetLanguage = "en",
     recordId,
   } = opts;
 
@@ -132,6 +139,11 @@ export async function runPipeline(opts: PipelineOptions): Promise<PipelineResult
   }
 
   // ── Step 3: Distil via GPT-4o-mini ──────────────────────────────────────
+  const isSpanish = targetLanguage === "es";
+  const languageInstruction = isSpanish
+    ? "\n- LANGUAGE: You must write the entire output in Spanish (Español), regardless of the transcript's original language. Use natural, professional Spanish."
+    : "";
+
   const systemPrompt = `You are an elite research assistant. Take this podcast transcript and create a "Deep Signal" brief.
 
 Rules:
@@ -141,7 +153,7 @@ Rules:
 - Include an "Action Items" section (3–5 concrete next steps the listener can take today).
 - Format for a professional listener who has ${length} to extract the core value.
 - Tone: sharp, direct, zero filler. No "in this episode" preambles.
-- Target length: ~${targetWords} words.`;
+- Target length: ~${targetWords} words.${languageInstruction}`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -160,7 +172,7 @@ Rules:
   try {
     const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
       text: brief,
-      model_id: "eleven_turbo_v2_5",
+      model_id: isSpanish ? "eleven_multilingual_v2" : "eleven_turbo_v2_5",
       voice_settings: {
         stability: 0.75,
         similarity_boost: 0.85,

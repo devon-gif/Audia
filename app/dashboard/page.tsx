@@ -16,6 +16,7 @@ import type { Episode } from "@/app/api/episodes/route";
 import type { ShowSelection } from "@/app/components/PodcastGrid";
 
 type VoiceName = "Rachel" | "Sarah" | "Marcus" | "George";
+type TargetLanguage = "en" | "es";
 
 const voices: {
   elevenLabsId: string;
@@ -25,12 +26,15 @@ const voices: {
   initial: string;
   gradient: string;
   previewUrl: string;
+  category: "Conversational" | "Authoritative" | "Bilingual";
 }[] = [
-  { elevenLabsId: "21m00Tcm4TlvDq8ikWAM", id: "Rachel",  label: "Rachel (Calm)",       desc: "Calm • Warm • Storytelling",  initial: "R", gradient: "from-rose-400 to-rose-700",    previewUrl: "/Rachel.mp3" },
-  { elevenLabsId: "EXAVITQu4vr4xnSDxMaL", id: "Sarah",   label: "Sarah (Broadcast)",   desc: "US Female • Broadcast",       initial: "S", gradient: "from-pink-500 to-pink-700",   previewUrl: "/Sarah.mp3" },
-  { elevenLabsId: "bIHbv24MWmeRgasZH58o", id: "Marcus",  label: "Marcus (Executive)",  desc: "US Male • Authoritative",    initial: "M", gradient: "from-blue-500 to-blue-700",   previewUrl: "/Marcus.mp3" },
-  { elevenLabsId: "JBFqnCBsd6RMkjVDRZzb", id: "George",  label: "George (Cinematic)",  desc: "UK Male • Cinematic",         initial: "G", gradient: "from-green-500 to-green-700", previewUrl: "/George.mp3" },
+  { elevenLabsId: "21m00Tcm4TlvDq8ikWAM", id: "Rachel",  label: "Rachel (Calm)",      desc: "Calm • Warm • Storytelling",  initial: "R", gradient: "from-rose-400 to-rose-700",    previewUrl: "/Rachel.mp3",  category: "Conversational" },
+  { elevenLabsId: "EXAVITQu4vr4xnSDxMaL", id: "Sarah",  label: "Sarah (Broadcast)",  desc: "US Female • Broadcast",       initial: "S", gradient: "from-pink-500 to-pink-700",   previewUrl: "/Sarah.mp3",   category: "Conversational" },
+  { elevenLabsId: "bIHbv24MWmeRgasZH58o", id: "Marcus", label: "Marcus (Executive)", desc: "US Male • Authoritative",     initial: "M", gradient: "from-blue-500 to-blue-700",   previewUrl: "/Marcus.mp3",  category: "Authoritative" },
+  { elevenLabsId: "JBFqnCBsd6RMkjVDRZzb", id: "George", label: "George (Cinematic)", desc: "UK Male • Cinematic",          initial: "G", gradient: "from-green-500 to-green-700", previewUrl: "/George.mp3",  category: "Bilingual" },
 ];
+
+const VOICE_CATEGORIES = ["Conversational", "Authoritative", "Bilingual"] as const;
 
 type SearchResult = {
   trackId: number;
@@ -64,6 +68,7 @@ export default function DashboardPage() {
   const [activeView, setActiveView] = useState<"new-summary" | "library" | "billing" | "help">("new-summary");
   const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Rachel");
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [targetLanguage, setTargetLanguage] = useState<TargetLanguage>("en");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>("trialing");
@@ -363,6 +368,7 @@ export default function DashboardPage() {
           length: briefLength,
           bypassCredits,
           voiceId: voices.find(v => v.id === selectedVoice)?.elevenLabsId,
+          targetLanguage,
         }),
       });
       const data = await res.json();
@@ -782,46 +788,67 @@ export default function DashboardPage() {
                       <ArrowRight size={11} className={`transition-transform ${voiceOpen ? "-rotate-90" : "rotate-90"}`} />
                     </button>
                     {voiceOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-56 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl p-2 z-50 shadow-2xl">
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2 px-2 font-bold">Select Voice</p>
-                        {voices.map(v => (
-                          <div key={v.id} className="flex items-center gap-1">
-                            <button
-                              onClick={() => { setSelectedVoice(v.id); setVoiceOpen(false); }}
-                              className="flex-1 flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors"
-                            >
-                              <div className="flex items-center gap-2">
-                                <div className={`w-6 h-6 bg-gradient-to-br ${v.gradient} rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0`}>{v.initial}</div>
-                                <div className="text-left">
-                                  <p className="text-xs text-white font-medium">{v.label}</p>
-                                  <p className="text-[10px] text-zinc-500">{v.desc}</p>
+                      <div className="absolute top-full left-0 mt-2 w-60 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl p-2 z-50 shadow-2xl">
+                        {VOICE_CATEGORIES.map(cat => {
+                          const catVoices = voices.filter(v => v.category === cat);
+                          if (!catVoices.length) return null;
+                          return (
+                            <div key={cat}>
+                              <p className="text-[9px] text-zinc-600 uppercase tracking-[0.2em] mb-1 mt-2 px-2 font-bold first:mt-0">{cat}</p>
+                              {catVoices.map(v => (
+                                <div key={v.id} className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => { setSelectedVoice(v.id); setVoiceOpen(false); }}
+                                    className="flex-1 flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-6 h-6 bg-gradient-to-br ${v.gradient} rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0`}>{v.initial}</div>
+                                      <div className="text-left">
+                                        <p className="text-xs text-white font-medium">{v.label}</p>
+                                        <p className="text-[10px] text-zinc-500">{v.desc}</p>
+                                      </div>
+                                    </div>
+                                    {selectedVoice === v.id && <Check size={13} className="text-[#FF6600] shrink-0" />}
+                                  </button>
+                                  {/* Preview button */}
+                                  <button
+                                    onClick={(e) => previewVoice(v.id, v.previewUrl, e)}
+                                    title={previewingVoice === v.id ? "Stop preview" : "Preview voice"}
+                                    className={`relative p-1.5 rounded-lg transition-all shrink-0 ${
+                                      previewingVoice === v.id ? "text-orange-400" : "text-white/30 hover:text-orange-500"
+                                    }`}
+                                  >
+                                    {previewingVoice === v.id && (
+                                      <span className="absolute inset-0 rounded-lg ring-1 ring-orange-500/60 animate-pulse" />
+                                    )}
+                                    {previewingVoice === v.id
+                                      ? <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="1.5"/></svg>
+                                      : <Play size={10} />}
+                                  </button>
                                 </div>
-                              </div>
-                              {selectedVoice === v.id && <Check size={13} className="text-[#FF6600] shrink-0" />}
-                            </button>
-
-                            {/* Preview button */}
-                            <button
-                              onClick={(e) => previewVoice(v.id, v.previewUrl, e)}
-                              title={previewingVoice === v.id ? "Stop preview" : "Preview voice"}
-                              className={`relative p-1.5 rounded-lg transition-all shrink-0 ${
-                                previewingVoice === v.id
-                                  ? "text-orange-400"
-                                  : "text-white/30 hover:text-orange-500"
-                              }`}
-                            >
-                              {/* Pulse ring while playing */}
-                              {previewingVoice === v.id && (
-                                <span className="absolute inset-0 rounded-lg ring-1 ring-orange-500/60 animate-pulse" />
-                              )}
-                              {previewingVoice === v.id
-                                ? <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="1.5"/></svg>
-                                : <Play size={10} />}
-                            </button>
-                          </div>
-                        ))}
+                              ))}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
+                  </div>
+
+                  {/* Language toggle */}
+                  <div className="flex items-center gap-0.5 bg-white/[0.03] border border-white/10 rounded-full p-0.5">
+                    {(["en", "es"] as TargetLanguage[]).map(lang => (
+                      <button
+                        key={lang}
+                        onClick={() => setTargetLanguage(lang)}
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                          targetLanguage === lang
+                            ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]"
+                            : "text-zinc-500 hover:text-zinc-300"
+                        }`}
+                      >
+                        {lang === "en" ? "EN" : "ES"}
+                      </button>
+                    ))}
                   </div>
                 </div>
 

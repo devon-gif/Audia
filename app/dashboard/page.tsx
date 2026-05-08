@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Search, ArrowRight, Play, Pause, FileText, Layout, Star, Sparkles,
-  Crown, SkipBack, SkipForward, Speaker, Check, LogOut, CreditCard, Terminal, Zap, Lock,
+  Search, ArrowRight, Play, Pause, Layout, Sparkles,
+  Crown, SkipBack, SkipForward, Speaker, Check, LogOut, CreditCard, Terminal, Lock,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import LibraryView from "@/app/components/LibraryView";
@@ -145,8 +145,10 @@ export default function DashboardPage() {
     return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   };
 
+  const toastCounter = useRef(0);
+
   const showToast = (message: string, type: Toast["type"] = "error") => {
-    const id = Date.now();
+    const id = ++toastCounter.current;
     setToasts((t) => [...t, { id, message, type }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4500);
   };
@@ -191,7 +193,6 @@ export default function DashboardPage() {
   const handleSummarize = async () => {
     if (!urlInput.trim() || isSummarizing) return;
     setIsSummarizing(true);
-    setSummarizeError(null);
     setBriefResult(null);
     setStageIndex(0);
     if (devMode) devLog("→ POST /api/summarize — url: " + urlInput.trim());

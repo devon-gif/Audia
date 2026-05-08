@@ -6,6 +6,7 @@ export type Dictionary = {
     templates: string;
     settings: string;
     help: string;
+    billing: string;
   };
   dashboard: {
     credits: string;

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import {
   Search, ArrowRight, Play, Layout, Sparkles,
   Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
+  Globe,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import LibraryView from "@/app/components/LibraryView";
 import PodcastGrid from "@/app/components/PodcastGrid";
 import BillingPage from "@/app/dashboard/billing/page";
@@ -65,6 +67,7 @@ type BriefResult = {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { language, toggleLanguage, t } = useLanguage();
   const [activeView, setActiveView] = useState<"new-summary" | "library" | "billing" | "help">("new-summary");
   const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Rachel");
   const [voiceOpen, setVoiceOpen] = useState(false);
@@ -447,7 +450,7 @@ export default function DashboardPage() {
               }`}
             >
               <Sparkles size={14} className={activeView === "new-summary" ? "text-orange-400" : ""} />
-              New Summary
+              {t.sidebar.newSummary}
             </button>
             <button
               onClick={() => setActiveView("library")}
@@ -458,7 +461,7 @@ export default function DashboardPage() {
               }`}
             >
               <Layout size={14} className={activeView === "library" ? "text-orange-400" : ""} />
-              Library
+              {t.sidebar.library}
             </button>
             <button
               onClick={() => setActiveView("billing")}
@@ -469,7 +472,7 @@ export default function DashboardPage() {
               }`}
             >
               <CreditCard size={14} className={activeView === "billing" ? "text-orange-400" : ""} />
-              Billing
+              {t.sidebar.billing || "Billing"}
             </button>
             <button
               onClick={() => setActiveView("help")}
@@ -480,7 +483,7 @@ export default function DashboardPage() {
               }`}
             >
               <LifeBuoy size={14} className={activeView === "help" ? "text-orange-400" : ""} />
-              Help &amp; Support
+              {t.sidebar.help}
             </button>
           </nav>
 
@@ -670,12 +673,22 @@ export default function DashboardPage() {
             {/* Top bar */}
               <div className="flex items-center justify-between px-8 py-5 border-b border-white/5">
                 <div>
-                  <h1 className="text-lg font-black tracking-tighter text-white">New Summary</h1>
-                  <p className="text-xs text-zinc-500 mt-0.5">Paste a podcast URL to generate your brief</p>
+                  <h1 className="text-lg font-black tracking-tighter text-white">{t.sidebar.newSummary}</h1>
+                  <p className="text-xs text-zinc-500 mt-0.5">{t.dashboard.searchPlaceholder}</p>
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-emerald-400">
-                  <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                  Engine Online
+                <div className="flex items-center gap-4">
+                  {/* Language Toggle */}
+                  <button
+                    onClick={toggleLanguage}
+                    className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors"
+                  >
+                    <Globe size={14} />
+                    <span className="font-medium">{language === "en" ? "EN" : "ES"}</span>
+                  </button>
+                  <div className="flex items-center gap-1.5 text-[10px] text-emerald-400">
+                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                    {t.dashboard.engineOnline}
+                  </div>
                 </div>
               </div>
 

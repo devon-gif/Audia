@@ -3,10 +3,9 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { en } from "@/lib/dictionaries/en";
 import { es } from "@/lib/dictionaries/es";
+import { Dictionary, Language } from "@/lib/dictionaries";
 
-type Language = "en" | "es";
-
-type Dictionary = typeof en;
+export { type Language, type Dictionary };
 
 interface LanguageContextType {
   language: Language;

@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 
 import "./globals.css";
 import InstallPrompt from "./components/InstallPrompt";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 const satoshi = localFont({
   src: "../public/fonts/Satoshi-Variable.woff2",
@@ -56,7 +57,12 @@ export default function RootLayout({
       lang="en"
       className={`${satoshi.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col font-sans antialiased">{children}<InstallPrompt /></body>
+      <body className="min-h-full flex flex-col font-sans antialiased">
+        <LanguageProvider>
+          {children}
+          <InstallPrompt />
+        </LanguageProvider>
+      </body>
     </html>
   );
 }

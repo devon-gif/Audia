@@ -1,4 +1,6 @@
-export const es = {
+import { Dictionary } from "./index";
+
+export const es: Dictionary = {
   sidebar: {
     newSummary: "Nuevo Resumen",
     library: "Biblioteca",
@@ -6,6 +8,7 @@ export const es = {
     templates: "Plantillas",
     settings: "Configuración",
     help: "Ayuda y Soporte",
+    billing: "Facturación",
   },
   dashboard: {
     credits: "Créditos",
@@ -51,6 +54,4 @@ export const es = {
     error: "Error",
     success: "Éxito",
   },
-} as const;
-
-export type Dictionary = typeof es;
+};

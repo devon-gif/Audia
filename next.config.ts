@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         hostname: "cdn.listennotes.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
     ],
   },
 };

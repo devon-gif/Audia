@@ -160,7 +160,7 @@ export default function LandingPage() {
           <div className="relative z-10 w-full max-w-6xl mx-auto px-6 flex flex-col items-center">
             
             {/* Hero Headline */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter pb-2 mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter pb-4 mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
               Turn Hours of Audio<br />
               Into Minutes of Insight.
             </h1>
@@ -175,8 +175,20 @@ export default function LandingPage() {
               {/* Avatars + 50K+ */}
               <div className="flex items-center">
                 <div className="flex -space-x-2">
-                  {[1,2,3,4].map((i) => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-zinc-600 to-zinc-800 border-2 border-black overflow-hidden" />
+                  {[
+                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&crop=face&auto=format",
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face&auto=format",
+                    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=64&h=64&fit=crop&crop=face&auto=format",
+                    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop&crop=face&auto=format",
+                  ].map((src, i) => (
+                    <Image
+                      key={i}
+                      src={src}
+                      alt=""
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 rounded-full border-2 border-black object-cover"
+                    />
                   ))}
                 </div>
                 <div className="w-8 h-8 rounded-full bg-zinc-700 border-2 border-black flex items-center justify-center text-[10px] font-bold text-zinc-300 ml-1">
@@ -190,7 +202,7 @@ export default function LandingPage() {
                     <Star key={i} size={14} className="text-[#FF8A00] fill-[#FF8A00]" />
                   ))}
                 </div>
-                <span className="text-sm font-bold text-white">4.9/5</span>
+                <span className="text-sm font-bold text-white">4.8/5</span>
                 <span className="text-sm text-zinc-500">Trusted by 50,000+ listeners, researchers, and founders</span>
               </div>
             </div>

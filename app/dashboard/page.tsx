@@ -89,6 +89,7 @@ export default function DashboardPage() {
   const [outputLanguage, setOutputLanguage] = useState<TargetLanguage>("en");
   const [outputLangOpen, setOutputLangOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>("trialing");
 
@@ -157,6 +158,7 @@ export default function DashboardPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
       setUserEmail(user.email ?? null);
+      setUserId(user.id);
       if (user.email === "heydevon@gmail.com") setDevMode(true);
 
       // Poll profiles table for trial + subscription data
@@ -1076,7 +1078,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="px-8 py-6 w-full">
-              <BillingPage />
+              <BillingPage userId={userId} userEmail={userEmail} />
             </div>
           )}
         </div>

@@ -3,52 +3,31 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Crown, CreditCard, ArrowRight, Check, Sparkles } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
 
 const PRO_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY;
 const ELITE_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_ELITE_MONTHLY;
 
 async function startCheckout(
   priceId: string,
+  userId: string | null,
+  userEmail: string | null,
   setLoading: (v: boolean) => void,
   router: ReturnType<typeof useRouter>
 ) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
-  // 1. Try getSession() first — fast, local
-  let { data: { session } } = await supabase.auth.getSession();
-
-  // 2. If missing or expired, attempt a silent refresh
-  if (!session) {
-    console.log("[billing] Session missing — attempting refresh...");
-    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
-    if (refreshError) {
-      console.error("[billing] Refresh failed:", refreshError.message);
-    } else {
-      console.log("[billing] Session refreshed successfully.");
-    }
-    session = refreshed.session;
-  }
-
-  // 3. Hard redirect only if both attempts failed
-  if (!session?.user) {
-    console.warn("[billing] No user after refresh — redirecting to login.");
+  if (!userId) {
+    console.warn("[billing] No userId available — redirecting to login.");
     router.push("/login?returnTo=/dashboard/billing");
     return;
   }
 
-  console.log("[billing] Session found, proceeding to checkout. User:", session.user.id, "Price:", priceId);
-
+  console.log("[billing] Starting checkout. User:", userId, "Price:", priceId);
   setLoading(true);
+
   try {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // Pass userId so the checkout route can attach client_reference_id
-      body: JSON.stringify({ priceId, userEmail: session.user.email, userId: session.user.id }),
+      body: JSON.stringify({ priceId, userEmail, userId }),
     });
 
     if (!res.ok) {
@@ -70,7 +49,12 @@ async function startCheckout(
   }
 }
 
-export default function BillingPage() {
+interface BillingPageProps {
+  userId?: string | null;
+  userEmail?: string | null;
+}
+
+export default function BillingPage({ userId = null, userEmail = null }: BillingPageProps) {
   const router = useRouter();
   const [proLoading, setProLoading] = useState(false);
   const [eliteLoading, setEliteLoading] = useState(false);
@@ -159,7 +143,7 @@ export default function BillingPage() {
             <button
               type="button"
               disabled={proLoading || !PRO_PRICE_ID}
-              onClick={() => PRO_PRICE_ID && startCheckout(PRO_PRICE_ID, setProLoading, router)}
+              onClick={() => PRO_PRICE_ID && startCheckout(PRO_PRICE_ID, userId, userEmail, setProLoading, router)}
               className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl text-white font-bold text-sm hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,120,0,0.3)] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {proLoading ? "Redirecting…" : <><span>Upgrade to Pro</span> <ArrowRight size={15} /></>}
@@ -214,7 +198,7 @@ export default function BillingPage() {
               <button
                 type="button"
                 disabled={eliteLoading || !ELITE_PRICE_ID}
-                onClick={() => ELITE_PRICE_ID && startCheckout(ELITE_PRICE_ID, setEliteLoading, router)}
+                onClick={() => ELITE_PRICE_ID && startCheckout(ELITE_PRICE_ID, userId, userEmail, setEliteLoading, router)}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-white/[0.06] hover:bg-white/[0.10] border border-orange-500/40 hover:border-orange-500/70 rounded-xl text-white font-bold text-sm transition-all shadow-[0_0_0_0_rgba(255,120,0,0)] hover:shadow-[0_0_24px_rgba(255,120,0,0.25)] hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {eliteLoading ? "Redirecting…" : <><span>Upgrade to Max</span> <ArrowRight size={15} /></>}

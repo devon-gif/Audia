@@ -134,7 +134,7 @@ export default function LandingPage() {
         </header>
 
         {/* --- COMMAND CENTER HERO --- */}
-        <section className="relative h-screen w-full flex flex-col items-center justify-center pt-40 pb-8 overflow-hidden">
+        <section className="relative h-screen w-full flex flex-col items-center justify-center pt-52 pb-8 overflow-hidden">
           
           {/* Video Backdrop with Mask */}
           <div className="absolute inset-0 z-0 overflow-hidden">
@@ -160,7 +160,7 @@ export default function LandingPage() {
           <div className="relative z-10 w-full max-w-6xl mx-auto px-6 flex flex-col items-center">
             
             {/* Hero Headline */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter pb-2 mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
               Turn Hours of Audio<br />
               Into Minutes of Insight.
             </h1>
@@ -231,7 +231,7 @@ export default function LandingPage() {
               />
               
               {/* Scaled Dashboard Container */}
-              <div className="bg-white/[0.03] backdrop-blur-[60px] border border-white/10 rounded-3xl overflow-hidden shadow-2xl transform scale-[0.82] origin-top">
+              <div className="bg-white/[0.03] backdrop-blur-[60px] border border-white/10 rounded-3xl overflow-hidden shadow-2xl transform scale-[0.88] origin-top">
                 {/* Dashboard Content - Simplified Preview */}
                 <div className="flex min-h-[500px]">
                   

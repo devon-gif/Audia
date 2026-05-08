@@ -22,7 +22,7 @@ export default function StereoPlayer() {
   const isMuted = volume === 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center px-4 pb-3 pt-1">
+    <div className="fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-center px-4 pb-3 pt-1">
       {/* Stereo bar */}
       <div
         className={`

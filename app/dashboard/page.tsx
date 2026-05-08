@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayer } from "@/contexts/PlayerContext";
+import Link from "next/link";
 import DiscoverView from "@/app/components/DiscoverView";
 import LibraryView from "@/app/components/LibraryView";
 import PodcastGrid from "@/app/components/PodcastGrid";
@@ -473,9 +474,30 @@ export default function DashboardPage() {
         devLog(`✓ DB — record id: ${data.id}`);
       }
       setBriefResult(data as BriefResult);
-      // Load audio into global player
+      // Load audio into global player if pipeline already produced it
       if (data.briefAudioUrl) {
         loadTrack({ url: data.briefAudioUrl, title: "Audia Brief" });
+      } else {
+        // Auto-generate TTS without requiring a second click
+        setGeneratingAudio(true);
+        fetch("/api/summarize/audio", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: data.brief,
+            voiceId: voices.find(v => v.id === selectedVoice)?.elevenLabsId,
+            recordId: data.id,
+          }),
+        })
+          .then((r) => r.json())
+          .then((audioData) => {
+            if (audioData.audioUrl) {
+              setBriefResult((prev) => prev ? { ...prev, briefAudioUrl: audioData.audioUrl } : prev);
+              loadTrack({ url: audioData.audioUrl, title: "Audia Brief" });
+            }
+          })
+          .catch(() => { /* non-fatal — user can still read the brief */ })
+          .finally(() => setGeneratingAudio(false));
       }
       // Optimistically increment local credit counter
       setMonthlyGenerations(prev => prev + 1);
@@ -528,9 +550,9 @@ export default function DashboardPage() {
       {/* ── Sidebar ── */}
       <aside className="w-[220px] bg-black/60 backdrop-blur-2xl border-r border-white/5 p-6 flex flex-col shrink-0">
         {/* Logo */}
-        <div className="text-xl font-black tracking-tighter text-white mb-8">
+        <Link href="/dashboard" className="block text-xl font-black tracking-tighter text-white mb-8 hover:opacity-80 transition-opacity">
           Audia<span className="text-[#FF6600]">.</span>
-        </div>
+        </Link>
 
         {/* Nav */}
         <nav className="space-y-1 flex-1">
@@ -951,7 +973,7 @@ export default function DashboardPage() {
                       <pre className="text-[12px] text-zinc-300 leading-relaxed whitespace-pre-wrap font-sans">{briefResult.brief}</pre>
                     </div>
 
-                    {/* Listen button row */}
+                    {/* Listen / audio status row */}
                     <div className="flex items-center gap-3 pt-1">
                       {briefResult.briefAudioUrl ? (
                         <button
@@ -961,41 +983,12 @@ export default function DashboardPage() {
                           <Volume2 size={13} />
                           Listen in Player
                         </button>
-                      ) : (
-                        <button
-                          onClick={async () => {
-                            if (generatingAudio) return;
-                            setGeneratingAudio(true);
-                            try {
-                              const res = await fetch("/api/summarize/audio", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  text: briefResult.brief,
-                                  voiceId: voices.find(v => v.id === selectedVoice)?.elevenLabsId,
-                                  recordId: briefResult.id,
-                                }),
-                              });
-                              const data = await res.json();
-                              if (!res.ok) throw new Error(data.error ?? "Audio generation failed");
-                              setBriefResult(prev => prev ? { ...prev, briefAudioUrl: data.audioUrl } : prev);
-                              loadTrack({ url: data.audioUrl, title: "Audia Brief" });
-                            } catch (err) {
-                              showToast((err as Error).message, "error");
-                            } finally {
-                              setGeneratingAudio(false);
-                            }
-                          }}
-                          disabled={generatingAudio}
-                          className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-xl text-zinc-400 hover:text-white text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {generatingAudio ? (
-                            <><svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> Generating Audio…</>
-                          ) : (
-                            <><Volume2 size={13} /> Generate Audio Brief</>
-                          )}
-                        </button>
-                      )}
+                      ) : generatingAudio ? (
+                        <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] border border-white/10 rounded-xl text-zinc-500 text-xs">
+                          <svg className="animate-spin w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                          Generating audio brief…
+                        </div>
+                      ) : null}
                     </div>
                   </div>
             ) : (

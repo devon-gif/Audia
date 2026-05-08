@@ -29,7 +29,7 @@ export default function AutoDistillModal({ isOpen, onClose, onSave, onUnsubscrib
     >
       <div
         className="relative bg-[#0A0A0A] border border-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 text-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
       >
         {/* Close */}
         <button
@@ -58,7 +58,7 @@ export default function AutoDistillModal({ isOpen, onClose, onSave, onUnsubscrib
           {/* Email row */}
           <div
             className="flex items-center justify-between p-3 border border-gray-800 rounded-xl cursor-pointer hover:border-gray-700 transition-colors select-none"
-            onClick={() => setEmailEnabled((v) => !v)}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEmailEnabled((v) => !v); }}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center shrink-0">
@@ -80,7 +80,7 @@ export default function AutoDistillModal({ isOpen, onClose, onSave, onUnsubscrib
           {/* Notion row */}
           <div
             className="flex items-center justify-between p-3 border border-gray-800 rounded-xl cursor-pointer hover:border-gray-700 transition-colors select-none"
-            onClick={() => setNotionEnabled((v) => !v)}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setNotionEnabled((v) => !v); }}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center shrink-0">

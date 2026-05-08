@@ -122,8 +122,7 @@ export default function DashboardPage() {
   // Pro gate — derived from live subscription data; devMode always acts as Pro
   const isPro = devMode || subscriptionStatus === "active" || subscriptionStatus === "pro";
   const trialExpired = !isPro && daysRemaining !== null && daysRemaining <= 0;
-  const [showProModal, setShowProModal] = useState(false);
-  const [proUpgradeLoading, setProUpgradeLoading] = useState(false);
+  // (upgrade flow now uses /pricing page directly)
 
   // Credit tracking
   const [planTier, setPlanTier] = useState<"free" | "pro" | "max">("free");
@@ -416,7 +415,7 @@ export default function DashboardPage() {
       const data = await res.json();
       if (!res.ok) {
         if (devMode) devLog(`✗ Error ${res.status}: ${data.error}`);
-        if (data.upgradeRequired) setShowProModal(true);
+        if (data.upgradeRequired) router.push("/pricing");
         throw new Error(data.error ?? "Summarization failed");
       }
       if (devMode) {
@@ -638,7 +637,7 @@ export default function DashboardPage() {
               <span className="text-xs font-bold tracking-widest uppercase text-white">Pro Plan</span>
             </div>
             <button
-              onClick={() => setShowProModal(true)}
+              onClick={() => router.push("/pricing")}
               className="w-full py-1.5 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg text-[10px] text-orange-300 font-semibold transition-all"
             >
               Upgrade
@@ -793,10 +792,10 @@ export default function DashboardPage() {
                         Upgrade to Pro to reactivate your intelligence engine and process unlimited episodes.
                       </p>
                       <button
-                        onClick={() => setShowProModal(true)}
+                        onClick={() => router.push("/pricing")}
                         className="w-full py-3 px-6 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl font-bold text-white text-sm shadow-[0_0_30px_rgba(255,120,0,0.35)] hover:scale-[1.02] transition-all"
                       >
-                        Upgrade Now — $9.99/mo
+                        Upgrade Now — $4.99/mo
                       </button>
                     </div>
                   </div>
@@ -856,7 +855,7 @@ export default function DashboardPage() {
                         return (
                           <button
                             key={l}
-                            onClick={() => locked ? setShowProModal(true) : setBriefLength(l)}
+                            onClick={() => locked ? router.push("/pricing") : setBriefLength(l)}
                             title={locked ? "Requires Pro Plan" : undefined}
                             className={`px-3 py-1 rounded-full text-[10px] transition-all flex items-center gap-1 ${
                               locked
@@ -1169,74 +1168,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Pro Gate Modal ── */}
-      {showProModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={() => setShowProModal(false)}
-        >
-          <div
-            className="relative bg-black/90 border border-orange-500/30 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-[0_0_80px_rgba(255,102,0,0.15)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Glow */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
-            <div className="relative">
-              <div className="w-12 h-12 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center justify-center mb-4">
-                <Crown size={22} className="text-orange-400" />
-              </div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-orange-500 mb-1">Pro Plan Required</p>
-              <h2 className="text-xl font-black tracking-tighter text-white mb-2">Extended Intelligence</h2>
-              <p className="text-sm text-zinc-400 leading-relaxed mb-6">
-                10-minute deep-dive summaries are a Pro feature. Unlock unlimited length, priority processing, and advanced voice options.
-              </p>
-              <div className="flex items-end gap-1.5 mb-6">
-                <span className="text-4xl font-black text-white">$4.99</span>
-                <span className="text-sm text-zinc-500 pb-1.5">/month</span>
-              </div>
-              {!process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY && (
-                <p className="text-[11px] text-red-400/80 mb-3 text-center">⚠ Configuration Error — contact support</p>
-              )}
-              <button
-                type="button"
-                disabled={proUpgradeLoading || !process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY}
-                onClick={async () => {
-                  setProUpgradeLoading(true);
-                  try {
-                    const res = await fetch("/api/checkout", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY,
-                      }),
-                    });
-                    const data = await res.json();
-                    if (data.url) {
-                      window.location.assign(data.url);
-                    } else {
-                      throw new Error(data.error || "No checkout URL returned");
-                    }
-                  } catch (err) {
-                    console.error("[checkout] Error:", err);
-                    showToast("Failed to start checkout. Please try again.", "error");
-                    setProUpgradeLoading(false);
-                  }
-                }}
-                className="w-full py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl font-bold text-white text-sm shadow-[0_0_20px_rgba(255,120,0,0.3)] hover:scale-[1.02] transition-all mb-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
-              >
-                {proUpgradeLoading ? "Redirecting…" : "Upgrade to Pro"}
-              </button>
-              <button
-                onClick={() => setShowProModal(false)}
-                className="w-full py-2 text-zinc-600 hover:text-zinc-400 text-xs transition-colors"
-              >
-                Maybe later
-              </button>
             </div>
           </div>
         </div>

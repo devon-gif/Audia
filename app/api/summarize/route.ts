@@ -149,10 +149,12 @@ export async function POST(request: NextRequest) {
   try {
     const result = await assemblyai.transcripts.transcribe({
       audio_url: audioUrl,
-      speech_model: "best",
+      // speech_model is deprecated — use speech_models array instead
+      speech_models: ["best"],
       language_detection: true,
     });
-    if (result.status === "error" || !result.text) {
+    // SDK polling resolves only when status is "completed" or "error"
+    if (result.status !== "completed" || !result.text) {
       throw new Error(result.error ?? "Transcription returned empty result");
     }
     transcript = result.text;

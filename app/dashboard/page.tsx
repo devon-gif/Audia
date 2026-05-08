@@ -1196,12 +1196,15 @@ export default function DashboardPage() {
                 10-minute deep-dive summaries are a Pro feature. Unlock unlimited length, priority processing, and advanced voice options.
               </p>
               <div className="flex items-end gap-1.5 mb-6">
-                <span className="text-4xl font-black text-white">$9.99</span>
+                <span className="text-4xl font-black text-white">$4.99</span>
                 <span className="text-sm text-zinc-500 pb-1.5">/month</span>
               </div>
+              {!process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY && (
+                <p className="text-[11px] text-red-400/80 mb-3 text-center">⚠ Configuration Error — contact support</p>
+              )}
               <button
                 type="button"
-                disabled={proUpgradeLoading}
+                disabled={proUpgradeLoading || !process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY}
                 onClick={async () => {
                   setProUpgradeLoading(true);
                   try {

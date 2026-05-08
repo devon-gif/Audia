@@ -169,6 +169,7 @@ Rules:
 
   // ── Step 4: Text-to-Speech via ElevenLabs ────────────────────────────────
   let briefAudioUrl: string | null = null;
+  console.log(`[pipeline] TTS — voiceId=${voiceId}, chars=${brief.length}, keyPresent=${!!process.env.ELEVENLABS_API_KEY}`);
   try {
     const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
       text: brief,
@@ -198,12 +199,13 @@ Rules:
         .from("audio-briefs")
         .getPublicUrl(fileName);
       briefAudioUrl = publicUrlData.publicUrl;
+      console.log(`[pipeline] TTS upload OK → ${briefAudioUrl}`);
     } else {
-      console.warn("[pipeline] Storage upload failed:", uploadError.message);
+      console.error("[pipeline] Storage upload failed:", uploadError.message);
     }
   } catch (err) {
     // TTS is non-fatal — text brief is still returned
-    console.warn("[pipeline] ElevenLabs TTS failed:", (err as Error).message);
+    console.error("[pipeline] ElevenLabs TTS failed:", (err as Error).message);
   }
 
   // ── Step 6: Mark DB record as completed ──────────────────────────────────

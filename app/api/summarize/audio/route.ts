@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required field: "text"' }, { status: 400 });
   }
 
+  console.log(`[audio-route] userId=${user.id} voiceId=${voiceId} recordId=${recordId ?? "none"} chars=${text.length} keyPresent=${!!process.env.ELEVENLABS_API_KEY}`);
+
   // ── ElevenLabs TTS ──────────────────────────────────────────────────────────
   let audioBuffer: Buffer;
   try {

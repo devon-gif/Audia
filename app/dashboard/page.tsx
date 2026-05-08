@@ -490,14 +490,24 @@ export default function DashboardPage() {
             recordId: data.id,
           }),
         })
-          .then((r) => r.json())
-          .then((audioData) => {
+          .then(async (r) => {
+            const audioData = await r.json();
+            if (!r.ok) {
+              console.error("[audio] /api/summarize/audio error:", r.status, audioData?.error);
+              showToast(`Audio generation failed: ${audioData?.error ?? r.status}`);
+              return;
+            }
             if (audioData.audioUrl) {
               setBriefResult((prev) => prev ? { ...prev, briefAudioUrl: audioData.audioUrl } : prev);
               loadTrack({ url: audioData.audioUrl, title: "Audia Brief" });
+            } else {
+              console.error("[audio] Response OK but no audioUrl returned:", audioData);
             }
           })
-          .catch(() => { /* non-fatal — user can still read the brief */ })
+          .catch((err) => {
+            console.error("[audio] Fetch error:", err);
+            showToast("Audio generation failed — check your connection.");
+          })
           .finally(() => setGeneratingAudio(false));
       }
       // Optimistically increment local credit counter
@@ -994,9 +1004,9 @@ export default function DashboardPage() {
                           Listen in Player
                         </button>
                       ) : generatingAudio ? (
-                        <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] border border-white/10 rounded-xl text-zinc-500 text-xs">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/25 rounded-xl text-orange-400 text-xs font-semibold animate-pulse">
                           <svg className="animate-spin w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-                          Generating audio brief…
+                          Generating neural audio…
                         </div>
                       ) : null}
                     </div>

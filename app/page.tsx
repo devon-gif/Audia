@@ -557,228 +557,77 @@ export default function LandingPage() {
         {/* --- LIVE ENGINE INTERACTIVE DEMO --- */}
         <section className="py-16 relative overflow-hidden">
           <div className="max-w-6xl mx-auto px-6 md:px-12">
+            </div>
+          </div>
+        </section>
+
+        {/* --- PASSIVE INTELLIGENCE: HOW IT WORKS --- */}
+        <section id="how-it-works" className="py-32 bg-black relative overflow-hidden">
+          {/* Ambient background glow */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/[0.04] rounded-full blur-[120px]" />
+          </div>
+
+          <div className="max-w-6xl mx-auto px-6 md:px-12 relative z-10">
+            {/* Header */}
+            <div className="text-center mb-20">
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-orange-500 mb-4 block">How It Works</span>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
+                Passive Intelligence:<br />Your Library on Autopilot.
+              </h2>
+            </div>
+
+            {/* 3-col steps + floating headphones */}
             <div className="relative">
-              {/* Deep Glass Dashboard with Film Grain */}
-              <div className="bg-black/40 backdrop-blur-[60px] border border-white/10 rounded-[2.5rem] p-8 shadow-2xl shadow-black/50 relative overflow-hidden">
-                {/* Film Grain Overlay */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-                  }}
-                />
-                
-                {/* Window Controls */}
-                <div className="flex items-center justify-between mb-6 relative z-10">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                  </div>
-                  <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Audia Live Engine v2.4</div>
-                </div>
-                
-                {/* Live Distillation Grid */}
-                <div className="grid grid-cols-12 gap-6 relative z-10">
-                  {/* Animated Transcript */}
-                  <div className="col-span-12 lg:col-span-7 bg-black/30 rounded-2xl p-6 border border-white/5">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2 text-orange-500">
-                        <FileText size={16} />
-                        <span className="text-xs font-semibold uppercase tracking-wider">Live Transcript</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono text-emerald-400 animate-pulse">● Processing</span>
-                      </div>
-                    </div>
-                    <div className="space-y-3 text-sm text-orange-100/60 font-mono">
-                      <p className="animate-pulse">[00:00:15] Sam Altman: The timeline for AGI is compressing...</p>
-                      <p className="opacity-70">[00:00:42] Sam Altman: GPT-5 represents a massive leap in reasoning...</p>
-                      <p className="opacity-50">[00:01:15] Sam Altman: Sora's physics understanding is emergent...</p>
-                      <p className="text-orange-500 text-xs mt-4">[AI Distilling... 2.3M tokens analyzed]</p>
-                    </div>
-                  </div>
-                  
-                  {/* Key Insights with Glow */}
-                  <div className="col-span-12 lg:col-span-5 space-y-4">
-                    <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-5 shadow-[0_0_20px_rgba(249,115,22,0.2)]">
-                      <div className="flex items-center gap-2 mb-2 text-orange-400 text-xs font-semibold uppercase">
-                        <Star size={14} /> Key Insight
-                      </div>
-                      <p className="text-white text-sm">GPT-5 expected to be massive leap in raw reasoning capabilities</p>
-                    </div>
-                    <div className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-5">
-                      <div className="flex items-center gap-2 mb-2 text-orange-400/70 text-xs font-semibold uppercase">
-                        <Star size={14} /> Key Insight
-                      </div>
-                      <p className="text-white/70 text-sm">Sora's physics understanding is an emergent property of scale</p>
-                    </div>
-                    <div className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-5">
-                      <div className="flex items-center gap-2 mb-2 text-orange-400/70 text-xs font-semibold uppercase">
-                        <Star size={14} /> Key Insight
-                      </div>
-                      <p className="text-white/70 text-sm">AGI timeline compressing but compute/energy are bottlenecks</p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Interactive Audio Bar */}
-                <div className="mt-6 flex items-center gap-4 bg-black/40 rounded-xl p-4 border border-white/5 relative z-10">
-                  <button 
-                    onClick={() => setSoundOn(!soundOn)}
-                    className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
-                  >
-                    {soundOn ? <Pause size={18} fill="black" className="text-black" /> : <Play size={18} fill="black" className="text-black ml-0.5" />}
-                  </button>
-                  <div className="flex-1">
-                    <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                      <div className={`h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-300 ${voiceProcessing ? 'animate-pulse w-3/4' : 'w-1/3'}`}></div>
-                    </div>
-                    <div className="flex justify-between text-xs text-orange-100/40 mt-1 font-mono">
-                      <span>0:00</span>
-                      <span>{voices.find(v => v.id === selectedVoice)?.label ?? selectedVoice}</span>
-                      <span>4:12</span>
-                    </div>
-                  </div>
-                  
-                  {/* Voice Selector */}
-                  <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1">
-                    <button 
-                      onClick={() => { setSelectedVoice('Marcus'); setVoiceProcessing(true); setTimeout(() => setVoiceProcessing(false), 1500); }}
-                      className={`px-3 py-1 rounded-md text-xs font-mono transition-all ${selectedVoice === 'Marcus' ? 'bg-orange-500/20 text-orange-400' : 'text-zinc-400 hover:text-white'}`}
-                    >
-                      Marcus
-                    </button>
-                    <button 
-                      onClick={() => { setSelectedVoice('Sarah'); setVoiceProcessing(true); setTimeout(() => setVoiceProcessing(false), 1500); }}
-                      className={`px-3 py-1 rounded-md text-xs font-mono transition-all ${selectedVoice === 'Sarah' ? 'bg-orange-500/20 text-orange-400' : 'text-zinc-400 hover:text-white'}`}
-                    >
-                      Sarah
-                    </button>
-                  </div>
-                  
-                  {/* Sound Toggle */}
-                  <button 
-                    onClick={() => setSoundOn(!soundOn)}
-                    className={`p-2 rounded-lg transition-all ${soundOn ? 'bg-orange-500/20 text-orange-400' : 'bg-white/5 text-zinc-400 hover:text-white'}`}
-                  >
-                    <Speaker size={16} />
-                  </button>
-                </div>
-              </div>
-              
-            </div>
-          </div>
-        </section>
-
-        {/* --- COMPARISON SECTION --- */}
-        <section className="py-16 relative overflow-hidden">
-          <div className="max-w-6xl mx-auto px-6 md:px-12">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-white">From Hours to Minutes</h2>
-              <p className="text-orange-100/60">See the dramatic difference Audia makes</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {/* Before: 3 Hour Waveform */}
-              <div className="p-8 rounded-[2.5rem] bg-black/40 backdrop-blur-[45px] border border-white/10 relative overflow-hidden">
-                <div className="absolute inset-0 opacity-30">
-                  <svg className="w-full h-full" preserveAspectRatio="none">
-                    <pattern id="dense-waveform" x="0" y="0" width="4" height="100%" patternUnits="userSpaceOnUse">
-                      <rect x="0" y="20%" width="2" height="60%" fill="#333" rx="1"/>
-                    </pattern>
-                    <rect width="100%" height="100%" fill="url(#dense-waveform)"/>
-                  </svg>
-                </div>
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-3 h-3 bg-red-500/60 rounded-full"></div>
-                    <span className="text-red-400/80 text-sm font-medium">Original</span>
-                  </div>
-                  <div className="text-4xl font-bold text-white/40 mb-2 font-mono tracking-tighter">3 hours</div>
-                  <p className="text-white/30 text-sm">Dense, unfiltered audio. Filler content. Ads. Digressions.</p>
-                </div>
+              {/* Floating headphones — dead center behind steps */}
+              <div
+                className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] pointer-events-none select-none z-0 animate-float"
+                style={{ filter: 'drop-shadow(0 60px 100px rgba(0,0,0,0.95)) drop-shadow(0 0 80px rgba(255,102,0,0.06))' }}
+              >
+                <Image src="/headphones.png" alt="" width={460} height={460} className="w-full h-full object-contain opacity-[0.09]" />
               </div>
 
-              {/* After: 5 Minute Bento */}
-              <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-orange-500/20 to-amber-500/10 backdrop-blur-[45px] border border-orange-500/30 relative overflow-hidden">
-                <div className="absolute inset-0 opacity-20">
-                  <svg className="w-full h-full" preserveAspectRatio="none">
-                    <pattern id="clean-waveform" x="0" y="0" width="20" height="100%" patternUnits="userSpaceOnUse">
-                      <rect x="0" y="35%" width="12" height="30%" fill="#f97316" rx="2"/>
-                    </pattern>
-                    <rect width="100%" height="100%" fill="url(#clean-waveform)"/>
-                  </svg>
-                </div>
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                    <span className="text-emerald-400 text-sm font-medium">Audia Brief</span>
+              {/* Connecting line */}
+              <div className="hidden md:block absolute top-10 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-10" />
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+
+                {/* Step 1 — Link Your Feed */}
+                <div className="group bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-3xl p-8 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300">
+                  <div className="w-14 h-14 bg-black/60 border border-white/10 rounded-2xl flex items-center justify-center mb-6 group-hover:border-orange-500/40 group-hover:shadow-[0_0_20px_rgba(255,102,0,0.15)] transition-all duration-300">
+                    <PlusCircle size={26} className="text-orange-400" />
                   </div>
-                  <div className="text-4xl font-bold text-white mb-2 font-mono tracking-tighter">5 minutes</div>
-                  <p className="text-orange-100/70 text-sm">Pure signal. Key insights. Structured takeaways. Ready to act.</p>
+                  <div className="text-[10px] text-orange-500 font-bold uppercase tracking-[0.25em] mb-3">Step 01</div>
+                  <h3 className="text-xl font-black tracking-tighter text-white mb-3">Link Your Feed</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed">
+                    Follow your favorite podcasts. Audia tracks every new episode the second it hits the server — no manual searching required.
+                  </p>
                 </div>
-                <div className="absolute top-4 right-4 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs text-emerald-400 font-medium font-mono">
-                  36x faster
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* --- WHY PEOPLE CONVERT SECTION --- */}
-        <section id="features" className="py-16 relative">
-          <div className="max-w-6xl mx-auto px-6 md:px-12">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-white">Why People Convert</h2>
-              <p className="text-orange-100/60 text-lg max-w-2xl mx-auto">
-                Three simple steps to transform how you consume audio content.
-              </p>
-            </div>
+                {/* Step 2 — Set Your Depth */}
+                <div className="group bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-3xl p-8 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300">
+                  <div className="w-14 h-14 bg-black/60 border border-white/10 rounded-2xl flex items-center justify-center mb-6 group-hover:border-orange-500/40 group-hover:shadow-[0_0_20px_rgba(255,102,0,0.15)] transition-all duration-300">
+                    <Timer size={26} className="text-orange-400" />
+                  </div>
+                  <div className="text-[10px] text-orange-500 font-bold uppercase tracking-[0.25em] mb-3">Step 02</div>
+                  <h3 className="text-xl font-black tracking-tighter text-white mb-3">Set Your Depth</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed">
+                    Choose your brief length — 3, 5, or 10 minutes. Our neural engine distills the noise to fit your exact schedule.
+                  </p>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Search any episode */}
-              <div className="p-8 md:p-10 rounded-[2.5rem] bg-white/5 backdrop-blur-[45px] border border-white/10 hover:border-orange-500/30 hover:scale-[1.02] hover:shadow-2xl hover:shadow-orange-500/10 transition-all group">
-                <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
-                  <Search size={28} className="text-white" />
+                {/* Step 3 — Instant Delivery */}
+                <div className="group bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-3xl p-8 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300">
+                  <div className="w-14 h-14 bg-black/60 border border-white/10 rounded-2xl flex items-center justify-center mb-6 group-hover:border-orange-500/40 group-hover:shadow-[0_0_20px_rgba(255,102,0,0.15)] transition-all duration-300">
+                    <Bell size={26} className="text-orange-400" />
+                  </div>
+                  <div className="text-[10px] text-orange-500 font-bold uppercase tracking-[0.25em] mb-3">Step 03</div>
+                  <h3 className="text-xl font-black tracking-tighter text-white mb-3">Instant Delivery</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed">
+                    Walk away. We&apos;ll ping your device with your custom audio brief the moment it&apos;s ready. No manual work required.
+                  </p>
                 </div>
-                <h3 className="text-2xl font-bold mb-3">Search any episode</h3>
-                <p className="text-orange-100/70 leading-relaxed mb-4">
-                  Paste any podcast URL from Spotify, Apple Podcasts, or YouTube. We support 2.5M+ shows.
-                </p>
-                <div className="flex items-center gap-2 text-orange-400 text-sm font-medium font-mono">
-                  <Check size={16} />
-                  <span>Universal search</span>
-                </div>
-              </div>
 
-              {/* Get a distilled brief */}
-              <div className="p-8 md:p-10 rounded-[2.5rem] bg-white/5 backdrop-blur-[45px] border border-white/10 hover:border-orange-500/30 hover:scale-[1.02] hover:shadow-2xl hover:shadow-orange-500/10 transition-all group">
-                <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
-                  <Sparkles size={28} className="text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Get a distilled brief</h3>
-                <p className="text-orange-100/70 leading-relaxed mb-4">
-                  Our AI extracts key insights and creates a structured briefing in under 60 seconds.
-                </p>
-                <div className="flex items-center gap-2 text-orange-400 text-sm font-medium">
-                  <Check size={16} />
-                  <span>AI-powered distillation</span>
-                </div>
-              </div>
-
-              {/* Find moments that matter */}
-              <div className="p-8 md:p-10 rounded-[2.5rem] bg-white/5 backdrop-blur-[45px] border border-white/10 hover:border-orange-500/30 hover:scale-[1.02] hover:shadow-2xl hover:shadow-orange-500/10 transition-all group">
-                <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
-                  <Zap size={28} className="text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Find moments that matter</h3>
-                <p className="text-orange-100/70 leading-relaxed mb-4">
-                  Jump to timestamped moments or listen to an AI-generated audio briefing on the go.
-                </p>
-                <div className="flex items-center gap-2 text-orange-400 text-sm font-medium">
-                  <Check size={16} />
-                  <span>Instant navigation</span>
-                </div>
               </div>
             </div>
           </div>
@@ -873,76 +722,6 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-
-        {/* --- HOW IT WORKS --- */}
-        <section id="features" className="py-32 bg-black relative">
-          <div className="max-w-6xl mx-auto px-6 md:px-12">
-            <div className="text-center mb-20">
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-orange-500 mb-4 block">How It Works</span>
-              <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
-                Your favorite shows, summarized<br />on autopilot.
-              </h2>
-            </div>
-
-            {/* Steps Grid */}
-            <div className="relative">
-              {/* Floating headphones — cinematic anchor behind steps */}
-              <div className="hidden md:block absolute -top-16 left-1/2 -translate-x-1/2 w-[380px] h-[380px] pointer-events-none select-none z-0"
-                style={{ filter: 'drop-shadow(0 40px 80px rgba(0,0,0,0.9)) drop-shadow(0 0 60px rgba(255,102,0,0.08))' }}>
-                <Image
-                  src="/headphones.png"
-                  alt=""
-                  width={380}
-                  height={380}
-                  className="w-full h-full object-contain opacity-[0.07] animate-float"
-                />
-              </div>
-
-              {/* Connecting line */}
-              <div className="hidden md:block absolute top-10 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
-
-                {/* Step 1 — Subscribe */}
-                <div className="text-center relative group">
-                  <div className="w-16 h-16 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 relative z-10 group-hover:border-orange-500/40 group-hover:bg-orange-500/5 transition-all duration-300">
-                    <PlusCircle size={26} className="text-orange-400" />
-                  </div>
-                  <div className="text-[10px] text-orange-500 font-bold uppercase tracking-[0.25em] mb-3">Step 01</div>
-                  <h3 className="text-xl font-black tracking-tighter text-white mb-3">Subscribe</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto">
-                    Follow your favorite podcasts. Audia tracks every new episode the second it drops — no manual searching required.
-                  </p>
-                </div>
-
-                {/* Step 2 — Set Your Depth */}
-                <div className="text-center relative group">
-                  <div className="w-16 h-16 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 relative z-10 group-hover:border-orange-500/40 group-hover:bg-orange-500/5 transition-all duration-300">
-                    <Timer size={26} className="text-orange-400" />
-                  </div>
-                  <div className="text-[10px] text-orange-500 font-bold uppercase tracking-[0.25em] mb-3">Step 02</div>
-                  <h3 className="text-xl font-black tracking-tighter text-white mb-3">Set Your Depth</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto">
-                    Choose your summary length — 3, 5, or 10 min. We tailor the neural audio brief to fit your exact commute.
-                  </p>
-                </div>
-
-                {/* Step 3 — Get Notified */}
-                <div className="text-center relative group">
-                  <div className="w-16 h-16 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 relative z-10 group-hover:border-orange-500/40 group-hover:bg-orange-500/5 transition-all duration-300">
-                    <Bell size={26} className="text-orange-400" />
-                  </div>
-                  <div className="text-[10px] text-orange-500 font-bold uppercase tracking-[0.25em] mb-3">Step 03</div>
-                  <h3 className="text-xl font-black tracking-tighter text-white mb-3">Get Notified</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto">
-                    Relax. We&apos;ll ping your phone or inbox with your custom brief the moment it&apos;s ready. No manual work required.
-                  </p>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* --- FEATURES BENTO GRID --- */}
         <section className="py-32 bg-black relative">

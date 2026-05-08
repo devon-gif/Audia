@@ -201,12 +201,30 @@ export default function DashboardPage() {
                     <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
                     <input
                       type="text"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSummarize()}
                       placeholder="Paste podcast URL or RSS feed…"
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                      disabled={isSummarizing}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all disabled:opacity-50"
                     />
                   </div>
-                  <button className="px-5 py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl text-white font-bold text-sm flex items-center gap-2 hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,120,0,0.3)]">
-                    SUMMARIZE <ArrowRight size={14} />
+                  <button
+                    onClick={handleSummarize}
+                    disabled={isSummarizing || !urlInput.trim()}
+                    className="px-5 py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl text-white font-bold text-sm flex items-center gap-2 hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,120,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 min-w-[150px] justify-center"
+                  >
+                    {isSummarizing ? (
+                      <>
+                        <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        <span className="font-mono text-xs tracking-widest uppercase truncate">{LOADING_STAGES[stageIndex]}</span>
+                      </>
+                    ) : (
+                      <>SUMMARIZE <ArrowRight size={14} /></>
+                    )}
                   </button>
                 </div>
 
@@ -215,8 +233,12 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Length:</span>
                     <div className="bg-black/60 border border-white/10 rounded-full p-0.5 flex items-center">
-                      {["3m", "5m", "10m"].map((l) => (
-                        <button key={l} className={`px-3 py-1 rounded-full text-[10px] transition-all ${l === "5m" ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]" : "text-zinc-400 hover:text-white"}`}>{l}</button>
+                      {(["3m", "5m", "10m"] as const).map((l) => (
+                        <button
+                          key={l}
+                          onClick={() => setBriefLength(l)}
+                          className={`px-3 py-1 rounded-full text-[10px] transition-all ${l === briefLength ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]" : "text-zinc-400 hover:text-white"}`}
+                        >{l}</button>
                       ))}
                     </div>
                   </div>
@@ -255,48 +277,68 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Summary Brief label */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Summary Brief</span>
-                  <span className="text-[10px] text-zinc-500">1:42:18</span>
-                </div>
+                {/* Error state */}
+                {summarizeError && (
+                  <div className="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 font-mono">
+                    ⚠ {summarizeError}
+                  </div>
+                )}
 
-                {/* 4-col bento grid */}
-                <div className="grid grid-cols-4 gap-3">
-                  <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
-                    <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Key Takeaways</h4>
-                    <ul className="space-y-1.5">
-                      {["Deep work is a superpower", "Schedule focus time", "Avoid shallow work"].map(t => (
-                        <li key={t} className="text-[11px] text-zinc-400">{t}</li>
-                      ))}
-                    </ul>
+                {/* Results: Deep Signal Brief */}
+                {briefResult ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deep Signal Brief</span>
+                      <span className="text-[10px] text-zinc-500 font-mono">{(briefResult.transcriptLength / 5 / 60).toFixed(0)} min transcript</span>
+                    </div>
+                    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 max-h-[340px] overflow-y-auto">
+                      <pre className="text-[12px] text-zinc-300 leading-relaxed whitespace-pre-wrap font-sans">{briefResult.brief}</pre>
+                    </div>
                   </div>
-                  <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
-                    <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Chapters</h4>
-                    {[["00:00", "Distraction Crisis"], ["12:45", "Deep Work Is"], ["28:10", "Flow Protocols"]].map(([t, l]) => (
-                      <div key={t} className="flex gap-2 text-[11px] mb-1">
-                        <span className="text-zinc-500">{t}</span>
-                        <span className="text-zinc-300">{l}</span>
+                ) : (
+                  <>
+                    {/* Placeholder bento grid */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Summary Brief</span>
+                      <span className="text-[10px] text-zinc-500">1:42:18</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                        <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Key Takeaways</h4>
+                        <ul className="space-y-1.5">
+                          {["Deep work is a superpower", "Schedule focus time", "Avoid shallow work"].map(t => (
+                            <li key={t} className="text-[11px] text-zinc-400">{t}</li>
+                          ))}
+                        </ul>
                       </div>
-                    ))}
-                  </div>
-                  <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
-                    <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Quote</h4>
-                    <blockquote className="text-[11px] text-zinc-300 italic leading-relaxed">
-                      &quot;You can do anything, but not everything.&quot;
-                    </blockquote>
-                    <p className="text-[10px] text-zinc-500 mt-2">— Cal Newport</p>
-                  </div>
-                  <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
-                    <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Actions</h4>
-                    {["Audit distractions", "Block deep work time", "Remove notifications"].map(a => (
-                      <label key={a} className="flex items-start gap-1.5 mb-1.5">
-                        <div className="w-3 h-3 border border-zinc-600 rounded mt-0.5 shrink-0" />
-                        <span className="text-[11px] text-zinc-400">{a}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                      <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                        <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Chapters</h4>
+                        {[["00:00", "Distraction Crisis"], ["12:45", "Deep Work Is"], ["28:10", "Flow Protocols"]].map(([t, l]) => (
+                          <div key={t} className="flex gap-2 text-[11px] mb-1">
+                            <span className="text-zinc-500">{t}</span>
+                            <span className="text-zinc-300">{l}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                        <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Quote</h4>
+                        <blockquote className="text-[11px] text-zinc-300 italic leading-relaxed">
+                          &quot;You can do anything, but not everything.&quot;
+                        </blockquote>
+                        <p className="text-[10px] text-zinc-500 mt-2">— Cal Newport</p>
+                      </div>
+                      <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                        <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Actions</h4>
+                        {["Audit distractions", "Block deep work time", "Remove notifications"].map(a => (
+                          <label key={a} className="flex items-start gap-1.5 mb-1.5">
+                            <div className="w-3 h-3 border border-zinc-600 rounded mt-0.5 shrink-0" />
+                            <span className="text-[11px] text-zinc-400">{a}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Audio player bar */}

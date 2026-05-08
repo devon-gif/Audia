@@ -1,18 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Download, Trash2, ExternalLink, Clock, Calendar } from "lucide-react";
+import { Search, Download, Trash2, ExternalLink, Clock, Calendar, Play } from "lucide-react";
 import PodcastCover from "@/app/components/PodcastCover";
+
+interface Props {
+  onPlay?: (audioUrl: string, title: string) => void;
+}
 
 // ─── Mock data ─────────────────────────────────────────────────────────────
 // showName drives real artwork lookups inside PodcastCover
 
 const savedSummaries = [
-  { id: 1, title: "The Art of Focus",       showName: "Cal Newport Deep Questions", date: "2 hours ago", length: "4m 32s" },
-  { id: 2, title: "GPT-5 and the Future",   showName: "Lex Fridman Podcast",        date: "Yesterday",   length: "6m 18s" },
-  { id: 3, title: "Dopamine Detox",         showName: "Huberman Lab",               date: "3 days ago",  length: "3m 45s" },
-  { id: 4, title: "Crypto Market Analysis", showName: "Bankless",                   date: "1 week ago",  length: "8m 12s" },
-  { id: 5, title: "Startup Fundraising",    showName: "Y Combinator Podcast",       date: "1 week ago",  length: "5m 22s" },
+  { id: 1, title: "The Art of Focus",       showName: "Cal Newport Deep Questions", date: "2 hours ago", length: "4m 32s", briefAudioUrl: null as string | null },
+  { id: 2, title: "GPT-5 and the Future",   showName: "Lex Fridman Podcast",        date: "Yesterday",   length: "6m 18s", briefAudioUrl: null as string | null },
+  { id: 3, title: "Dopamine Detox",         showName: "Huberman Lab",               date: "3 days ago",  length: "3m 45s", briefAudioUrl: null as string | null },
+  { id: 4, title: "Crypto Market Analysis", showName: "Bankless",                   date: "1 week ago",  length: "8m 12s", briefAudioUrl: null as string | null },
+  { id: 5, title: "Startup Fundraising",    showName: "Y Combinator Podcast",       date: "1 week ago",  length: "5m 22s", briefAudioUrl: null as string | null },
 ];
 
 const recentShows = [
@@ -32,7 +36,7 @@ const recentShows = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function LibraryView() {
+export default function LibraryView({ onPlay }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = savedSummaries.filter(
@@ -40,6 +44,24 @@ export default function LibraryView() {
       s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.showName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleDownload = async (audioUrl: string, title: string) => {
+    try {
+      const res = await fetch(audioUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // Fallback: open in new tab
+      window.open(audioUrl, "_blank");
+    }
+  };
 
   const row1 = [...recentShows, ...recentShows];
   const row2 = [...recentShows.slice().reverse(), ...recentShows.slice().reverse()];
@@ -128,7 +150,21 @@ export default function LibraryView() {
                   <Clock size={11} className="shrink-0" />{summary.length}
                 </div>
                 <div className="flex items-center gap-1">
-                  <button className="p-1.5 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                  {summary.briefAudioUrl && (
+                    <button
+                      onClick={() => onPlay?.(summary.briefAudioUrl!, summary.title)}
+                      className="p-1.5 text-zinc-500 hover:text-orange-400 hover:bg-orange-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                      title="Play brief"
+                    >
+                      <Play size={13} fill="currentColor" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => summary.briefAudioUrl && handleDownload(summary.briefAudioUrl, summary.title)}
+                    disabled={!summary.briefAudioUrl}
+                    className="p-1.5 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-20 disabled:cursor-not-allowed"
+                    title="Download mp3"
+                  >
                     <Download size={13} />
                   </button>
                   <button className="p-1.5 text-zinc-500 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-all opacity-0 group-hover:opacity-100">

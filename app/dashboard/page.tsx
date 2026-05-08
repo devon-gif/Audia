@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, ArrowRight, Play, Layout, Sparkles,
-  Crown, SkipBack, SkipForward, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell,
+  Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import LibraryView from "@/app/components/LibraryView";
@@ -82,6 +82,9 @@ export default function DashboardPage() {
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Global audio player — persists across view changes
+  const [globalAudio, setGlobalAudio] = useState<{ url: string; title: string } | null>(null);
 
   // Search results (when input is a text query, not a URL)
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
@@ -193,7 +196,7 @@ export default function DashboardPage() {
   };
   // Auto-play the audio brief as soon as it loads
   useEffect(() => {
-    if (briefResult?.briefAudioUrl && audioRef.current) {
+    if (globalAudio?.url && audioRef.current) {
       audioRef.current.load();
       const el = audioRef.current;
       const onCanPlay = () => {
@@ -202,7 +205,7 @@ export default function DashboardPage() {
       };
       el.addEventListener("canplaythrough", onCanPlay);
     }
-  }, [briefResult?.briefAudioUrl]);
+  }, [globalAudio?.url]);
   const toastCounter = useRef(0);
 
   const showToast = (message: string, type: Toast["type"] = "error") => {
@@ -328,6 +331,17 @@ export default function DashboardPage() {
     }
   };
 
+  const handlePlayLibraryBrief = (url: string, title: string) => {
+    // Stop current playback then load new track
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      setAudioProgress(0);
+      setAudioDuration(0);
+    }
+    setGlobalAudio({ url, title });
+  };
+
   const handleSummarize = async () => {
     if (!urlInput.trim() || isSummarizing) return;
     setIsSummarizing(true);
@@ -363,6 +377,10 @@ export default function DashboardPage() {
         devLog(`✓ DB — record id: ${data.id}`);
       }
       setBriefResult(data as BriefResult);
+      // Load audio into global player
+      if (data.briefAudioUrl) {
+        setGlobalAudio({ url: data.briefAudioUrl, title: "Audia Brief" });
+      }
       // Optimistically increment local credit counter
       setMonthlyGenerations(prev => prev + 1);
     } catch (err) {
@@ -545,11 +563,93 @@ export default function DashboardPage() {
           </div>
         </aside>
 
-        {/* ── Main content ── */}
+        {/* ── Main content column ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {activeView === "new-summary" ? (
-            <>
-              {/* Top bar */}
+
+        {/* ── Global Audio Player ── always visible when audio is loaded, persists across views */}
+        {globalAudio && (
+          <>
+            <audio
+              ref={audioRef}
+              src={globalAudio.url}
+              onTimeUpdate={(e) => setAudioProgress(e.currentTarget.currentTime)}
+              onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
+              onEnded={() => setIsPlaying(false)}
+            />
+            <div className={`shrink-0 mx-6 mt-4 mb-0 relative bg-black/50 backdrop-blur-2xl border rounded-2xl px-5 py-3.5 transition-all duration-500 ${
+              isPlaying
+                ? "border-orange-500/40 shadow-[0_0_30px_rgba(255,102,0,0.18)]"
+                : "border-white/10"
+            }`}>
+              {isPlaying && (
+                <div className="absolute inset-0 rounded-2xl bg-orange-500/[0.04] animate-pulse pointer-events-none" />
+              )}
+              <div className="relative z-10 flex items-center gap-4">
+                {/* Play/Pause */}
+                <button
+                  onClick={toggleAudio}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
+                    isPlaying
+                      ? "bg-orange-500 shadow-[0_0_18px_rgba(255,102,0,0.5)] scale-105"
+                      : "bg-white/10 border border-white/20 hover:bg-white/20"
+                  }`}
+                >
+                  {isPlaying ? (
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="white">
+                      <rect x="3" y="2" width="4" height="12" rx="1"/>
+                      <rect x="9" y="2" width="4" height="12" rx="1"/>
+                    </svg>
+                  ) : (
+                    <Play size={14} fill="white" className="text-white ml-0.5" />
+                  )}
+                </button>
+
+                {/* Track label + progress */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest truncate">{globalAudio.title}</span>
+                    <span className={`text-[10px] font-mono shrink-0 ml-3 ${
+                      isPlaying ? "text-orange-500/80" : "text-zinc-500"
+                    }`}>
+                      {isPlaying ? "Playing…" : audioDuration ? formatTime(audioDuration) : "--:--"}
+                    </span>
+                  </div>
+                  <div
+                    className="h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer"
+                    onClick={(e) => {
+                      if (!audioRef.current || !audioDuration) return;
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      audioRef.current.currentTime = ((e.clientX - rect.left) / rect.width) * audioDuration;
+                    }}
+                  >
+                    <div
+                      className="h-full bg-gradient-to-r from-[#FF7A00] to-[#FF4400] rounded-full transition-all duration-100"
+                      style={{ width: audioDuration ? `${(audioProgress / audioDuration) * 100}%` : "0%" }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[9px] font-mono text-zinc-600">{formatTime(audioProgress)}</span>
+                    <span className="text-[9px] font-mono text-zinc-600">{audioDuration ? formatTime(audioDuration) : "--:--"}</span>
+                  </div>
+                </div>
+
+                {/* Dismiss */}
+                <button
+                  onClick={() => { audioRef.current?.pause(); setIsPlaying(false); setGlobalAudio(null); setAudioProgress(0); setAudioDuration(0); }}
+                  className="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-white/5 transition-all shrink-0"
+                  title="Close player"
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 1l8 8M9 1L1 9"/></svg>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── View content ── */}
+        {activeView === "new-summary" ? (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Top bar */}
               <div className="flex items-center justify-between px-8 py-5 border-b border-white/5">
                 <div>
                   <h1 className="text-lg font-black tracking-tighter text-white">New Summary</h1>
@@ -723,73 +823,6 @@ export default function DashboardPage() {
                       <span className="text-[10px] text-zinc-500 font-mono">{(briefResult.transcriptLength / 5 / 60).toFixed(0)} min transcript</span>
                     </div>
 
-                    {/* Deep-glass audio player — only shown when TTS audio exists */}
-                    {briefResult.briefAudioUrl && (
-                      <>
-                        <audio
-                          ref={audioRef}
-                          src={briefResult.briefAudioUrl}
-                          onTimeUpdate={(e) => setAudioProgress(e.currentTarget.currentTime)}
-                          onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
-                          onEnded={() => setIsPlaying(false)}
-                        />
-                        <div className={`relative bg-black/50 backdrop-blur-2xl border rounded-2xl p-5 transition-all duration-500 ${
-                          isPlaying
-                            ? 'border-orange-500/40 shadow-[0_0_40px_rgba(255,102,0,0.2)]'
-                            : 'border-white/10'
-                        }`}>
-                          {/* Pulsing ambient glow while playing */}
-                          {isPlaying && (
-                            <div className="absolute inset-0 rounded-2xl bg-orange-500/5 animate-pulse pointer-events-none" />
-                          )}
-                          <div className="relative z-10 flex items-center gap-4">
-                            {/* Play/Pause button */}
-                            <button
-                              onClick={toggleAudio}
-                              className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
-                                isPlaying
-                                  ? 'bg-orange-500 shadow-[0_0_20px_rgba(255,102,0,0.5)] scale-105'
-                                  : 'bg-white/10 border border-white/20 hover:bg-white/20'
-                              }`}
-                            >
-                              {isPlaying ? (
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
-                                  <rect x="3" y="2" width="4" height="12" rx="1"/>
-                                  <rect x="9" y="2" width="4" height="12" rx="1"/>
-                                </svg>
-                              ) : (
-                                <Play size={16} fill="white" className="text-white ml-0.5" />
-                              )}
-                            </button>
-
-                            {/* Waveform progress */}
-                            <div className="flex-1">
-                              <div
-                                className="h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer"
-                                onClick={(e) => {
-                                  if (!audioRef.current || !audioDuration) return;
-                                  const rect = e.currentTarget.getBoundingClientRect();
-                                  audioRef.current.currentTime = ((e.clientX - rect.left) / rect.width) * audioDuration;
-                                }}
-                              >
-                                <div
-                                  className="h-full bg-gradient-to-r from-[#FF7A00] to-[#FF4400] rounded-full transition-all duration-100"
-                                  style={{ width: audioDuration ? `${(audioProgress / audioDuration) * 100}%` : '0%' }}
-                                />
-                              </div>
-                              <div className="flex justify-between mt-1.5">
-                                <span className="text-[10px] font-mono text-zinc-500">{formatTime(audioProgress)}</span>
-                                <span className="text-[10px] font-mono text-orange-500/80 uppercase tracking-widest">
-                                  {isPlaying ? 'Playing Brief…' : 'Audia Brief'}
-                                </span>
-                                <span className="text-[10px] font-mono text-zinc-500">{audioDuration ? formatTime(audioDuration) : '--:--'}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-
                     {/* Brief text card */}
                     <div className={`bg-white/[0.02] border rounded-xl p-5 max-h-[280px] overflow-y-auto transition-all duration-500 ${
                       briefResult.briefAudioUrl && isPlaying
@@ -876,31 +909,10 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {/* Audio player bar */}
-              <div className="mt-auto bg-black/40 backdrop-blur-xl border-t border-white/5 px-8 py-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-9 h-9 bg-gradient-to-br from-zinc-700 to-zinc-900 rounded-lg flex items-center justify-center shrink-0">
-                    <span className="text-[7px] text-zinc-400 font-bold tracking-widest uppercase">FOCUS</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full w-1/3 bg-gradient-to-r from-orange-500 to-amber-400 rounded-full" />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button className="text-zinc-400 hover:text-white transition-colors"><SkipBack size={15} /></button>
-                    <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-all">
-                      <Play size={13} fill="black" className="text-black ml-0.5" />
-                    </button>
-                    <button className="text-zinc-400 hover:text-white transition-colors"><SkipForward size={15} /></button>
-                  </div>
-                  <span className="text-[10px] font-bold text-zinc-400 tracking-widest">1.25×</span>
-                </div>
-              </div>
-            </>
+          </div>
           ) : activeView === "library" ? (
             <div className="flex-1 overflow-auto p-8">
-              <LibraryView />
+              <LibraryView onPlay={handlePlayLibraryBrief} />
             </div>
           ) : (
             <BillingPage />
@@ -912,14 +924,14 @@ export default function DashboardPage() {
       {/* ── Episode Vault ── */}
       {vaultShow && (
         <EpisodeVault
-          showName={vaultShow.name}
-          artworkUrl={vaultShow.artwork}
-          feedUrl={vaultShow.feedUrl}
+          showName={vaultShow!.name}
+          artworkUrl={vaultShow!.artwork}
+          feedUrl={vaultShow!.feedUrl}
           episodes={vaultEpisodes}
           loading={vaultLoading}
           onSelect={handleEpisodeSelect}
           onSubscribe={handleSubscribe}
-          initialSubscribed={vaultShow.feedUrl ? subscribedFeeds.has(vaultShow.feedUrl) : false}
+          initialSubscribed={vaultShow!.feedUrl ? subscribedFeeds.has(vaultShow!.feedUrl as string) : false}
           onClose={() => { setVaultShow(null); setVaultEpisodes([]); }}
         />
       )}

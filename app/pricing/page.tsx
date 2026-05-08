@@ -16,7 +16,7 @@ export default function PricingPage() {
       <header className="relative z-10 py-6 px-6 md:px-12 border-b border-white/5">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold tracking-tight text-white font-mono">
-            Audia.
+            Audia<span className="text-[#FF6600]">.</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-white/70 hover:text-white transition-colors">

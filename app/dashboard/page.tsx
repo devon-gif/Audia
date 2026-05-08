@@ -4,10 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, ArrowRight, Play, FileText, Layout, Star, Sparkles,
-  Crown, SkipBack, SkipForward, Speaker, Check, LogOut,
+  Crown, SkipBack, SkipForward, Speaker, Check, LogOut, CreditCard, Terminal, Zap,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import LibraryView from "@/app/components/LibraryView";
+import PodcastGrid from "@/app/components/PodcastGrid";
+import BillingPage from "@/app/dashboard/billing/page";
 
 type VoiceName = "Marcus" | "Sarah" | "George" | "Charlotte";
 
@@ -37,11 +39,16 @@ type BriefResult = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [activeView, setActiveView] = useState<"new-summary" | "library">("new-summary");
+  const [activeView, setActiveView] = useState<"new-summary" | "library" | "billing">("new-summary");
   const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Marcus");
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
+
+  // Developer mode — unlocked for admin email
+  const [devMode, setDevMode] = useState(false);
+  const [bypassCredits, setBypassCredits] = useState(false);
+  const [devLogs, setDevLogs] = useState<string[]>([]);
 
   // Summarize state
   const [urlInput, setUrlInput] = useState("");
@@ -64,6 +71,7 @@ export default function DashboardPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
       setUserEmail(user.email ?? null);
+      if (user.email === "heydevon@gmail.com") setDevMode(true);
       const trialEndsAt = user.user_metadata?.trial_ends_at as string | undefined;
       if (trialEndsAt) {
         const diff = Math.ceil(
@@ -113,14 +121,17 @@ export default function DashboardPage() {
     return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   };
 
+  const devLog = (msg: string) =>
+    setDevLogs((l) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...l].slice(0, 100));
+
   const handleSummarize = async () => {
     if (!urlInput.trim() || isSummarizing) return;
     setIsSummarizing(true);
     setSummarizeError(null);
     setBriefResult(null);
     setStageIndex(0);
+    if (devMode) devLog("→ POST /api/summarize — url: " + urlInput.trim());
 
-    // Cycle through loading stage labels while the request is in flight
     const stageTimer = setInterval(() => {
       setStageIndex((i) => Math.min(i + 1, LOADING_STAGES.length - 1));
     }, 4000);
@@ -129,10 +140,19 @@ export default function DashboardPage() {
       const res = await fetch("/api/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: urlInput.trim(), length: briefLength }),
+        body: JSON.stringify({ url: urlInput.trim(), length: briefLength, bypassCredits }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Summarization failed");
+      if (!res.ok) {
+        if (devMode) devLog(`✗ Error ${res.status}: ${data.error}`);
+        throw new Error(data.error ?? "Summarization failed");
+      }
+      if (devMode) {
+        devLog(`✓ AssemblyAI — transcript ${data.transcriptLength} chars`);
+        devLog(`✓ GPT-4o-mini — brief generated`);
+        devLog(data.briefAudioUrl ? `✓ ElevenLabs — audio ready` : `⚠ ElevenLabs — no audio (non-fatal)`);
+        devLog(`✓ DB — record id: ${data.id}`);
+      }
       setBriefResult(data as BriefResult);
     } catch (err) {
       setSummarizeError((err as Error).message);
@@ -204,13 +224,16 @@ export default function DashboardPage() {
               <Layout size={14} className={activeView === "library" ? "text-orange-400" : ""} />
               Library
             </button>
-            <button className="w-full flex items-center gap-2.5 px-3 py-2.5 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl text-xs transition-all">
-              <Star size={14} />
-              Highlights
-            </button>
-            <button className="w-full flex items-center gap-2.5 px-3 py-2.5 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl text-xs transition-all">
-              <FileText size={14} />
-              Templates
+            <button
+              onClick={() => setActiveView("billing")}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                activeView === "billing"
+                  ? "bg-gradient-to-r from-orange-500/20 to-transparent border border-orange-500/30 text-white"
+                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <CreditCard size={14} className={activeView === "billing" ? "text-orange-400" : ""} />
+              Billing
             </button>
           </nav>
 
@@ -445,7 +468,7 @@ export default function DashboardPage() {
                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Summary Brief</span>
                       <span className="text-[10px] text-zinc-500">1:42:18</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-4 gap-3 mb-6">
                       <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
                         <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Key Takeaways</h4>
                         <ul className="space-y-1.5">
@@ -480,6 +503,7 @@ export default function DashboardPage() {
                         ))}
                       </div>
                     </div>
+                    <PodcastGrid onSelect={(name) => setUrlInput(`Search: ${name}`)} />
                   </>
                 )}
               </div>
@@ -506,14 +530,60 @@ export default function DashboardPage() {
                 </div>
               </div>
             </>
-          ) : (
+          ) : activeView === "library" ? (
             <div className="flex-1 overflow-auto p-8">
               <LibraryView />
             </div>
+          ) : (
+            <BillingPage />
           )}
         </div>
 
       </div>
+
+      {/* ── Developer Mode Panel ── */}
+      {devMode && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-xl border-t border-orange-500/30">
+          <div className="max-w-full px-6 py-2 flex items-center gap-4">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Terminal size={13} className="text-orange-400" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Dev Mode</span>
+            </div>
+            <label className="flex items-center gap-1.5 cursor-pointer shrink-0">
+              <div
+                onClick={() => setBypassCredits(b => !b)}
+                className={`w-8 h-4 rounded-full transition-colors relative ${
+                  bypassCredits ? "bg-orange-500" : "bg-zinc-700"
+                }`}
+              >
+                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${
+                  bypassCredits ? "translate-x-4" : "translate-x-0.5"
+                }`} />
+              </div>
+              <span className="text-[10px] text-zinc-400">Bypass Credits</span>
+            </label>
+            <div className="flex-1 overflow-x-auto">
+              <div className="flex gap-3 font-mono text-[10px]">
+                {devLogs.length === 0 ? (
+                  <span className="text-zinc-600">No logs yet — run a summary to see API calls here.</span>
+                ) : (
+                  devLogs.slice(0, 5).map((log, i) => (
+                    <span key={i} className={`whitespace-nowrap ${
+                      log.includes("✓") ? "text-emerald-400" : log.includes("✗") ? "text-red-400" : log.includes("⚠") ? "text-yellow-400" : "text-zinc-400"
+                    }`}>{log}</span>
+                  ))
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => setDevLogs([])}
+              className="text-[10px] text-zinc-600 hover:text-zinc-400 shrink-0"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -13,31 +13,42 @@ async function startCheckout(
   setLoading: (v: boolean) => void,
   router: ReturnType<typeof useRouter>
 ) {
-  // Use getUser() — forces a server-side token validation, more reliable than getSession()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (authError) {
-    console.error("[billing] Auth error during upgrade:", authError.message, authError);
+  // 1. Try getSession() first — fast, local
+  let { data: { session } } = await supabase.auth.getSession();
+
+  // 2. If missing or expired, attempt a silent refresh
+  if (!session) {
+    console.log("[billing] Session missing — attempting refresh...");
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.error("[billing] Refresh failed:", refreshError.message);
+    } else {
+      console.log("[billing] Session refreshed successfully.");
+    }
+    session = refreshed.session;
   }
 
-  if (authError || !user) {
-    console.warn("[billing] No authenticated user found — redirecting to login. authError:", authError);
+  // 3. Hard redirect only if both attempts failed
+  if (!session?.user) {
+    console.warn("[billing] No user after refresh — redirecting to login.");
     router.push("/login?returnTo=/dashboard/billing");
     return;
   }
 
-  console.log("[billing] User verified:", user.id, "— starting checkout for priceId:", priceId);
+  console.log("[billing] Session found, proceeding to checkout. User:", session.user.id, "Price:", priceId);
 
   setLoading(true);
   try {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId, userEmail: user.email }),
+      // Pass userId so the checkout route can attach client_reference_id
+      body: JSON.stringify({ priceId, userEmail: session.user.email, userId: session.user.id }),
     });
 
     if (!res.ok) {

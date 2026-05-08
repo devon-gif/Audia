@@ -16,7 +16,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { priceId, userEmail } = body;
+    const { priceId, userEmail, userId: bodyUserId } = body;
 
     // 1. Check for Missing Price ID
     if (!priceId) {
@@ -53,8 +53,8 @@ export async function POST(req: Request) {
       success_url: `${siteUrl}/dashboard?success=true`,
       cancel_url: `${siteUrl}/dashboard/billing`,
       customer_email: user?.email || userEmail || undefined,
-      // client_reference_id links the Stripe session back to our Supabase user
-      client_reference_id: user?.id || undefined,
+      // Prefer server-verified user ID; fall back to client-supplied ID
+      client_reference_id: user?.id || bodyUserId || undefined,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
     });

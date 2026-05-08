@@ -505,20 +505,24 @@ export default function DashboardPage() {
           .then(async (r) => {
             const audioData = await r.json();
             if (!r.ok) {
-              console.error("[audio] /api/summarize/audio error:", r.status, audioData?.error);
-              showToast(`Audio generation failed: ${audioData?.error ?? r.status}`);
+              console.warn("[audio] /api/summarize/audio error:", r.status, audioData?.error);
+              if (r.status === 402) {
+                showToast("Audio generation paused: System capacity reached. Your text summary is ready below.");
+              } else {
+                showToast(`Audio generation failed: ${audioData?.error ?? r.status}`);
+              }
               return;
             }
             if (audioData.audioUrl) {
               setBriefResult((prev) => prev ? { ...prev, briefAudioUrl: audioData.audioUrl } : prev);
               loadTrack({ url: audioData.audioUrl, title: "Audia Brief" });
             } else {
-              console.error("[audio] Response OK but no audioUrl returned:", audioData);
+              console.warn("[audio] Response OK but no audioUrl returned:", audioData);
             }
           })
           .catch((err) => {
-            console.error("[audio] Fetch error:", err);
-            showToast("Audio generation failed — check your connection.");
+            console.warn("[audio] Fetch error:", err);
+            showToast("Audio generation paused — check your connection. Your text summary is ready below.");
           })
           .finally(() => setGeneratingAudio(false));
       }

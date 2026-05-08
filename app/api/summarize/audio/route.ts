@@ -63,7 +63,9 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : "ElevenLabs TTS failed";
     console.error("[audio] TTS error:", msg);
-    return NextResponse.json({ error: msg }, { status: 502 });
+    // 402 from ElevenLabs means quota / billing limit — surface it with its own status
+    const is402 = msg.includes("402") || msg.toLowerCase().includes("payment") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("insufficient");
+    return NextResponse.json({ error: msg }, { status: is402 ? 402 : 502 });
   }
 
   // ── Upload to Supabase Storage ("summaries" bucket) ─────────────────────────

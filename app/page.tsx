@@ -113,8 +113,8 @@ export default function LandingPage() {
             <nav className="hidden md:flex items-center justify-center gap-8">
               <Link href="/#features" className="text-sm text-white/70 hover:text-white transition-colors">Features</Link>
               <Link href="/#hero" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</Link>
-              <Link href="/#integrations" className="text-sm text-white/70 hover:text-white transition-colors">Integrations</Link>
-              <Link href="/changelog" className="text-sm text-white/70 hover:text-white transition-colors">Changelog</Link>
+              <Link href="/#how-it-works" className="text-sm text-white/70 hover:text-white transition-colors">How it Works</Link>
+              <a href="mailto:devon@audia.ai" className="text-sm text-white/70 hover:text-white transition-colors">Contact</a>
             </nav>
             
             {/* Right Actions */}
@@ -122,13 +122,12 @@ export default function LandingPage() {
               <Link href="/login" className="text-sm text-white/70 hover:text-white transition-colors">
                 Log in
               </Link>
-              <button 
-                onClick={() => router.push("/signup")}
-                className="px-5 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm text-white font-semibold hover:bg-white/10 transition-all flex items-center gap-2"
+              <Link
+                href="/signup"
+                className="px-5 py-2.5 bg-[#FF6600]/10 backdrop-blur-md border border-[#FF6600]/30 rounded-full text-sm text-white/80 font-semibold hover:bg-[#FF6600]/20 hover:text-white hover:border-[#FF6600]/50 transition-all"
               >
-                <Download size={16} />
-                Download Mac App
-              </button>
+                Start Free
+              </Link>
             </div>
           </div>
         </header>

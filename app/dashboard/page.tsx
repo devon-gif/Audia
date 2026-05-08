@@ -115,7 +115,29 @@ export default function DashboardPage() {
 
   // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
+const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  };
+  const toastCounter = useRef(0);
 
+  // PASTE THE CODE BELOW THIS LINE:
+  const playVoicePreview = async (voiceName: string) => {
+    try {
+      const response = await fetch('/api/voices/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voice: voiceName }),
+      });
+      if (!response.ok) return;
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.play();
+    } catch (err) {
+      console.error("Preview failed", err);
+    }
+  };
   // Settings modal
   const [showSettings, setShowSettings] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);

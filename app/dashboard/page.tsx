@@ -535,6 +535,17 @@ export default function DashboardPage() {
             {t.sidebar.library}
           </button>
           <button
+            onClick={() => setActiveView("discover")}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+              activeView === "discover"
+                ? "bg-gradient-to-r from-orange-500/20 to-transparent border border-orange-500/30 text-white"
+                : "text-zinc-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Compass size={14} className={activeView === "discover" ? "text-orange-400" : ""} />
+            Discover
+          </button>
+          <button
             onClick={() => setActiveView("billing")}
             className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
               activeView === "billing"
@@ -1019,6 +1030,16 @@ export default function DashboardPage() {
             <div className="px-8 py-6 w-full">
               <LibraryView onPlay={handlePlayLibraryBrief} />
             </div>
+          ) : activeView === "discover" ? (
+            <DiscoverView
+              userId={userId}
+              favoriteRssUrls={favoriteShows}
+              onFavoriteToggle={handleFavoriteToggle}
+              onEpisodeSelect={(audioUrl, title, artwork) => {
+                loadTrack({ url: audioUrl, title, artwork });
+              }}
+              onToast={(msg, type) => showToast(msg, type)}
+            />
           ) : activeView === "help" ? (
             <div className="px-8 py-6 w-full">
               <HelpPage />

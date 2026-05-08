@@ -355,7 +355,10 @@ export default function DashboardPage() {
       if (favoriteShows.size >= limit) {
         const upgradeTarget = planTier === "free" ? "Pro" : "Elite";
         showToast(`Slot limit reached. Upgrade to ${upgradeTarget} to track more shows.`, "error");
-        router.push("/dashboard/billing");(prev => new Set([...prev, feedUrl]));
+        router.push("/dashboard/billing");
+        return;
+      }
+      setFavoriteShows(prev => new Set([...prev, feedUrl]));
       showToast(`${showName} added to automated delivery!`, "info");
     }
   };

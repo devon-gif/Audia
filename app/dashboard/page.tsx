@@ -848,21 +848,27 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Language toggle */}
-                  <div className="flex items-center gap-0.5 bg-white/[0.03] border border-white/10 rounded-full p-0.5">
-                    {(["en", "es"] as TargetLanguage[]).map(lang => (
-                      <button
-                        key={lang}
-                        onClick={() => setOutputLanguage(lang)}
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
-                          outputLanguage === lang
-                            ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]"
-                            : "text-zinc-500 hover:text-zinc-300"
-                        }`}
-                      >
-                        {lang === "en" ? "EN" : "ES"}
-                      </button>
-                    ))}
+                  {/* Output Language toggle */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Output:</span>
+                    <div className="flex items-center gap-0.5 bg-white/[0.03] border border-white/10 rounded-full p-0.5">
+                      {([
+                        { id: "en", label: "English" },
+                        { id: "es", label: "Español" }
+                      ] as const).map(({ id, label }) => (
+                        <button
+                          key={id}
+                          onClick={() => setOutputLanguage(id)}
+                          className={`px-3 py-1 rounded-full text-[10px] font-medium transition-all ${
+                            outputLanguage === id
+                              ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]"
+                              : "text-zinc-500 hover:text-zinc-300"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

@@ -441,6 +441,15 @@ export default function DashboardPage() {
   const handleSummarize = async (overrideUrl?: string) => {
     const targetUrl = (overrideUrl ?? urlInput).trim();
     if (!targetUrl || isSummarizing) return;
+
+    // Credit guardrail — block before even hitting the network
+    const caps: Record<string, number> = { free: 3, pro: 15, max: 100 };
+    const cap = caps[planTier] ?? 3;
+    const isMax = planTier === "max";
+    if (!isMax && !bypassCredits && monthlyGenerations >= cap) {
+      showToast("Out of credits. Please upgrade to Pro.");
+      return;
+    }
     setIsSummarizing(true);
     setBriefResult(null);
     setStageIndex(0);
@@ -475,7 +484,10 @@ export default function DashboardPage() {
         devLog(`✓ DB — record id: ${data.id}`);
       }
       setBriefResult(data as BriefResult);
-      // Load audio into global player if pipeline already produced it
+      // Sync credit count from authoritative server value
+      if (typeof data.newMonthlyGenerations === "number") {
+        setMonthlyGenerations(data.newMonthlyGenerations);
+      }
       if (data.briefAudioUrl) {
         loadTrack({ url: data.briefAudioUrl, title: "Audia Brief" });
       } else {
@@ -510,8 +522,6 @@ export default function DashboardPage() {
           })
           .finally(() => setGeneratingAudio(false));
       }
-      // Optimistically increment local credit counter
-      setMonthlyGenerations(prev => prev + 1);
     } catch (err) {
       showToast((err as Error).message);
     } finally {
@@ -817,7 +827,9 @@ export default function DashboardPage() {
                   const isUrl = trimmed !== "" && /^https?:\/\//i.test(trimmed);
                   const isSearchMode = trimmed !== "" && !isUrl;
                   const handleAction = () => isSearchMode ? handleSearch() : handleSummarize();
-                  const isWorking = isSummarizing || isSearching || trialExpired;
+                  const caps2: Record<string, number> = { free: 3, pro: 15, max: 100 };
+                  const atCreditLimit = planTier !== "max" && !bypassCredits && monthlyGenerations >= (caps2[planTier] ?? 3);
+                  const isWorking = isSummarizing || isSearching || trialExpired || atCreditLimit;
                   return (
                 <div className="flex gap-3 mb-4">
                   <div className="flex-1 relative">

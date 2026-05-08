@@ -81,15 +81,38 @@ export async function POST(request: NextRequest) {
   }
 
   // ── 3. Create a pending DB record ─────────────────────────────────────────
+  const userId = user.id; // captured once — user is non-null past auth check above
   const { data: generation } = await supabase
     .from("audio_generations")
-    .insert({ user_id: user.id, source_url: url, brief_length: length, status: "processing" })
+    .insert({ user_id: userId, source_url: url, brief_length: length, status: "processing" })
     .select("id")
     .single();
 
   const recordId: string | null = generation?.id ?? null;
 
+  // ── 3b. Pre-deduct credit so double-submits can't race past the cap ────────
+  let creditDeducted = false;
+  if (!isDeveloper) {
+    const { error: deductError } = await supabase
+      .from("profiles")
+      .update({ monthly_generations: monthlyGenerations + 1 })
+      .eq("id", userId);
+    if (deductError) {
+      console.error("[summarize] credit deduction failed:", deductError.message);
+    } else {
+      creditDeducted = true;
+      monthlyGenerations += 1; // keep local var in sync
+    }
+  }
+
   async function fail(message: string, httpStatus = 502): Promise<NextResponse> {
+    // Refund the pre-deducted credit on any pipeline failure
+    if (creditDeducted) {
+      await supabase
+        .from("profiles")
+        .update({ monthly_generations: monthlyGenerations - 1 })
+        .eq("id", userId);
+    }
     if (recordId) {
       await supabase
         .from("audio_generations")
@@ -109,7 +132,7 @@ export async function POST(request: NextRequest) {
   try {
     ({ brief, briefAudioUrl, resolvedAudioUrl, transcriptLength } = await runPipeline({
       supabase,
-      userId: user.id,
+      userId,
       sourceUrl: url,
       length,
       voiceId,
@@ -120,19 +143,13 @@ export async function POST(request: NextRequest) {
     return fail((err as Error).message);
   }
 
-  // ── 9. Increment credit counter ───────────────────────────────────────────
-  if (!isDeveloper) {
-    await supabase
-      .from("profiles")
-      .update({ monthly_generations: monthlyGenerations + 1 })
-      .eq("id", user.id);
-  }
-
+  // ── 9. Return — credit was already deducted before pipeline ─────────────
   return NextResponse.json({
     id: recordId,
     brief,
     audioUrl: resolvedAudioUrl,
     briefAudioUrl,
     transcriptLength,
+    newMonthlyGenerations: isDeveloper ? null : monthlyGenerations,
   });
 }

@@ -33,8 +33,15 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll: () => cookieStore.getAll(),
-          setAll: () => {},
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: Record<string, unknown>) {
+            cookieStore.set({ name, value, ...options });
+          },
+          remove(name: string, options: Record<string, unknown>) {
+            cookieStore.set({ name, value: "", ...options });
+          },
         },
       }
     );

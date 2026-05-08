@@ -23,38 +23,39 @@ export default function StereoPlayer() {
   if (!track) {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-center px-4 pb-3 pt-1 pointer-events-none">
-        <div className="relative w-full max-w-3xl bg-black/50 backdrop-blur-xl border border-white/[0.06] rounded-2xl pointer-events-auto">
+        <div className="relative w-full max-w-3xl bg-black/50 backdrop-blur-xl border border-white/[0.06] border-t-white/[0.09] rounded-2xl pointer-events-auto min-h-[68px]">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent rounded-t-2xl" />
           <div className="flex items-center gap-3 px-5 py-3">
             {/* Idle artwork placeholder */}
-            <div className="shrink-0 w-11 h-11 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
-              <Headphones size={17} className="text-zinc-600" />
+            <div className="shrink-0 w-11 h-11 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
+              <Headphones size={17} className="text-zinc-700" />
             </div>
 
             {/* Idle label */}
             <div className="hidden sm:flex flex-col min-w-0 w-36 shrink-0">
-              <span className="text-[11px] font-bold text-zinc-600 truncate leading-tight">No track loaded</span>
+              <span className="text-[11px] font-semibold text-zinc-600 truncate leading-tight">Ready to play…</span>
               <span className="text-[9px] text-zinc-700 uppercase tracking-widest mt-0.5">Audia Player</span>
             </div>
 
             {/* Idle waveform bars */}
             <div className="hidden md:flex items-end gap-[3px] h-5 shrink-0">
               {[3, 5, 8, 6, 10, 7, 4, 9, 5, 3].map((h, i) => (
-                <div key={i} className="w-[3px] rounded-full bg-white/[0.06]" style={{ height: `${h * 2}px` }} />
+                <div key={i} className="w-[3px] rounded-full bg-white/[0.05]" style={{ height: `${h * 2}px` }} />
               ))}
             </div>
 
             {/* Idle transport */}
             <div className="flex items-center gap-1.5 shrink-0 mx-auto">
-              <button disabled className="p-2 rounded-xl text-zinc-800 transition-all cursor-default"><RotateCcw size={15} /></button>
-              <div className="w-11 h-11 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+              <button disabled className="p-2 rounded-xl text-zinc-800 cursor-default"><RotateCcw size={15} /></button>
+              <div className="w-11 h-11 rounded-full bg-white/[0.04] border border-white/[0.07] flex items-center justify-center">
                 <Play size={15} className="text-zinc-700 ml-0.5" />
               </div>
-              <button disabled className="p-2 rounded-xl text-zinc-800 transition-all cursor-default"><RotateCw size={15} /></button>
+              <button disabled className="p-2 rounded-xl text-zinc-800 cursor-default"><RotateCw size={15} /></button>
             </div>
 
             {/* Idle scrubber */}
             <div className="flex-1 min-w-0 hidden sm:block">
-              <div className="h-1.5 bg-white/[0.05] rounded-full" />
+              <div className="h-1.5 bg-white/[0.04] rounded-full" />
               <div className="flex justify-between mt-1">
                 <span className="text-[9px] font-mono text-zinc-800">0:00</span>
                 <span className="text-[9px] font-mono text-zinc-800">--:--</span>

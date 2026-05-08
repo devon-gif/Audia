@@ -580,17 +580,6 @@ export default function DashboardPage() {
             {t.sidebar.library}
           </button>
           <button
-            onClick={() => setActiveView("discover")}
-            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-              activeView === "discover"
-                ? "bg-gradient-to-r from-orange-500/20 to-transparent border border-orange-500/30 text-white"
-                : "text-zinc-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Compass size={14} className={activeView === "discover" ? "text-orange-400" : ""} />
-            Discover
-          </button>
-          <button
             onClick={() => setActiveView("favorites")}
             className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
               activeView === "favorites"
@@ -760,7 +749,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* ── Main content column ── */}
-        <div className="flex-1 flex flex-col overflow-y-auto justify-start items-start">
+        <div className="flex-1 flex flex-col overflow-y-auto justify-start items-start pb-24">
 
         {/* ── View content ── */}
         {activeView === "new-summary" ? (

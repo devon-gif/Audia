@@ -299,8 +299,9 @@ export default function EpisodeVault({
           onClick={handleBackdropClick}
           className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm"
         >
-          <div 
+          <div
             className="relative bg-[#0A0A0A] border border-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
@@ -320,7 +321,7 @@ export default function EpisodeVault({
                 Automatic Summaries
               </h2>
               <p className="text-sm text-zinc-400">
-                We'll automatically summarize new episodes of this show the moment they drop. Where should we send them?
+                We&apos;ll automatically summarize new episodes of this show the moment they drop. Where should we send them?
               </p>
             </div>
 

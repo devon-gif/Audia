@@ -4,6 +4,13 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
+// Visually hidden component for accessibility
+const VisuallyHidden = ({ children }: { children: React.ReactNode }) => (
+  <span className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0">
+    {children}
+  </span>
+);
+
 interface VideoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -48,6 +55,10 @@ export default function VideoModal({
                   className="fixed inset-0 z-[101] flex items-center justify-center p-4 md:p-8"
                 >
                   <div className="relative w-full max-w-4xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.7)]">
+                    {/* Accessible title for screen readers */}
+                    <VisuallyHidden>
+                      <Dialog.Title>Audia Product Demo Video</Dialog.Title>
+                    </VisuallyHidden>
 
                     {/* Close button */}
                     <Dialog.Close asChild>

@@ -451,17 +451,7 @@ export default function LandingPage() {
                   </div>
                 </div>
               
-              {/* Headphones - Positioned bottom-left overlapping sidebar */}
-              <div className="absolute -bottom-6 -left-8 w-52 h-52 pointer-events-none z-10" style={{filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.8)) drop-shadow(0 0 30px rgba(0,0,0,0.6))'}}>
-                <Image
-                  src="/headphones.png"
-                  alt="Premium headphones"
-                  width={192}
-                  height={192}
-                  className="w-full h-full object-contain drop-shadow-2xl opacity-95"
-                  priority
-                />
-              </div>
+
             </>
           ) : (
             <LibraryView />
@@ -480,12 +470,12 @@ export default function LandingPage() {
           </div>
           
           {/* Wall of Content with Radial Mask */}
-          <div className="w-full relative overflow-hidden flex flex-col gap-y-12" style={{ maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' }}>
+          <div className="w-full relative overflow-hidden flex flex-col gap-y-4" style={{ maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
             {/* Row 1 - Slow Left */}
             <div className="flex items-center overflow-hidden">
-              <div className="flex animate-marquee-row-1 gap-x-12">
+              <div className="flex animate-marquee-row-1 gap-x-4">
                 {[...Array(3)].map((_, setIndex) => (
-                  <div key={setIndex} className="flex gap-x-12 shrink-0">
+                  <div key={setIndex} className="flex gap-x-4 shrink-0">
                     {[
                       { name: "Huberman Lab", image: "/huberman.webp" },
                       { name: "Lex Fridman", image: "/Lex.webp" },
@@ -510,9 +500,9 @@ export default function LandingPage() {
             
             {/* Row 2 - Fast Right */}
             <div className="flex items-center overflow-hidden">
-              <div className="flex animate-marquee-row-2 gap-x-12">
+              <div className="flex animate-marquee-row-2 gap-x-4">
                 {[...Array(3)].map((_, setIndex) => (
-                  <div key={setIndex} className="flex gap-x-12 shrink-0">
+                  <div key={setIndex} className="flex gap-x-4 shrink-0">
                     {[
                       { name: "The Futur", image: "/thefutur.webp" },
                       { name: "My First Million", image: "/first million.webp" },
@@ -537,9 +527,9 @@ export default function LandingPage() {
             
             {/* Row 3 - Slow Left */}
             <div className="flex items-center overflow-hidden">
-              <div className="flex animate-marquee-row-3 gap-x-12">
+              <div className="flex animate-marquee-row-3 gap-x-4">
                 {[...Array(3)].map((_, setIndex) => (
-                  <div key={setIndex} className="flex gap-x-12 shrink-0">
+                  <div key={setIndex} className="flex gap-x-4 shrink-0">
                     {[
                       { name: "Smartless", image: "/smartless.webp" },
                       { name: "The Daily", image: "/daily.webp" },
@@ -896,6 +886,18 @@ export default function LandingPage() {
 
             {/* Steps Grid */}
             <div className="relative">
+              {/* Floating headphones — cinematic anchor behind steps */}
+              <div className="hidden md:block absolute -top-16 left-1/2 -translate-x-1/2 w-[380px] h-[380px] pointer-events-none select-none z-0"
+                style={{ filter: 'drop-shadow(0 40px 80px rgba(0,0,0,0.9)) drop-shadow(0 0 60px rgba(255,102,0,0.08))' }}>
+                <Image
+                  src="/headphones.png"
+                  alt=""
+                  width={380}
+                  height={380}
+                  className="w-full h-full object-contain opacity-[0.07] animate-float"
+                />
+              </div>
+
               {/* Connecting line */}
               <div className="hidden md:block absolute top-10 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 

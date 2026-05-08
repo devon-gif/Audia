@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {

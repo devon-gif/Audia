@@ -1,18 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Crown, CreditCard, ArrowRight, Check, Sparkles } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
 
 const PRO_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY;
 const ELITE_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_ELITE_MONTHLY;
 
-async function startCheckout(priceId: string, setLoading: (v: boolean) => void) {
+async function startCheckout(
+  priceId: string,
+  setLoading: (v: boolean) => void,
+  router: ReturnType<typeof useRouter>
+) {
+  // Guard: ensure session is still valid
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    router.push("/login");
+    return;
+  }
+
   setLoading(true);
   try {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId }),
+      body: JSON.stringify({ priceId, userEmail: session.user.email }),
     });
     const data = await res.json();
     if (data.url) {
@@ -28,6 +45,7 @@ async function startCheckout(priceId: string, setLoading: (v: boolean) => void) 
 }
 
 export default function BillingPage() {
+  const router = useRouter();
   const [proLoading, setProLoading] = useState(false);
   const [eliteLoading, setEliteLoading] = useState(false);
   return (
@@ -115,7 +133,7 @@ export default function BillingPage() {
             <button
               type="button"
               disabled={proLoading || !PRO_PRICE_ID}
-              onClick={() => PRO_PRICE_ID && startCheckout(PRO_PRICE_ID, setProLoading)}
+              onClick={() => PRO_PRICE_ID && startCheckout(PRO_PRICE_ID, setProLoading, router)}
               className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl text-white font-bold text-sm hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,120,0,0.3)] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {proLoading ? "Redirecting…" : <><span>Upgrade to Pro</span> <ArrowRight size={15} /></>}
@@ -170,7 +188,7 @@ export default function BillingPage() {
               <button
                 type="button"
                 disabled={eliteLoading || !ELITE_PRICE_ID}
-                onClick={() => ELITE_PRICE_ID && startCheckout(ELITE_PRICE_ID, setEliteLoading)}
+                onClick={() => ELITE_PRICE_ID && startCheckout(ELITE_PRICE_ID, setEliteLoading, router)}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-white/[0.06] hover:bg-white/[0.10] border border-orange-500/40 hover:border-orange-500/70 rounded-xl text-white font-bold text-sm transition-all shadow-[0_0_0_0_rgba(255,120,0,0)] hover:shadow-[0_0_24px_rgba(255,120,0,0.25)] hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {eliteLoading ? "Redirecting…" : <><span>Upgrade to Max</span> <ArrowRight size={15} /></>}

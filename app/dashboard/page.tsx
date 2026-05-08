@@ -355,10 +355,7 @@ export default function DashboardPage() {
       if (favoriteShows.size >= limit) {
         const upgradeTarget = planTier === "free" ? "Pro" : "Elite";
         showToast(`Slot limit reached. Upgrade to ${upgradeTarget} to track more shows.`, "error");
-        router.push("/pricing");
-        return;
-      }
-      setFavoriteShows(prev => new Set([...prev, feedUrl]));
+        router.push("/dashboard/billing");(prev => new Set([...prev, feedUrl]));
       showToast(`${showName} added to automated delivery!`, "info");
     }
   };
@@ -415,7 +412,7 @@ export default function DashboardPage() {
       const data = await res.json();
       if (!res.ok) {
         if (devMode) devLog(`✗ Error ${res.status}: ${data.error}`);
-        if (data.upgradeRequired) router.push("/pricing");
+        if (data.upgradeRequired) router.push("/dashboard/billing");
         throw new Error(data.error ?? "Summarization failed");
       }
       if (devMode) {
@@ -637,8 +634,7 @@ export default function DashboardPage() {
               <span className="text-xs font-bold tracking-widest uppercase text-white">Pro Plan</span>
             </div>
             <button
-              onClick={() => router.push("/pricing")}
-              className="w-full py-1.5 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg text-[10px] text-orange-300 font-semibold transition-all"
+              onClick={() => router.push("/dashboard/billing")} hover:bg-orange-500/30 border border-orange-500/30 rounded-lg text-[10px] text-orange-300 font-semibold transition-all"
             >
               Upgrade
             </button>
@@ -792,7 +788,7 @@ export default function DashboardPage() {
                         Upgrade to Pro to reactivate your intelligence engine and process unlimited episodes.
                       </p>
                       <button
-                        onClick={() => router.push("/pricing")}
+                        onClick={() => router.push("/dashboard/billing")}
                         className="w-full py-3 px-6 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl font-bold text-white text-sm shadow-[0_0_30px_rgba(255,120,0,0.35)] hover:scale-[1.02] transition-all"
                       >
                         Upgrade Now — $4.99/mo
@@ -855,7 +851,7 @@ export default function DashboardPage() {
                         return (
                           <button
                             key={l}
-                            onClick={() => locked ? router.push("/pricing") : setBriefLength(l)}
+                            onClick={() => locked ? router.push("/dashboard/billing") : setBriefLength(l)}
                             title={locked ? "Requires Pro Plan" : undefined}
                             className={`px-3 py-1 rounded-full text-[10px] transition-all flex items-center gap-1 ${
                               locked

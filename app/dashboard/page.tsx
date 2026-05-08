@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import Link from "next/link";
 import DiscoverView from "@/app/components/DiscoverView";
+import FavoritesView from "@/app/components/FavoritesView";
 import LibraryView from "@/app/components/LibraryView";
 import PodcastGrid from "@/app/components/PodcastGrid";
 import BillingPage from "@/app/dashboard/billing/page";
@@ -72,7 +73,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language: uiLanguage, toggleLanguage, t } = useLanguage();
-  const [activeView, setActiveView] = useState<"new-summary" | "library" | "discover" | "billing" | "help">("new-summary");
+  const [activeView, setActiveView] = useState<"new-summary" | "library" | "discover" | "billing" | "help" | "favorites">("new-summary");
   const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   // Check for checkout success
@@ -588,6 +589,17 @@ export default function DashboardPage() {
           >
             <Compass size={14} className={activeView === "discover" ? "text-orange-400" : ""} />
             Discover
+          </button>
+          <button
+            onClick={() => setActiveView("favorites")}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+              activeView === "favorites"
+                ? "bg-gradient-to-r from-orange-500/20 to-transparent border border-orange-500/30 text-white"
+                : "text-zinc-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Star size={14} className={activeView === "favorites" ? "text-orange-400" : ""} />
+            Favorites
           </button>
           <button
             onClick={() => setActiveView("billing")}
@@ -1117,6 +1129,14 @@ export default function DashboardPage() {
             <div className="px-8 py-6 w-full">
               <LibraryView onPlay={handlePlayLibraryBrief} />
             </div>
+          ) : activeView === "favorites" ? (
+            <FavoritesView
+              userId={userId}
+              favoriteShowObjects={favoriteShowObjects}
+              favoriteShows={favoriteShows}
+              onSelectShow={handleShowSelect}
+              onFavoriteToggle={handleFavoriteToggle}
+            />
           ) : activeView === "discover" ? (
             <DiscoverView
               onSelectShow={handleShowSelect}

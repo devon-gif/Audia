@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { AssemblyAI } from "assemblyai";
 import OpenAI from "openai";
 import Parser from "rss-parser";
+import { ElevenLabsClient } from "elevenlabs";
 
 // ─── Clients ──────────────────────────────────────────────────────────────────
 
@@ -13,6 +14,14 @@ const assemblyai = new AssemblyAI({
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
+
+const elevenlabs = new ElevenLabsClient({
+  apiKey: process.env.ELEVENLABS_API_KEY!,
+});
+
+// ElevenLabs voice ID for "Brian" — a steady, authoritative premium voice
+// Switch to your preferred voice ID from the ElevenLabs dashboard if desired
+const ELEVENLABS_VOICE_ID = "nPczCjzI2devNBz1zQrb"; // Brian
 
 const rssParser = new Parser();
 
@@ -160,11 +169,59 @@ Rules:
     return fail(`Distillation failed: ${(err as Error).message}`);
   }
 
-  // ── 7. Mark completed ────────────────────────────────────────────────────
+  // ── 7. Text-to-Speech via ElevenLabs ────────────────────────────────────
+  let briefAudioUrl: string | null = null;
+  try {
+    // Generate audio from the brief text
+    const audioStream = await elevenlabs.textToSpeech.convert(ELEVENLABS_VOICE_ID, {
+      text: brief,
+      model_id: "eleven_turbo_v2_5",
+      voice_settings: {
+        stability: 0.75,
+        similarity_boost: 0.85,
+        style: 0.2,
+        use_speaker_boost: true,
+      },
+    });
+
+    // Collect the stream into a buffer
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of audioStream) {
+      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    }
+    const audioBuffer = Buffer.concat(chunks);
+
+    // Upload to Supabase Storage — audio-briefs bucket
+    const fileName = `${user.id}/${recordId ?? Date.now()}.mp3`;
+    const { error: uploadError } = await supabase.storage
+      .from("audio-briefs")
+      .upload(fileName, audioBuffer, {
+        contentType: "audio/mpeg",
+        upsert: true,
+      });
+
+    if (!uploadError) {
+      const { data: publicUrlData } = supabase.storage
+        .from("audio-briefs")
+        .getPublicUrl(fileName);
+      briefAudioUrl = publicUrlData.publicUrl;
+    } else {
+      console.warn("[summarize] Storage upload failed:", uploadError.message);
+    }
+  } catch (err) {
+    // TTS is non-fatal — we still return the text brief
+    console.warn("[summarize] ElevenLabs TTS failed:", (err as Error).message);
+  }
+
+  // ── 8. Mark completed ────────────────────────────────────────────────────
   if (recordId) {
     await supabase
       .from("audio_generations")
-      .update({ summary_text: brief, status: "completed" })
+      .update({
+        summary_text: brief,
+        brief_audio_url: briefAudioUrl,
+        status: "completed",
+      })
       .eq("id", recordId);
   }
 
@@ -172,6 +229,7 @@ Rules:
     id: recordId,
     brief,
     audioUrl,
+    briefAudioUrl,
     transcriptLength: transcript.length,
   });
 }

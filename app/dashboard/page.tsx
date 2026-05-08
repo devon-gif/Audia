@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, ArrowRight, Play, FileText, Layout, Star, Sparkles,
@@ -32,6 +32,7 @@ type BriefResult = {
   id: string | null;
   brief: string;
   audioUrl: string;
+  briefAudioUrl: string | null;
   transcriptLength: number;
 };
 
@@ -50,6 +51,10 @@ export default function DashboardPage() {
   const [stageIndex, setStageIndex] = useState(0);
   const [briefResult, setBriefResult] = useState<BriefResult | null>(null);
   const [summarizeError, setSummarizeError] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -68,6 +73,18 @@ export default function DashboardPage() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/");
+  };
+
+  const toggleAudio = () => {
+    const el = audioRef.current;
+    if (!el) return;
+    if (isPlaying) { el.pause(); setIsPlaying(false); }
+    else { el.play(); setIsPlaying(true); }
+  };
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   };
 
   const handleSummarize = async () => {
@@ -284,14 +301,87 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {/* Results: Deep Signal Brief */}
+                {/* Results: Deep Signal Brief + Audio Player */}
                 {briefResult ? (
-                  <div className="space-y-3">
+                  <div className={`space-y-3 transition-all duration-700 ${briefResult ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deep Signal Brief</span>
                       <span className="text-[10px] text-zinc-500 font-mono">{(briefResult.transcriptLength / 5 / 60).toFixed(0)} min transcript</span>
                     </div>
-                    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-5 max-h-[340px] overflow-y-auto">
+
+                    {/* Deep-glass audio player — only shown when TTS audio exists */}
+                    {briefResult.briefAudioUrl && (
+                      <>
+                        <audio
+                          ref={audioRef}
+                          src={briefResult.briefAudioUrl}
+                          onTimeUpdate={(e) => setAudioProgress(e.currentTarget.currentTime)}
+                          onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
+                          onEnded={() => setIsPlaying(false)}
+                        />
+                        <div className={`relative bg-black/50 backdrop-blur-2xl border rounded-2xl p-5 transition-all duration-500 ${
+                          isPlaying
+                            ? 'border-orange-500/40 shadow-[0_0_40px_rgba(255,102,0,0.2)]'
+                            : 'border-white/10'
+                        }`}>
+                          {/* Pulsing ambient glow while playing */}
+                          {isPlaying && (
+                            <div className="absolute inset-0 rounded-2xl bg-orange-500/5 animate-pulse pointer-events-none" />
+                          )}
+                          <div className="relative z-10 flex items-center gap-4">
+                            {/* Play/Pause button */}
+                            <button
+                              onClick={toggleAudio}
+                              className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
+                                isPlaying
+                                  ? 'bg-orange-500 shadow-[0_0_20px_rgba(255,102,0,0.5)] scale-105'
+                                  : 'bg-white/10 border border-white/20 hover:bg-white/20'
+                              }`}
+                            >
+                              {isPlaying ? (
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
+                                  <rect x="3" y="2" width="4" height="12" rx="1"/>
+                                  <rect x="9" y="2" width="4" height="12" rx="1"/>
+                                </svg>
+                              ) : (
+                                <Play size={16} fill="white" className="text-white ml-0.5" />
+                              )}
+                            </button>
+
+                            {/* Waveform progress */}
+                            <div className="flex-1">
+                              <div
+                                className="h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer"
+                                onClick={(e) => {
+                                  if (!audioRef.current || !audioDuration) return;
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  audioRef.current.currentTime = ((e.clientX - rect.left) / rect.width) * audioDuration;
+                                }}
+                              >
+                                <div
+                                  className="h-full bg-gradient-to-r from-[#FF7A00] to-[#FF4400] rounded-full transition-all duration-100"
+                                  style={{ width: audioDuration ? `${(audioProgress / audioDuration) * 100}%` : '0%' }}
+                                />
+                              </div>
+                              <div className="flex justify-between mt-1.5">
+                                <span className="text-[10px] font-mono text-zinc-500">{formatTime(audioProgress)}</span>
+                                <span className="text-[10px] font-mono text-orange-500/80 uppercase tracking-widest">
+                                  {isPlaying ? 'Playing Brief…' : 'Audia Brief'}
+                                </span>
+                                <span className="text-[10px] font-mono text-zinc-500">{audioDuration ? formatTime(audioDuration) : '--:--'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Brief text card */}
+                    <div className={`bg-white/[0.02] border rounded-xl p-5 max-h-[280px] overflow-y-auto transition-all duration-500 ${
+                      briefResult.briefAudioUrl && isPlaying
+                        ? 'border-orange-500/20 shadow-[0_0_30px_rgba(255,102,0,0.08)]'
+                        : 'border-white/5'
+                    }`}>
                       <pre className="text-[12px] text-zinc-300 leading-relaxed whitespace-pre-wrap font-sans">{briefResult.brief}</pre>
                     </div>
                   </div>

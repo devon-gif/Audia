@@ -7,7 +7,7 @@ import {
   Search, Mic, Layout, Share2, ArrowRight, Play, Pause,
   FileText, ArrowLeft, Download, Zap, Headphones, Shield, Sparkles, Star, Check,
   Clock, Volume2, Lock, User, Users, HelpCircle, Activity, Speaker, Crown, SkipBack, SkipForward,
-  Link as LinkIcon, Globe, Quote
+  Link as LinkIcon, Globe, Quote, Bell, Timer, PlusCircle
 } from "lucide-react";
 import Link from "next/link";
 import LibraryView from "./components/LibraryView";
@@ -888,52 +888,55 @@ export default function LandingPage() {
         <section id="features" className="py-32 bg-black relative">
           <div className="max-w-6xl mx-auto px-6 md:px-12">
             <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                From raw audio to refined intelligence in seconds.
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-orange-500 mb-4 block">How It Works</span>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
+                Your favorite shows, summarized<br />on autopilot.
               </h2>
             </div>
-            
-            {/* Steps Grid with connecting line */}
+
+            {/* Steps Grid */}
             <div className="relative">
               {/* Connecting line */}
-              <div className="hidden md:block absolute top-16 left-[16.67%] right-[16.67%] h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-              
+              <div className="hidden md:block absolute top-10 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
-                {/* Step 1 */}
-                <div className="text-center relative">
-                  <div className="w-12 h-12 bg-white/[0.05] border border-white/10 rounded-xl flex items-center justify-center mx-auto mb-6 relative z-10">
-                    <LinkIcon size={20} className="text-orange-400" />
+
+                {/* Step 1 — Subscribe */}
+                <div className="text-center relative group">
+                  <div className="w-16 h-16 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 relative z-10 group-hover:border-orange-500/40 group-hover:bg-orange-500/5 transition-all duration-300">
+                    <PlusCircle size={26} className="text-orange-400" />
                   </div>
-                  <div className="text-xs text-orange-500 font-semibold uppercase tracking-wider mb-2">Step 1</div>
-                  <h3 className="text-xl font-semibold text-white mb-3">Drop the Source</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    Paste any Apple Podcast, Spotify, or YouTube URL. Audia bypasses the download and instantly connects to the feed.
+                  <div className="text-[10px] text-orange-500 font-bold uppercase tracking-[0.25em] mb-3">Step 01</div>
+                  <h3 className="text-xl font-black tracking-tighter text-white mb-3">Subscribe</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto">
+                    Follow your favorite podcasts. Audia tracks every new episode the second it drops — no manual searching required.
                   </p>
                 </div>
-                
-                {/* Step 2 */}
-                <div className="text-center relative">
-                  <div className="w-12 h-12 bg-white/[0.05] border border-white/10 rounded-xl flex items-center justify-center mx-auto mb-6 relative z-10">
-                    <Activity size={20} className="text-orange-400" />
+
+                {/* Step 2 — Set Your Depth */}
+                <div className="text-center relative group">
+                  <div className="w-16 h-16 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 relative z-10 group-hover:border-orange-500/40 group-hover:bg-orange-500/5 transition-all duration-300">
+                    <Timer size={26} className="text-orange-400" />
                   </div>
-                  <div className="text-xs text-orange-500 font-semibold uppercase tracking-wider mb-2">Step 2</div>
-                  <h3 className="text-xl font-semibold text-white mb-3">Neural Processing</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    Our engine cleans the audio, identifies multiple speakers, and extracts context with near-perfect accuracy.
+                  <div className="text-[10px] text-orange-500 font-bold uppercase tracking-[0.25em] mb-3">Step 02</div>
+                  <h3 className="text-xl font-black tracking-tighter text-white mb-3">Set Your Depth</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto">
+                    Choose your summary length — 3, 5, or 10 min. We tailor the neural audio brief to fit your exact commute.
                   </p>
                 </div>
-                
-                {/* Step 3 */}
-                <div className="text-center relative">
-                  <div className="w-12 h-12 bg-white/[0.05] border border-white/10 rounded-xl flex items-center justify-center mx-auto mb-6 relative z-10">
-                    <Sparkles size={20} className="text-orange-400" />
+
+                {/* Step 3 — Get Notified */}
+                <div className="text-center relative group">
+                  <div className="w-16 h-16 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 relative z-10 group-hover:border-orange-500/40 group-hover:bg-orange-500/5 transition-all duration-300">
+                    <Bell size={26} className="text-orange-400" />
                   </div>
-                  <div className="text-xs text-orange-500 font-semibold uppercase tracking-wider mb-2">Step 3</div>
-                  <h3 className="text-xl font-semibold text-white mb-3">Listen to the Signal</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    Hit play. Audia generates a highly produced, 5-minute neural audio brief of your episode, complete with a text transcript and timestamped citations.
+                  <div className="text-[10px] text-orange-500 font-bold uppercase tracking-[0.25em] mb-3">Step 03</div>
+                  <h3 className="text-xl font-black tracking-tighter text-white mb-3">Get Notified</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto">
+                    Relax. We&apos;ll ping your phone or inbox with your custom brief the moment it&apos;s ready. No manual work required.
                   </p>
                 </div>
+
               </div>
             </div>
           </div>

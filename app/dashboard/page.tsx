@@ -67,11 +67,12 @@ type BriefResult = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { language, toggleLanguage, t } = useLanguage();
+  const { language: uiLanguage, toggleLanguage, t } = useLanguage();
   const [activeView, setActiveView] = useState<"new-summary" | "library" | "billing" | "help">("new-summary");
   const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Rachel");
   const [voiceOpen, setVoiceOpen] = useState(false);
-  const [targetLanguage, setTargetLanguage] = useState<TargetLanguage>("en");
+  const [outputLanguage, setOutputLanguage] = useState<TargetLanguage>("en");
+  const [outputLangOpen, setOutputLangOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>("trialing");
@@ -371,7 +372,7 @@ export default function DashboardPage() {
           length: briefLength,
           bypassCredits,
           voiceId: voices.find(v => v.id === selectedVoice)?.elevenLabsId,
-          targetLanguage,
+          targetLanguage: outputLanguage,
         }),
       });
       const data = await res.json();
@@ -683,7 +684,7 @@ export default function DashboardPage() {
                     className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors"
                   >
                     <Globe size={14} />
-                    <span className="font-medium">{language === "en" ? "EN" : "ES"}</span>
+                    <span className="font-medium">{uiLanguage === "en" ? "EN" : "ES"}</span>
                   </button>
                   <div className="flex items-center gap-1.5 text-[10px] text-emerald-400">
                     <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
@@ -852,9 +853,9 @@ export default function DashboardPage() {
                     {(["en", "es"] as TargetLanguage[]).map(lang => (
                       <button
                         key={lang}
-                        onClick={() => setTargetLanguage(lang)}
+                        onClick={() => setOutputLanguage(lang)}
                         className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
-                          targetLanguage === lang
+                          outputLanguage === lang
                             ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]"
                             : "text-zinc-500 hover:text-zinc-300"
                         }`}

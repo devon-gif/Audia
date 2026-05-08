@@ -32,7 +32,7 @@ ELITE_PRICE_IDS.forEach((id) => { if (id) TIER_MAP[id] = { tier: "elite", favori
 // ─── Stripe + Supabase clients ────────────────────────────────────────────────
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-12-18.acacia",
+  apiVersion: "2026-04-22.dahlia",
 });
 
 // Service-role client — bypasses RLS so we can write to profiles
@@ -61,9 +61,10 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-  } catch (err: any) {
-    console.error("[STRIPE WEBHOOK] Signature verification failed:", err.message);
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[STRIPE WEBHOOK] Signature verification failed:", message);
+    return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
   }
 
   console.log(`[STRIPE WEBHOOK] Received event: ${event.type} (${event.id})`);
@@ -112,7 +113,9 @@ export async function POST(req: Request) {
 
     // ── Affiliate / promotion code tracking ───────────────────────────────
     try {
-      const discounts = (fullSession.total_details as any)?.breakdown?.discounts ?? [];
+      type DiscountEntry = { discount?: { promotion_code?: string | { code?: string } } };
+      const breakdown = (fullSession.total_details as { breakdown?: { discounts?: DiscountEntry[] } } | null)?.breakdown;
+      const discounts: DiscountEntry[] = breakdown?.discounts ?? [];
       for (const d of discounts) {
         const promoCode: string | undefined =
           typeof d.discount?.promotion_code === "object"

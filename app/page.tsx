@@ -554,13 +554,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* --- LIVE ENGINE INTERACTIVE DEMO --- */}
-        <section className="py-16 relative overflow-hidden">
-          <div className="max-w-6xl mx-auto px-6 md:px-12">
-            </div>
-          </div>
-        </section>
-
         {/* --- PASSIVE INTELLIGENCE: HOW IT WORKS --- */}
         <section id="how-it-works" className="py-32 bg-black relative overflow-hidden">
           {/* Ambient background glow */}

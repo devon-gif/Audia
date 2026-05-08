@@ -83,8 +83,17 @@ export default function PricingPage() {
   }, []);
 
   const handleCheckout = async (plan: PricingPlan) => {
-    if (plan.id === "free") {
+    // Check if user is logged in
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      // Not logged in - redirect to signup
       router.push("/signup");
+      return;
+    }
+
+    if (plan.id === "free") {
+      router.push("/dashboard");
       return;
     }
 
@@ -92,7 +101,7 @@ export default function PricingPage() {
     
     if (!priceId) {
       console.error("Price ID not configured for", plan.id, billingCycle);
-      router.push("/signup");
+      alert("Pricing not configured. Please contact support.");
       return;
     }
 
@@ -104,7 +113,7 @@ export default function PricingPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ priceId, userEmail }),
+        body: JSON.stringify({ priceId, userEmail: user.email }),
       });
 
       const data = await response.json();
@@ -115,7 +124,7 @@ export default function PricingPage() {
 
       if (data.url) {
         // Redirect to Stripe checkout
-        window.location.href = data.url;
+        window.location.assign(data.url);
       } else {
         throw new Error("No checkout URL returned");
       }
@@ -284,7 +293,7 @@ export default function PricingPage() {
                     {isLoading ? (
                       <>
                         <Loader2 size={18} className="animate-spin" />
-                        Redirecting to Secure Checkout...
+                        Processing...
                       </>
                     ) : (
                       plan.id === "free" ? "Get Started" : billingCycle === "yearly" ? "START YEARLY PLAN" : "Upgrade to " + plan.name

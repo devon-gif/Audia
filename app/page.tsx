@@ -134,7 +134,7 @@ export default function LandingPage() {
         </header>
 
         {/* --- COMMAND CENTER HERO --- */}
-        <section className="relative h-screen w-full flex flex-col items-center justify-center pt-36 pb-8 overflow-hidden">
+        <section className="relative h-screen w-full flex flex-col items-center justify-center pt-40 pb-8 overflow-hidden">
           
           {/* Video Backdrop with Mask */}
           <div className="absolute inset-0 z-0 overflow-hidden">
@@ -231,7 +231,7 @@ export default function LandingPage() {
               />
               
               {/* Scaled Dashboard Container */}
-              <div className="bg-white/[0.03] backdrop-blur-[60px] border border-white/10 rounded-3xl overflow-hidden shadow-2xl transform scale-[0.78] origin-top">
+              <div className="bg-white/[0.03] backdrop-blur-[60px] border border-white/10 rounded-3xl overflow-hidden shadow-2xl transform scale-[0.82] origin-top">
                 {/* Dashboard Content - Simplified Preview */}
                 <div className="flex min-h-[500px]">
                   

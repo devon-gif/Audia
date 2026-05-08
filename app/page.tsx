@@ -150,7 +150,7 @@ export default function LandingPage() {
                 WebkitMaskImage: 'radial-gradient(circle at center, black 40%, transparent 90%)',
               }}
             >
-              <source src="/Seedance 2_0 - A high-end_ cinematic ambient background loop_ Subtle_ slow-moving golden light beams.mp4" type="video/mp4" />
+              <source src="/hero-background.mp4" type="video/mp4" />
             </video>
             {/* Dark overlay */}
             <div className="absolute inset-0 bg-black/40 pointer-events-none" />
@@ -546,9 +546,9 @@ export default function LandingPage() {
                       { name: "Business Wars", image: "/businesswars.webp" },
                       { name: "All-In", image: "/all-in.webp" },
                       { name: "HBR IdeaCast", image: "/ideacast.webp" },
-                      { name: "Smartless", image: "/smartless.webp" },
-                      { name: "The Daily", image: "/daily.webp" },
-                      { name: "Business Wars", image: "/businesswars.webp" },
+                      { name: "Naval", image: "/Naval.webp" },
+                      { name: "Conan", image: "/conan.webp" },
+                      { name: "Impact Theory", image: "/impact.webp" },
                     ].map((podcast, i) => (
                       <div 
                         key={`r3-${setIndex}-${i}`} 

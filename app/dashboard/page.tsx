@@ -842,6 +842,15 @@ export default function DashboardPage() {
                       <>SUMMARIZE <ArrowRight size={14} /></>
                     )}
                   </button>
+                  {/* Cancel button — only visible while working */}
+                  {isSummarizing && (
+                    <button
+                      onClick={() => { setIsSummarizing(false); setStageIndex(0); }}
+                      className="px-4 py-3 rounded-xl text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-semibold transition-all"
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </div>
                   );
                 })()}

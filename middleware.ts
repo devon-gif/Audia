@@ -38,6 +38,11 @@ export async function middleware(request: NextRequest) {
   // Refresh the session on every request (keeps tokens alive)
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Redirect authenticated users away from auth pages
+  if (user && (pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
   // Guard /dashboard routes
   if (pathname.startsWith("/dashboard") && !user) {
     const loginUrl = new URL("/login", request.url);

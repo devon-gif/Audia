@@ -68,14 +68,14 @@ export async function POST(request: NextRequest) {
   );
 
   // ── 2. Parse & validate body ──────────────────────────────────────────────
-  let body: { url?: string; length?: "3m" | "5m" | "10m"; voiceId?: string; bypassCredits?: boolean };
+  let body: { url?: string; length?: "3m" | "5m" | "10m"; voiceId?: string; bypassCredits?: boolean; targetLanguage?: "en" | "es" };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { url, length = "5m", voiceId = DEFAULT_VOICE_ID } = body;
+  const { url, length = "5m", voiceId = DEFAULT_VOICE_ID, targetLanguage = "en" } = body;
   if (!url || typeof url !== "string") {
     return NextResponse.json({ error: 'Missing required field: "url"' }, { status: 400 });
   }
@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
       sourceUrl: url,
       length,
       voiceId,
+      targetLanguage,
       recordId,
     }));
   } catch (err) {

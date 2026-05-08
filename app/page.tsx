@@ -59,7 +59,15 @@ export default function LandingPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"idle" | "searching" | "found">("idle");
   const [soundOn, setSoundOn] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState<"maya" | "caleb">("maya");
+  type VoiceName = "Marcus" | "Sarah" | "George" | "Charlotte";
+  const voices: { id: VoiceName; label: string; desc: string; initial: string; gradient: string }[] = [
+    { id: "Marcus",   label: "Marcus (US)",   desc: "US Male • Authoritative",    initial: "M", gradient: "from-blue-500 to-blue-700" },
+    { id: "Sarah",    label: "Sarah (US)",    desc: "US Female • Conversational", initial: "S", gradient: "from-pink-500 to-pink-700" },
+    { id: "George",   label: "George (UK)",   desc: "UK Male • Analytical",       initial: "G", gradient: "from-green-500 to-green-700" },
+    { id: "Charlotte",label: "Charlotte (UK)",desc: "UK Female • Sophisticated",  initial: "C", gradient: "from-purple-500 to-purple-700" },
+  ];
+  const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Marcus");
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const [activeView, setActiveView] = useState<"new-summary" | "library">("new-summary");
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const router = useRouter();
@@ -95,14 +103,14 @@ export default function LandingPage() {
         
         {/* --- FULL-WIDTH GLASS HEADER --- */}
         <header className="absolute top-0 left-0 right-0 z-50 py-6 px-6 md:px-12">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="max-w-7xl mx-auto grid grid-cols-3 items-center">
             {/* Logo */}
             <div className="text-2xl font-bold tracking-tight text-white font-mono cursor-pointer" onClick={handleReset}>
-              Audia.
+              Audia<span className="text-[#FF6600]">.</span>
             </div>
             
             {/* Center Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex items-center justify-center gap-8">
               <Link href="/#features" className="text-sm text-white/70 hover:text-white transition-colors">Features</Link>
               <Link href="/#pricing" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</Link>
               <Link href="/#integrations" className="text-sm text-white/70 hover:text-white transition-colors">Integrations</Link>
@@ -110,7 +118,7 @@ export default function LandingPage() {
             </nav>
             
             {/* Right Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-end gap-4">
               <Link href="/login" className="text-sm text-white/70 hover:text-white transition-colors">
                 Log in
               </Link>
@@ -126,7 +134,7 @@ export default function LandingPage() {
         </header>
 
         {/* --- COMMAND CENTER HERO --- */}
-        <section className="relative h-screen w-full flex flex-col items-center justify-center pt-24 pb-8 overflow-hidden">
+        <section className="relative h-screen w-full flex flex-col items-center justify-center pt-36 pb-8 overflow-hidden">
           
           {/* Video Backdrop with Mask */}
           <div className="absolute inset-0 z-0 overflow-hidden">
@@ -188,23 +196,33 @@ export default function LandingPage() {
             </div>
             
             {/* CTA Buttons */}
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <button 
-                onClick={() => router.push("/signup")}
-                className="px-8 py-4 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-full text-white font-semibold text-base flex items-center gap-2 hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,122,0,0.5)]"
-              >
-                START FREE TRIAL <ArrowRight size={18} />
-              </button>
-              <button 
-                onClick={() => setStatus("found")}
-                className="px-8 py-4 bg-black/50 backdrop-blur-md border border-white/20 rounded-full text-white font-medium text-base flex items-center gap-2 hover:bg-white/10 transition-all"
-              >
-                <Play size={18} fill="white" /> See How It Works
-              </button>
+            <div className="flex flex-col items-center gap-3 mb-8">
+              <div className="flex items-center justify-center gap-4">
+                <button 
+                  onClick={() => router.push("/signup")}
+                  className="px-8 py-4 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-full text-white font-semibold text-base flex items-center gap-2 hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,122,0,0.5)]"
+                >
+                  START FREE TRIAL <ArrowRight size={18} />
+                </button>
+                <button 
+                  onClick={() => setStatus("found")}
+                  className="px-8 py-4 bg-black/50 backdrop-blur-md border border-white/20 rounded-full text-white font-medium text-base flex items-center gap-2 hover:bg-white/10 transition-all"
+                >
+                  <Play size={18} fill="white" /> See How It Works
+                </button>
+              </div>
+              {/* Trust micro-copy */}
+              <p className="text-xs text-zinc-500 flex items-center gap-2">
+                <span>No credit card required</span>
+                <span className="text-zinc-700">•</span>
+                <span>7-day free trial</span>
+                <span className="text-zinc-700">•</span>
+                <span>Cancel anytime</span>
+              </p>
             </div>
             
             {/* Dashboard Preview - Scaled Down */}
-            <div className="relative w-full max-w-5xl">
+            <div className="relative w-full max-w-6xl">
               {/* Film Grain Overlay */}
               <div className="absolute inset-0 z-[2] pointer-events-none opacity-[0.03] rounded-3xl" 
                 style={{
@@ -213,7 +231,7 @@ export default function LandingPage() {
               />
               
               {/* Scaled Dashboard Container */}
-              <div className="bg-white/[0.03] backdrop-blur-[60px] border border-white/10 rounded-3xl overflow-hidden shadow-2xl transform scale-[0.65] origin-top">
+              <div className="bg-white/[0.03] backdrop-blur-[60px] border border-white/10 rounded-3xl overflow-hidden shadow-2xl transform scale-[0.78] origin-top">
                 {/* Dashboard Content - Simplified Preview */}
                 <div className="flex min-h-[500px]">
                   
@@ -304,62 +322,38 @@ export default function LandingPage() {
                       </div>
                       
                       {/* Voice Selector */}
-                      <div className="relative group">
-                        <button className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/10 rounded-full text-sm text-zinc-300 transition-all">
+                      <div className="relative">
+                        <button
+                          onClick={() => setVoiceOpen(o => !o)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/10 rounded-full text-zinc-300 transition-all"
+                        >
                           <Speaker size={14} />
-                          <span className="text-[10px]">Voice: Marcus (US)</span>
-                          <ArrowRight size={12} className="rotate-90" />
+                          <span className="text-[10px]">Voice: {voices.find(v => v.id === selectedVoice)?.label}</span>
+                          <ArrowRight size={12} className={`transition-transform ${voiceOpen ? "-rotate-90" : "rotate-90"}`} />
                         </button>
-                        
+
                         {/* Dropdown Menu */}
-                        <div className="absolute top-full left-0 mt-2 w-56 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl p-2 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all z-50">
-                          <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2 px-2">Select Voice</div>
-                          
-                          {/* Marcus */}
-                          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-[10px] font-bold">M</div>
-                              <div className="text-left">
-                                <div className="text-xs text-white">Marcus</div>
-                                <div className="text-[10px] text-zinc-500">US Male • Authoritative</div>
-                              </div>
-                            </div>
-                            <Check size={14} className="text-[#FF6600]" />
-                          </button>
-                          
-                          {/* Sarah */}
-                          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-gradient-to-br from-pink-500 to-pink-700 rounded-full flex items-center justify-center text-[10px] font-bold">S</div>
-                              <div className="text-left">
-                                <div className="text-xs text-white">Sarah</div>
-                                <div className="text-[10px] text-zinc-500">US Female • Conversational</div>
-                              </div>
-                            </div>
-                          </button>
-                          
-                          {/* George */}
-                          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-[10px] font-bold">G</div>
-                              <div className="text-left">
-                                <div className="text-xs text-white">George</div>
-                                <div className="text-[10px] text-zinc-500">UK Male • Analytical</div>
-                              </div>
-                            </div>
-                          </button>
-                          
-                          {/* Charlotte */}
-                          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-[10px] font-bold">C</div>
-                              <div className="text-left">
-                                <div className="text-xs text-white">Charlotte</div>
-                                <div className="text-[10px] text-zinc-500">UK Female • Sophisticated</div>
-                              </div>
-                            </div>
-                          </button>
-                        </div>
+                        {voiceOpen && (
+                          <div className="absolute top-full left-0 mt-2 w-56 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl p-2 z-50">
+                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2 px-2">Select Voice</div>
+                            {voices.map(v => (
+                              <button
+                                key={v.id}
+                                onClick={() => { setSelectedVoice(v.id); setVoiceOpen(false); }}
+                                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-6 h-6 bg-gradient-to-br ${v.gradient} rounded-full flex items-center justify-center text-[10px] font-bold text-white`}>{v.initial}</div>
+                                  <div className="text-left">
+                                    <div className="text-xs text-white">{v.id}</div>
+                                    <div className="text-[10px] text-zinc-500">{v.desc}</div>
+                                  </div>
+                                </div>
+                                {selectedVoice === v.id && <Check size={14} className="text-[#FF6600]" />}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -422,7 +416,6 @@ export default function LandingPage() {
                     </div>
                     
                   </div>
-                </div>
                 
                 {/* Audio Player Bar */}
                 <div className="bg-black/40 border-t border-white/5 px-5 py-3">
@@ -445,7 +438,6 @@ export default function LandingPage() {
                     <span className="text-[10px] text-zinc-400">1.25x</span>
                   </div>
                 </div>
-              </div>
               
               {/* Headphones - Positioned on Dashboard Corner */}
               <div className="absolute -bottom-4 -right-8 w-48 h-48 pointer-events-none z-10">
@@ -465,6 +457,8 @@ export default function LandingPage() {
         </div>
       </div>
     </div>
+  </div>
+</div>
   </section>
 
   {/* --- HOW IT WORKS --- */}
@@ -639,7 +633,7 @@ export default function LandingPage() {
                     </div>
                     <div className="flex justify-between text-xs text-orange-100/40 mt-1 font-mono">
                       <span>0:00</span>
-                      <span>{selectedVoice === 'maya' ? 'Maya - Smooth' : 'Caleb - Deep'}</span>
+                      <span>{voices.find(v => v.id === selectedVoice)?.label ?? selectedVoice}</span>
                       <span>4:12</span>
                     </div>
                   </div>
@@ -647,16 +641,16 @@ export default function LandingPage() {
                   {/* Voice Selector */}
                   <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1">
                     <button 
-                      onClick={() => { setSelectedVoice('maya'); setVoiceProcessing(true); setTimeout(() => setVoiceProcessing(false), 1500); }}
-                      className={`px-3 py-1 rounded-md text-xs font-mono transition-all ${selectedVoice === 'maya' ? 'bg-orange-500/20 text-orange-400' : 'text-zinc-400 hover:text-white'}`}
+                      onClick={() => { setSelectedVoice('Marcus'); setVoiceProcessing(true); setTimeout(() => setVoiceProcessing(false), 1500); }}
+                      className={`px-3 py-1 rounded-md text-xs font-mono transition-all ${selectedVoice === 'Marcus' ? 'bg-orange-500/20 text-orange-400' : 'text-zinc-400 hover:text-white'}`}
                     >
-                      Maya
+                      Marcus
                     </button>
                     <button 
-                      onClick={() => { setSelectedVoice('caleb'); setVoiceProcessing(true); setTimeout(() => setVoiceProcessing(false), 1500); }}
-                      className={`px-3 py-1 rounded-md text-xs font-mono transition-all ${selectedVoice === 'caleb' ? 'bg-orange-500/20 text-orange-400' : 'text-zinc-400 hover:text-white'}`}
+                      onClick={() => { setSelectedVoice('Sarah'); setVoiceProcessing(true); setTimeout(() => setVoiceProcessing(false), 1500); }}
+                      className={`px-3 py-1 rounded-md text-xs font-mono transition-all ${selectedVoice === 'Sarah' ? 'bg-orange-500/20 text-orange-400' : 'text-zinc-400 hover:text-white'}`}
                     >
-                      Caleb
+                      Sarah
                     </button>
                   </div>
                   

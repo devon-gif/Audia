@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { supabase } from "@/utils/supabase/client";
+
 // Google Icon
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
@@ -25,12 +28,29 @@ const MicrosoftIcon = () => (
 );
 
 export default function OAuthButtons() {
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    // browser will redirect; no need to reset state
+  };
+
   return (
     <div className="space-y-3">
       {/* Google */}
-      <button className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/[0.02] border border-white/10 rounded-full text-zinc-300 hover:bg-white/5 transition-all">
+      <button
+        onClick={handleGoogle}
+        disabled={googleLoading}
+        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/[0.02] border border-white/10 rounded-full text-zinc-300 hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      >
         <GoogleIcon />
-        <span className="text-sm font-medium">Continue with Google</span>
+        <span className="text-sm font-medium">
+          {googleLoading ? "Authenticating..." : "Continue with Google"}
+        </span>
       </button>
       
       {/* Apple */}

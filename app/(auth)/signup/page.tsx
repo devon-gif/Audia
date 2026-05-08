@@ -1,28 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthCard from "@/app/components/AuthCard";
 import OAuthButtons from "@/app/components/OAuthButtons";
 import Divider from "@/app/components/Divider";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { supabase } from "@/utils/supabase/client";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: ""
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const { error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+    });
     setIsSubmitting(false);
-    // Redirect to dashboard
-    window.location.href = "/";
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    router.push("/dashboard");
   };
 
   return (
@@ -78,6 +85,11 @@ export default function SignupPage() {
           </div>
         </div>
         
+        {/* Error Message */}
+        {error && (
+          <p className="text-xs text-red-400 text-center -mb-2">{error}</p>
+        )}
+
         {/* Submit Button - Filament CTA */}
         <button
           type="submit"

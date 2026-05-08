@@ -149,8 +149,10 @@ export async function POST(request: NextRequest) {
   try {
     const result = await assemblyai.transcripts.transcribe({
       audio_url: audioUrl,
-      // speech_model is deprecated — use speech_models array instead
-      speech_models: ["best"],
+      // Use the validated model names the live API requires.
+      // "universal-3-pro" is attempted first; API falls back to "universal-2".
+      // Cast to string[] because SDK type definitions lag behind the live API.
+      speech_models: ["universal-3-pro", "universal-2"] as string[],
       language_detection: true,
     });
     // SDK polling resolves only when status is "completed" or "error"

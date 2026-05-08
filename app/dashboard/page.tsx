@@ -6,7 +6,6 @@ import {
   Search, ArrowRight, Play, FileText, Layout, Star, Sparkles,
   Crown, SkipBack, SkipForward, Speaker, Check, LogOut,
 } from "lucide-react";
-import Image from "next/image";
 import { supabase } from "@/utils/supabase/client";
 import LibraryView from "@/app/components/LibraryView";
 
@@ -237,10 +236,14 @@ export default function DashboardPage() {
           </div>
 
           {/* User / sign out */}
-          <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-            <p className="text-[10px] text-zinc-500 truncate max-w-[130px]">{userEmail ?? "—"}</p>
-            <button onClick={handleSignOut} className="text-zinc-500 hover:text-white transition-colors" title="Sign out">
-              <LogOut size={14} />
+          <div className="mt-4 pt-4 border-t border-white/5">
+            <p className="text-[10px] text-zinc-500 truncate mb-3">{userEmail ?? "—"}</p>
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all text-xs font-medium"
+            >
+              <LogOut size={13} />
+              Sign Out
             </button>
           </div>
         </aside>
@@ -510,10 +513,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Headphones decoration */}
-        <div className="absolute bottom-0 right-0 w-48 h-48 pointer-events-none z-10 opacity-80">
-          <Image src="/headphones.png" alt="" width={192} height={192} className="w-full h-full object-contain drop-shadow-2xl" priority />
-        </div>
       </div>
     </main>
   );

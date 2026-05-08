@@ -10,7 +10,7 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-12-18.acacia",
+  apiVersion: "2026-04-22.dahlia",
 });
 
 // Initialize Supabase with service role
@@ -74,8 +74,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Apply coupon to subscription
+    // Note: in the 2026-04-22 Stripe API the legacy top-level `coupon` field
+    // was replaced by `discounts: [{ coupon }]`.
     const subscription = await stripe.subscriptions.update(subscriptionId, {
-      coupon: couponId,
+      discounts: [{ coupon: couponId }],
       metadata: {
         discountApplied: "true",
         discountTier: tier,
@@ -91,10 +93,11 @@ export async function POST(request: NextRequest) {
       subscriptionId: subscription.id,
       status: subscription.status,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[apply-discount] Error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "Failed to apply discount", details: error.message },
+      { error: "Failed to apply discount", details: message },
       { status: 500 }
     );
   }

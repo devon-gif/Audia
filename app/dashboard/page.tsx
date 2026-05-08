@@ -485,7 +485,7 @@ export default function DashboardPage() {
               console.warn("[audio] Could not parse success response as JSON");
             }
             if (audioData.audioUrl) {
-              setBriefResult((prev) => prev ? { ...prev, briefAudioUrl: audioData.audioUrl } : prev);
+              setBriefResult((prev) => prev ? { ...prev, briefAudioUrl: audioData.audioUrl ?? null } : prev);
               loadTrack({ url: audioData.audioUrl!, title: "Audia Brief" });
             } else {
               console.warn("[audio] Response OK but no audioUrl returned:", audioData);

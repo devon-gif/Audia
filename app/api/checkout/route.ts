@@ -15,6 +15,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 
 export async function POST(req: Request) {
   try {
+    // 0. Validate Stripe key is present
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error("Stripe Secret Key is missing in environment variables.");
+    }
+
     const body = await req.json();
     const { priceId, userEmail, userId: bodyUserId } = body;
 

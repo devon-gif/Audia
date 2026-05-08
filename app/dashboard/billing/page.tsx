@@ -44,7 +44,8 @@ async function startCheckout(
     }
   } catch (err) {
     console.error("[billing] Checkout error:", err);
-    alert("Failed to start checkout. Please try again.");
+    const msg = err instanceof Error ? err.message : String(err);
+    alert("Checkout Error: " + msg);
     setLoading(false);
   }
 }

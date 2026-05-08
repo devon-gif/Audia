@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, ArrowRight, Loader2, Heart } from "lucide-react";
+import { X, Loader2, Heart, Sparkles } from "lucide-react";
 import { type Episode } from "@/app/api/episodes/route";
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   episodes: Episode[];
   loading: boolean;
   onSelect: (audioUrl: string) => void;
+  onSummarize?: (audioUrl: string, title: string) => void;
   isFavorited?: boolean;
   onFavoriteToggle?: (feedUrl: string) => void;
   onClose: () => void;
@@ -33,6 +34,7 @@ export default function EpisodeVault({
   episodes, 
   loading, 
   onSelect,
+  onSummarize,
   isFavorited = false,
   onFavoriteToggle,
   onClose,
@@ -150,12 +152,13 @@ export default function EpisodeVault({
                   )}
                 </div>
 
-                {/* Select button */}
+                {/* Summarize button */}
                 <button
-                  onClick={() => onSelect(ep.audioUrl)}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 hover:border-orange-500/40 text-orange-400 text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0"
+                  onClick={() => onSummarize ? onSummarize(ep.audioUrl, ep.title) : onSelect(ep.audioUrl)}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/30 hover:border-orange-500/60 text-orange-400 text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 shadow-[0_0_10px_rgba(255,102,0,0.1)] hover:shadow-[0_0_16px_rgba(255,102,0,0.25)]"
                 >
-                  Select <ArrowRight size={11} />
+                  <Sparkles size={10} />
+                  Summarize
                 </button>
               </div>
             ))
@@ -165,7 +168,7 @@ export default function EpisodeVault({
         {/* Footer */}
         <div className="px-6 py-3 border-t border-white/5 shrink-0">
           <p className="text-[10px] text-zinc-600 text-center">
-            Select an episode to populate the URL and generate your brief.
+            Hover an episode and click <span className="text-orange-500/70 font-semibold">Summarize</span> to generate your AI brief.
           </p>
         </div>
       </div>

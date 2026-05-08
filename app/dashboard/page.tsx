@@ -414,12 +414,35 @@ export default function DashboardPage() {
     loadTrack({ url, title });
   };
 
-  const handleSummarize = async () => {
-    if (!urlInput.trim() || isSummarizing) return;
+  const handleEpisodeSummarize = (audioUrl: string, _title: string) => {
+    // Capture vault show before closing it
+    const show = vaultShow;
+    // Close vault
+    setVaultShow(null);
+    setVaultEpisodes([]);
+    setSearchResults(null);
+    // Set URL so the input reflects what's being processed
+    setUrlInput(audioUrl);
+    // Auto-favorite this show silently (no quota error shown — best effort)
+    if (show?.feedUrl && !favoriteShows.has(show.feedUrl)) {
+      handleFavoriteToggle({
+        trackId: 0,
+        name: show.name,
+        artwork: show.artwork ?? "",
+        feedUrl: show.feedUrl,
+      });
+    }
+    // Fire summarization immediately
+    handleSummarize(audioUrl);
+  };
+
+  const handleSummarize = async (overrideUrl?: string) => {
+    const targetUrl = (overrideUrl ?? urlInput).trim();
+    if (!targetUrl || isSummarizing) return;
     setIsSummarizing(true);
     setBriefResult(null);
     setStageIndex(0);
-    if (devMode) devLog("→ POST /api/summarize — url: " + urlInput.trim());
+    if (devMode) devLog("→ POST /api/summarize — url: " + targetUrl);
 
     const stageTimer = setInterval(() => {
       setStageIndex((i) => Math.min(i + 1, LOADING_STAGES.length - 1));
@@ -430,7 +453,7 @@ export default function DashboardPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          url: urlInput.trim(),
+          url: targetUrl,
           length: briefLength,
           bypassCredits,
           voiceId: voices.find(v => v.id === selectedVoice)?.elevenLabsId,
@@ -1028,7 +1051,7 @@ export default function DashboardPage() {
                             {searchResults.map((r) => (
                               <button
                                 key={r.trackId}
-                                onClick={() => { setUrlInput(r.feedUrl); setSearchResults(null); }}
+                                onClick={() => handleShowSelect({ name: r.trackName, artwork: r.artworkUrl600, feedUrl: r.feedUrl })}
                                 className="group flex items-center gap-3 p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-orange-500/30 rounded-xl transition-all text-left"
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1062,6 +1085,7 @@ export default function DashboardPage() {
                     episodes={vaultEpisodes}
                     loading={vaultLoading}
                     onSelect={handleEpisodeSelect}
+                    onSummarize={handleEpisodeSummarize}
                     isFavorited={vaultShow!.feedUrl ? favoriteShows.has(vaultShow!.feedUrl as string) : false}
                     onFavoriteToggle={(feedUrl) => handleFavoriteToggle(feedUrl, vaultShow!.name)}
                     onClose={() => { setVaultShow(null); setVaultEpisodes([]); }}

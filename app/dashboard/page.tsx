@@ -5,12 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, ArrowRight, Play, Layout, Sparkles,
   Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
-  Globe,
+  Globe, Compass,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import GlobalPlayer from "@/app/components/dashboard/GlobalPlayer";
+import DiscoverView from "@/app/components/DiscoverView";
 import LibraryView from "@/app/components/LibraryView";
 import PodcastGrid from "@/app/components/PodcastGrid";
 import BillingPage from "@/app/dashboard/billing/page";
@@ -71,7 +72,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language: uiLanguage, toggleLanguage, t } = useLanguage();
-  const [activeView, setActiveView] = useState<"new-summary" | "library" | "billing" | "help">("new-summary");
+  const [activeView, setActiveView] = useState<"new-summary" | "library" | "discover" | "billing" | "help">("new-summary");
   const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   // Check for checkout success
@@ -138,9 +139,10 @@ export default function DashboardPage() {
   // Subscribed feeds — Set of feedUrls the user has Auto-Distill enabled
   const [subscribedFeeds, setSubscribedFeeds] = useState<Set<string>>(new Set());
 
-  // Favorites Quota — feedUrls the user has hearted for automated delivery
+  // Favorites Quota — rss_urls the user has hearted + full objects for DB writes
   const QUOTA_LIMITS: Record<string, number> = { free: 1, pro: 5, max: Infinity };
-  const [favoriteShows, setFavoriteShows] = useState<Set<string>>(new Set());
+  const [favoriteShows, setFavoriteShows] = useState<Set<string>>(new Set()); // Set<rss_url>
+  const [favoriteShowObjects, setFavoriteShowObjects] = useState<Map<string, { podcast_id: string; podcast_name: string; image_url: string | null; rss_url: string }>>(new Map());
 
   // Episode Vault
   const [vaultShow, setVaultShow] = useState<ShowSelection | null>(null);
@@ -201,6 +203,22 @@ export default function DashboardPage() {
         .eq("user_id", user.id)
         .then(({ data: subs }) => {
           if (subs) setSubscribedFeeds(new Set(subs.map((s: { feed_url: string }) => s.feed_url)));
+        });
+
+      // Load saved favorites (hearted shows)
+      supabase
+        .from("user_favorites")
+        .select("podcast_id, podcast_name, image_url, rss_url")
+        .eq("user_id", user.id)
+        .then(({ data: favs }) => {
+          if (favs) {
+            setFavoriteShows(new Set(favs.map((f: { rss_url: string }) => f.rss_url)));
+            const map = new Map(favs.map((f: { podcast_id: string; podcast_name: string; image_url: string | null; rss_url: string }) => [
+              f.rss_url,
+              { podcast_id: f.podcast_id, podcast_name: f.podcast_name, image_url: f.image_url, rss_url: f.rss_url },
+            ]));
+            setFavoriteShowObjects(map);
+          }
         });
     });
 
@@ -326,11 +344,29 @@ export default function DashboardPage() {
     }
   };
 
-  const handleFavoriteToggle = (feedUrl: string, showName: string) => {
+  // Accept either a full PodcastResult (from Discover) or a legacy (feedUrl, showName) call
+  const handleFavoriteToggle = async (
+    showOrFeedUrl: { trackId: number; name: string; artwork: string; feedUrl: string } | string,
+    legacyName?: string
+  ) => {
+    const feedUrl   = typeof showOrFeedUrl === "string" ? showOrFeedUrl : showOrFeedUrl.feedUrl;
+    const showName  = typeof showOrFeedUrl === "string" ? (legacyName ?? "") : showOrFeedUrl.name;
+    const podcastId = typeof showOrFeedUrl === "string" ? feedUrl : String(showOrFeedUrl.trackId);
+    const imageUrl  = typeof showOrFeedUrl === "string" ? null : (showOrFeedUrl.artwork ?? null);
+
     if (favoriteShows.has(feedUrl)) {
-      // Unfavorite — always allowed
+      // Optimistic remove
       setFavoriteShows(prev => { const s = new Set(prev); s.delete(feedUrl); return s; });
+      setFavoriteShowObjects(prev => { const m = new Map(prev); m.delete(feedUrl); return m; });
       showToast(`Removed ${showName} from automated delivery`, "info");
+      // Persist delete
+      if (userId) {
+        await supabase
+          .from("user_favorites")
+          .delete()
+          .eq("user_id", userId)
+          .eq("rss_url", feedUrl);
+      }
     } else {
       const limit = QUOTA_LIMITS[planTier] ?? 1;
       if (favoriteShows.size >= limit) {
@@ -339,8 +375,24 @@ export default function DashboardPage() {
         router.push("/dashboard/billing");
         return;
       }
+      const row = { podcast_id: podcastId, podcast_name: showName, image_url: imageUrl, rss_url: feedUrl };
+      // Optimistic add
       setFavoriteShows(prev => new Set([...prev, feedUrl]));
+      setFavoriteShowObjects(prev => new Map([...prev, [feedUrl, row]]));
       showToast(`${showName} added to automated delivery!`, "info");
+      // Persist insert
+      if (userId) {
+        const { error } = await supabase.from("user_favorites").upsert(
+          { user_id: userId, ...row },
+          { onConflict: "user_id,podcast_id" }
+        );
+        if (error) {
+          // Revert on failure
+          setFavoriteShows(prev => { const s = new Set(prev); s.delete(feedUrl); return s; });
+          setFavoriteShowObjects(prev => { const m = new Map(prev); m.delete(feedUrl); return m; });
+          showToast("Failed to save favorite. Please try again.", "error");
+        }
+      }
     }
   };
 

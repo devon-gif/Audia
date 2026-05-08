@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, ArrowRight, Play, Layout, Sparkles,
   Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
@@ -67,8 +67,23 @@ type BriefResult = {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { language: uiLanguage, toggleLanguage, t } = useLanguage();
   const [activeView, setActiveView] = useState<"new-summary" | "library" | "billing" | "help">("new-summary");
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+
+  // Check for checkout success
+  useEffect(() => {
+    const success = searchParams.get("success");
+    if (success === "true") {
+      setShowSuccessToast(true);
+      // Hide after 5 seconds
+      const timer = setTimeout(() => {
+        setShowSuccessToast(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
   const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Rachel");
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [outputLanguage, setOutputLanguage] = useState<TargetLanguage>("en");
@@ -421,18 +436,42 @@ export default function DashboardPage() {
             <p className="text-sm font-semibold text-white">Finalizing your signal…</p>
             <p className="text-xs text-zinc-500 mt-1">Setting up your profile, just a moment.</p>
           </div>
-        </div>
-      </main>
-    );
   }
+};
 
+// Onboarding gate — show deep-glass overlay until profiles row is confirmed
+if (!profileReady) {
   return (
-    <main className="min-h-screen bg-black text-white font-sans antialiased flex flex-col overflow-hidden">
-      {/* Ambient glows */}
-      <div className="fixed top-[-15%] left-[-10%] w-[50vw] h-[50vw] bg-[#FF6600]/15 rounded-full blur-[150px] pointer-events-none z-0" />
-      <div className="fixed bottom-[-20%] right-[-15%] w-[45vw] h-[45vw] bg-[#FF6600]/10 rounded-full blur-[150px] pointer-events-none z-0" />
+    <main className="min-h-screen bg-black text-white font-sans antialiased flex items-center justify-center">
+      <div className="fixed top-[-15%] left-[-10%] w-[50vw] h-[50vw] bg-[#FF6600]/15 rounded-full blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-[-20%] right-[-15%] w-[45vw] h-[45vw] bg-[#FF6600]/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="relative z-10 flex flex-col items-center gap-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center">
+          <svg className="animate-spin w-7 h-7 text-[#FF6600]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+          </svg>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#FF6600]/80 mb-1">Audia</p>
+          <p className="text-sm font-semibold text-white">Finalizing your signal…</p>
+          <p className="text-xs text-zinc-500 mt-1">Setting up your profile, just a moment.</p>
+        </div>
+      </div>
+    </main>
+  );
+}
 
-      <div className="relative z-10 flex flex-1 overflow-hidden h-screen">
+return (
+  <main className="min-h-screen bg-black text-white font-sans antialiased flex flex-col overflow-hidden">
+    {/* Success Toast */}
+    {showSuccessToast && (
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl shadow-2xl shadow-orange-500/30 border border-orange-400/50">
+          <Crown size={24} className="text-white" />
+          <div>
+            <p className="font-semibold text-white">Welcome to the Elite!</p>
+            <p className="text-sm text-orange-100">Your neural engine is ready.</p>
         {/* ── Sidebar ── */}
         <aside className="w-[220px] bg-black/60 backdrop-blur-2xl border-r border-white/5 p-6 flex flex-col shrink-0">
           {/* Logo */}

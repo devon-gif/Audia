@@ -634,7 +634,8 @@ export default function DashboardPage() {
               <span className="text-xs font-bold tracking-widest uppercase text-white">Pro Plan</span>
             </div>
             <button
-              onClick={() => router.push("/dashboard/billing")} hover:bg-orange-500/30 border border-orange-500/30 rounded-lg text-[10px] text-orange-300 font-semibold transition-all"
+              onClick={() => router.push("/dashboard/billing")}
+              className="w-full py-1.5 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg text-[10px] text-orange-300 font-semibold transition-all"
             >
               Upgrade
             </button>

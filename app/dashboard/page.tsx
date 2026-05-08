@@ -608,7 +608,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* ── Main content column ── */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-y-auto">
 
         {/* ── Global Audio Player ── always visible when audio is loaded, persists across views */}
         {globalAudio && (
@@ -692,10 +692,10 @@ export default function DashboardPage() {
 
         {/* ── View content ── */}
         {activeView === "new-summary" ? (
-          <div className="flex-1 flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
+          <div className="flex-1 px-8 py-6">
             {/* Top bar */}
-            <div className="flex items-center justify-between px-8 py-5 border-b border-white/5">
-                <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
                   <h1 className="text-lg font-black tracking-tighter text-white">{t.sidebar.newSummary}</h1>
                   <p className="text-xs text-zinc-500 mt-0.5">{t.dashboard.searchPlaceholder}</p>
                 </div>
@@ -715,8 +715,8 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* URL input + controls — wrapped in paywall when trial expired */}
-              <div className="px-8 pt-6 relative">
+            {/* URL input + controls — wrapped in paywall when trial expired */}
+            <div className="relative mb-6">
                 {/* ── Paywall overlay ── */}
                 {trialExpired && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center">
@@ -787,7 +787,7 @@ export default function DashboardPage() {
                 })()}
 
                 {/* Controls row */}
-                <div className="flex items-center gap-5 mb-6">
+            <div className="flex items-center gap-5 mb-6">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Length:</span>
                     <div className="bg-black/60 border border-white/10 rounded-full p-0.5 flex items-center">
@@ -897,8 +897,8 @@ export default function DashboardPage() {
 
 
                 {/* Results: Deep Signal Brief + Audio Player */}
-                {briefResult ? (
-                  <div className={`space-y-3 transition-all duration-700 ${briefResult ? 'opacity-100' : 'opacity-0'}`}>
+            {briefResult ? (
+              <div className={`space-y-3 transition-all duration-700 ${briefResult ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deep Signal Brief</span>
                       <span className="text-[10px] text-zinc-500 font-mono">{(briefResult.transcriptLength / 5 / 60).toFixed(0)} min transcript</span>
@@ -913,14 +913,14 @@ export default function DashboardPage() {
                       <pre className="text-[12px] text-zinc-300 leading-relaxed whitespace-pre-wrap font-sans">{briefResult.brief}</pre>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    {/* Placeholder bento grid */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Summary Brief</span>
-                      <span className="text-[10px] text-zinc-500">1:42:18</span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-3 mb-6">
+            ) : (
+              <>
+                {/* Placeholder bento grid */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Summary Brief</span>
+                  <span className="text-[10px] text-zinc-500">1:42:18</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                       <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
                         <h4 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Key Takeaways</h4>
                         <ul className="space-y-1.5">
@@ -1008,15 +1008,15 @@ export default function DashboardPage() {
               )}
             </div>
           ) : activeView === "library" ? (
-            <div className="flex-1 overflow-auto p-8 max-w-7xl mx-auto w-full">
+            <div className="flex-1 px-8 py-6">
               <LibraryView onPlay={handlePlayLibraryBrief} />
             </div>
           ) : activeView === "help" ? (
-            <div className="flex-1 overflow-auto max-w-7xl mx-auto w-full">
+            <div className="flex-1 px-8 py-6">
               <HelpPage />
             </div>
           ) : (
-            <div className="flex-1 overflow-auto max-w-7xl mx-auto w-full">
+            <div className="flex-1 px-8 py-6">
               <BillingPage />
             </div>
           )}

@@ -56,7 +56,12 @@ export default function DashboardPage() {
   const [audioDuration, setAudioDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Onboarding: true once the DB trigger has created the profiles row
+  const [profileReady, setProfileReady] = useState(false);
+
   useEffect(() => {
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
       setUserEmail(user.email ?? null);
@@ -67,7 +72,29 @@ export default function DashboardPage() {
         );
         setDaysRemaining(Math.max(0, diff));
       }
+
+      // Poll profiles table until the DB trigger creates the row (max ~12s)
+      let attempts = 0;
+      const checkProfile = async () => {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (data) {
+          setProfileReady(true);
+        } else if (attempts < 8) {
+          attempts++;
+          pollTimer = setTimeout(checkProfile, 1500);
+        } else {
+          // Give up gracefully — don't block the UI forever
+          setProfileReady(true);
+        }
+      };
+      checkProfile();
     });
+
+    return () => { if (pollTimer) clearTimeout(pollTimer); };
   }, [router]);
 
   const handleSignOut = async () => {
@@ -116,6 +143,29 @@ export default function DashboardPage() {
       setStageIndex(0);
     }
   };
+
+  // Onboarding gate — show deep-glass overlay until profiles row is confirmed
+  if (!profileReady) {
+    return (
+      <main className="min-h-screen bg-black text-white font-sans antialiased flex items-center justify-center">
+        <div className="fixed top-[-15%] left-[-10%] w-[50vw] h-[50vw] bg-[#FF6600]/15 rounded-full blur-[150px] pointer-events-none" />
+        <div className="fixed bottom-[-20%] right-[-15%] w-[45vw] h-[45vw] bg-[#FF6600]/10 rounded-full blur-[150px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col items-center gap-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center">
+            <svg className="animate-spin w-7 h-7 text-[#FF6600]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#FF6600]/80 mb-1">Audia</p>
+            <p className="text-sm font-semibold text-white">Finalizing your signal…</p>
+            <p className="text-xs text-zinc-500 mt-1">Setting up your profile, just a moment.</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-black text-white font-sans antialiased flex flex-col overflow-hidden">

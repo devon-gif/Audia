@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +25,7 @@ export default function SignupPage() {
 
     const trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
@@ -37,7 +38,16 @@ export default function SignupPage() {
       setError(error.message);
       return;
     }
+
+    // Email confirmation is ON — no session yet, ask user to verify
+    if (!data.session) {
+      setNeedsEmailConfirm(true);
+      return;
+    }
+
+    // Session exists — refresh server-side cookies then navigate
     setSuccess(true);
+    router.refresh();
     setTimeout(() => router.push("/dashboard"), 1200);
   };
 
@@ -94,6 +104,14 @@ export default function SignupPage() {
           </div>
         </div>
         
+        {/* Email confirmation notice */}
+        {needsEmailConfirm && (
+          <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 text-center">
+            <p className="text-xs font-bold uppercase tracking-widest text-orange-400 mb-1">Check your inbox</p>
+            <p className="text-xs text-zinc-400">A confirmation link has been sent to <span className="text-white">{formData.email}</span>. Click it to activate your account.</p>
+          </div>
+        )}
+
         {/* Error Message */}
         {error && (
           <p className="text-xs text-red-400 text-center -mb-2">{error}</p>
@@ -102,7 +120,7 @@ export default function SignupPage() {
         {/* Submit Button - Filament CTA */}
         <button
           type="submit"
-          disabled={isSubmitting || success}
+          disabled={isSubmitting || success || needsEmailConfirm}
           className={`w-full mt-6 px-6 py-4 backdrop-blur-2xl border text-white font-semibold rounded-full transition-all flex items-center justify-center gap-2 disabled:cursor-not-allowed ${
             success
               ? "bg-emerald-500/20 border-emerald-500/60 shadow-[0_0_30px_rgba(16,185,129,0.2)]"

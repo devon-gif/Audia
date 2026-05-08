@@ -33,14 +33,13 @@ export default function PodcastCover({
     // If a URL was passed in props, no client-side fetch needed
     if (initialUrl !== undefined) return;
     let cancelled = false;
-    fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(showName)}&entity=podcast&limit=1`
-    )
-      .then((r) => r.json())
+    fetch(`/api/podcast-art?podcastName=${encodeURIComponent(showName)}`)
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (!cancelled) setUrl(data.results?.[0]?.artworkUrl600 ?? null);
+        if (!cancelled) setUrl(data?.artworkUrl ?? null);
       })
       .catch(() => {
+        // Fail silently — gradient fallback renders underneath
         if (!cancelled) setUrl(null);
       });
     return () => { cancelled = true; };

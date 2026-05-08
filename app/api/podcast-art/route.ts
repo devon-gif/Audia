@@ -57,8 +57,9 @@ export async function GET(request: NextRequest) {
 
     // Return with cache headers - cache for 7 days
     return NextResponse.json(
-      { 
+      {
         artworkUrl,
+        feedUrl: podcast.feedUrl ?? null,
         podcastName: podcast.collectionName,
         artistName: podcast.artistName,
       },

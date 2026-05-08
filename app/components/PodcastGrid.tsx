@@ -50,11 +50,11 @@ export default function PodcastGrid({ onSelect, onSelectShow }: Props) {
           prev.map((s, idx) => (idx === i ? { ...s, artwork, loaded: true } : s))
         );
       });
-      // Also prefetch feedUrl from iTunes
-      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=podcast&limit=1`)
-        .then((r) => r.json())
+      // Prefetch feedUrl via internal proxy to avoid direct client→iTunes calls
+      fetch(`/api/podcast-art?podcastName=${encodeURIComponent(name)}`)
+        .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
-          const feedUrl: string | null = data.results?.[0]?.feedUrl ?? null;
+          const feedUrl: string | null = data?.feedUrl ?? null;
           setShows((prev) =>
             prev.map((s, idx) => (idx === i ? { ...s, feedUrl } : s))
           );

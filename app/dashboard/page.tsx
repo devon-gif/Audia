@@ -139,6 +139,10 @@ export default function DashboardPage() {
   // Subscribed feeds — Set of feedUrls the user has Auto-Distill enabled
   const [subscribedFeeds, setSubscribedFeeds] = useState<Set<string>>(new Set());
 
+  // Favorites Quota — feedUrls the user has hearted for automated delivery
+  const QUOTA_LIMITS: Record<string, number> = { free: 1, pro: 5, max: Infinity };
+  const [favoriteShows, setFavoriteShows] = useState<Set<string>>(new Set());
+
   // Episode Vault
   const [vaultShow, setVaultShow] = useState<ShowSelection | null>(null);
   const [vaultEpisodes, setVaultEpisodes] = useState<Episode[]>([]);
@@ -338,6 +342,24 @@ export default function DashboardPage() {
       if (error) throw error;
       setSubscribedFeeds(prev => { const s = new Set(prev); s.delete(vaultShow.feedUrl!); return s; });
       showToast(`Unsubscribed from ${vaultShow.name}`, "info");
+    }
+  };
+
+  const handleFavoriteToggle = (feedUrl: string, showName: string) => {
+    if (favoriteShows.has(feedUrl)) {
+      // Unfavorite — always allowed
+      setFavoriteShows(prev => { const s = new Set(prev); s.delete(feedUrl); return s; });
+      showToast(`Removed ${showName} from automated delivery`, "info");
+    } else {
+      const limit = QUOTA_LIMITS[planTier] ?? 1;
+      if (favoriteShows.size >= limit) {
+        const upgradeTarget = planTier === "free" ? "Pro" : "Elite";
+        showToast(`Slot limit reached. Upgrade to ${upgradeTarget} to track more shows.`, "error");
+        router.push("/pricing");
+        return;
+      }
+      setFavoriteShows(prev => new Set([...prev, feedUrl]));
+      showToast(`${showName} added to automated delivery!`, "info");
     }
   };
 
@@ -567,6 +589,43 @@ export default function DashboardPage() {
                   </div>
                 )}
                 <p className="text-[9px] text-zinc-600 mt-1.5 capitalize">{planTier} Plan</p>
+              </div>
+            );
+          })()}
+
+          {/* Favorites quota widget */}
+          {(() => {
+            const limit = QUOTA_LIMITS[planTier] ?? 1;
+            const used = favoriteShows.size;
+            const isUnlimited = limit === Infinity;
+            const pct = isUnlimited ? 0 : Math.min((used / limit) * 100, 100);
+            const atLimit = !isUnlimited && used >= limit;
+            return (
+              <div className="mb-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Favorites</span>
+                  <span className={`text-[10px] font-semibold tabular-nums ${
+                    isUnlimited ? "text-emerald-400" : atLimit ? "text-orange-400 animate-pulse" : "text-zinc-300"
+                  }`}>
+                    {isUnlimited ? "∞" : `${used} / ${limit}`}
+                  </span>
+                </div>
+                {isUnlimited ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <p className="text-[9px] text-emerald-500/80 uppercase tracking-widest font-semibold">Unlimited Slots</p>
+                  </div>
+                ) : (
+                  <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${
+                        atLimit ? "bg-orange-500 animate-pulse" : "bg-rose-500"
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                )}
+                <p className="text-[9px] text-zinc-600 mt-1.5">Auto-Distill Slots</p>
               </div>
             );
           })()}
@@ -1000,8 +1059,8 @@ export default function DashboardPage() {
                     episodes={vaultEpisodes}
                     loading={vaultLoading}
                     onSelect={handleEpisodeSelect}
-                    onSubscribe={handleSubscribe}
-                    initialSubscribed={vaultShow!.feedUrl ? subscribedFeeds.has(vaultShow!.feedUrl as string) : false}
+                    isFavorited={vaultShow!.feedUrl ? favoriteShows.has(vaultShow!.feedUrl as string) : false}
+                    onFavoriteToggle={(feedUrl) => handleFavoriteToggle(feedUrl, vaultShow!.name)}
                     onClose={() => { setVaultShow(null); setVaultEpisodes([]); }}
                   />
                 </div>

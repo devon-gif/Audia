@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, ArrowRight, Play, Layout, Sparkles,
   Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
-  Globe, Compass,
+  Globe, Compass, Volume2,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -107,7 +107,7 @@ export default function DashboardPage() {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [stageIndex, setStageIndex] = useState(0);
   const [briefResult, setBriefResult] = useState<BriefResult | null>(null);
-
+  const [generatingAudio, setGeneratingAudio] = useState(false);
   // Global audio player — via PlayerContext (persists across view/route changes)
   const { load: loadTrack, isPlaying, progress: audioProgress, duration: audioDuration, toggle: toggleAudio, dismiss: dismissAudio } = usePlayer();
 
@@ -930,6 +930,53 @@ export default function DashboardPage() {
                         : 'border-white/5'
                     }`}>
                       <pre className="text-[12px] text-zinc-300 leading-relaxed whitespace-pre-wrap font-sans">{briefResult.brief}</pre>
+                    </div>
+
+                    {/* Listen button row */}
+                    <div className="flex items-center gap-3 pt-1">
+                      {briefResult.briefAudioUrl ? (
+                        <button
+                          onClick={() => loadTrack({ url: briefResult.briefAudioUrl!, title: "Audia Brief" })}
+                          className="flex items-center gap-2 px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-xl text-orange-300 text-xs font-semibold transition-all"
+                        >
+                          <Volume2 size={13} />
+                          Listen in Player
+                        </button>
+                      ) : (
+                        <button
+                          onClick={async () => {
+                            if (generatingAudio) return;
+                            setGeneratingAudio(true);
+                            try {
+                              const res = await fetch("/api/summarize/audio", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  text: briefResult.brief,
+                                  voiceId: voices.find(v => v.id === selectedVoice)?.elevenLabsId,
+                                  recordId: briefResult.id,
+                                }),
+                              });
+                              const data = await res.json();
+                              if (!res.ok) throw new Error(data.error ?? "Audio generation failed");
+                              setBriefResult(prev => prev ? { ...prev, briefAudioUrl: data.audioUrl } : prev);
+                              loadTrack({ url: data.audioUrl, title: "Audia Brief" });
+                            } catch (err) {
+                              showToast((err as Error).message, "error");
+                            } finally {
+                              setGeneratingAudio(false);
+                            }
+                          }}
+                          disabled={generatingAudio}
+                          className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-xl text-zinc-400 hover:text-white text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {generatingAudio ? (
+                            <><svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> Generating Audio…</>
+                          ) : (
+                            <><Volume2 size={13} /> Generate Audio Brief</>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
             ) : (

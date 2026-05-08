@@ -2,167 +2,147 @@
 
 import { useState } from "react";
 import { Search, Download, Trash2, ExternalLink, Clock, Calendar } from "lucide-react";
-import Image from "next/image";
+import PodcastCover from "@/app/components/PodcastCover";
 
-// Mock saved summaries data
+// ─── Mock data ─────────────────────────────────────────────────────────────
+// showName drives real artwork lookups inside PodcastCover
+
 const savedSummaries = [
-  { id: 1, title: "The Art of Focus", source: "Cal Newport Podcast", date: "2 hours ago", length: "4m 32s", cover: "/cover1.jpg" },
-  { id: 2, title: "GPT-5 and the Future", source: "Lex Fridman Podcast", date: "Yesterday", length: "6m 18s", cover: "/cover2.jpg" },
-  { id: 3, title: "Dopamine Detox", source: "Andrew Huberman", date: "3 days ago", length: "3m 45s", cover: "/cover3.jpg" },
-  { id: 4, title: "Crypto Market Analysis", source: "Bankless", date: "1 week ago", length: "8m 12s", cover: "/cover4.jpg" },
-  { id: 5, title: "Startup Fundraising", source: "Y Combinator", date: "1 week ago", length: "5m 22s", cover: "/cover5.jpg" },
+  { id: 1, title: "The Art of Focus",       showName: "Cal Newport Deep Questions", date: "2 hours ago", length: "4m 32s" },
+  { id: 2, title: "GPT-5 and the Future",   showName: "Lex Fridman Podcast",        date: "Yesterday",   length: "6m 18s" },
+  { id: 3, title: "Dopamine Detox",         showName: "Huberman Lab",               date: "3 days ago",  length: "3m 45s" },
+  { id: 4, title: "Crypto Market Analysis", showName: "Bankless",                   date: "1 week ago",  length: "8m 12s" },
+  { id: 5, title: "Startup Fundraising",    showName: "Y Combinator Podcast",       date: "1 week ago",  length: "5m 22s" },
 ];
 
-// Podcast covers for marquee
 const recentShows = [
-  { title: "Huberman Lab", cover: "/cover1.jpg" },
-  { title: "Lex Fridman", cover: "/cover2.jpg" },
-  { title: "The Joe Rogan Experience", cover: "/cover3.jpg" },
-  { title: "The Daily", cover: "/cover4.jpg" },
-  { title: "The Tim Ferriss Show", cover: "/cover5.jpg" },
-  { title: "Planet Money", cover: "/cover6.jpg" },
-  { title: "Radiolab", cover: "/cover7.jpg" },
-  { title: "How I Built This", cover: "/cover8.jpg" },
-  { title: "The Knowledge Project", cover: "/cover9.jpg" },
-  { title: "Invest Like the Best", cover: "/cover10.jpg" },
+  "Huberman Lab",
+  "Lex Fridman Podcast",
+  "The Joe Rogan Experience",
+  "The Daily",
+  "The Tim Ferriss Show",
+  "Planet Money",
+  "Radiolab",
+  "How I Built This",
+  "The Knowledge Project",
+  "Invest Like the Best",
+  "My First Million",
+  "Diary of a CEO",
 ];
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function LibraryView() {
   const [searchQuery, setSearchQuery] = useState("");
 
+  const filtered = savedSummaries.filter(
+    (s) =>
+      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.showName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const row1 = [...recentShows, ...recentShows];
+  const row2 = [...recentShows.slice().reverse(), ...recentShows.slice().reverse()];
+  const row3 = [...recentShows.slice(4), ...recentShows.slice(4)];
+
   return (
-    <div className="flex-1 p-8 flex flex-col h-full">
-      
+    <div className="flex-1 flex flex-col h-full">
+
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-4">Your Knowledge Vault</h2>
-        
-        {/* Search Bar */}
+        <h2 className="text-xl font-black tracking-tighter text-white mb-4">Knowledge Vault</h2>
         <div className="relative max-w-md">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search past briefs..."
-            className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 transition-all"
+            placeholder="Search past briefs…"
+            className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all"
           />
         </div>
       </div>
 
-      {/* Recent Shows Marquee */}
+      {/* ── Recent Shows marquee ── */}
       <div className="mb-8">
-        <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Recent Shows</h3>
-        <div className="space-y-3">
-          {/* Row 1 */}
-          <div className="flex gap-4 overflow-hidden">
-            <div className="flex gap-4 animate-marquee-slow">
-              {[...recentShows, ...recentShows].map((show, i) => (
-                <div 
-                  key={i} 
-                  className="flex-shrink-0 w-24 h-24 bg-zinc-800 rounded-lg overflow-hidden cursor-pointer group"
-                >
-                  <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-xs text-zinc-500 group-hover:scale-110 transition-transform">
-                    {show.title.slice(0, 8)}...
-                  </div>
-                </div>
+        <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">Recent Shows</h3>
+        <div className="space-y-2.5 overflow-hidden">
+          <div className="flex gap-3">
+            <div className="flex gap-3 animate-marquee-slow">
+              {row1.map((show, i) => (
+                <PodcastCover key={i} showName={show} size={80} rounded="rounded-xl"
+                  className="cursor-pointer hover:scale-105 transition-transform duration-300 shadow-lg" />
               ))}
             </div>
           </div>
-          
-          {/* Row 2 */}
-          <div className="flex gap-4 overflow-hidden">
-            <div className="flex gap-4 animate-marquee-slow-reverse">
-              {[...recentShows.slice().reverse(), ...recentShows.slice().reverse()].map((show, i) => (
-                <div 
-                  key={i} 
-                  className="flex-shrink-0 w-20 h-20 bg-zinc-800 rounded-lg overflow-hidden cursor-pointer group"
-                >
-                  <div className="w-full h-full bg-gradient-to-br from-zinc-600 to-zinc-800 flex items-center justify-center text-xs text-zinc-500 group-hover:scale-110 transition-transform">
-                    {show.title.slice(0, 6)}...
-                  </div>
-                </div>
+          <div className="flex gap-3">
+            <div className="flex gap-3 animate-marquee-slow-reverse">
+              {row2.map((show, i) => (
+                <PodcastCover key={i} showName={show} size={68} rounded="rounded-lg"
+                  className="cursor-pointer hover:scale-105 transition-transform duration-300 shadow-lg" />
               ))}
             </div>
           </div>
-          
-          {/* Row 3 */}
-          <div className="flex gap-4 overflow-hidden">
-            <div className="flex gap-4 animate-marquee-slow">
-              {[...recentShows.slice(3), ...recentShows.slice(3)].map((show, i) => (
-                <div 
-                  key={i} 
-                  className="flex-shrink-0 w-16 h-16 bg-zinc-800 rounded-lg overflow-hidden cursor-pointer group"
-                >
-                  <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-[10px] text-zinc-500 group-hover:scale-110 transition-transform">
-                    {show.title.slice(0, 5)}...
-                  </div>
-                </div>
+          <div className="flex gap-3">
+            <div className="flex gap-3 animate-marquee-slow">
+              {row3.map((show, i) => (
+                <PodcastCover key={i} showName={show} size={56} rounded="rounded-lg"
+                  className="cursor-pointer hover:scale-105 transition-transform duration-300 shadow-md" />
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Saved Briefs List */}
-      <div className="flex-1">
-        <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Saved Briefs</h3>
-        
-        {/* Table Header */}
-        <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-4 py-3 text-xs text-zinc-500 uppercase tracking-wider border-b border-white/5">
-          <div>Title/Source</div>
+      {/* ── Saved Briefs ── */}
+      <div className="flex-1 min-h-0">
+        <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">Saved Briefs</h3>
+
+        <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-4 py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-white/5">
+          <div>Title / Source</div>
           <div>Date</div>
           <div>Length</div>
-          <div>Action</div>
+          <div>Actions</div>
         </div>
-        
-        {/* Table Rows */}
-        <div className="space-y-1">
-          {savedSummaries.map((summary) => (
-            <div 
-              key={summary.id}
-              className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-4 py-4 items-center text-sm hover:bg-white/[0.02] transition-colors border-b border-white/5"
-            >
-              {/* Title/Source */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-zinc-700 to-zinc-900 rounded-lg flex items-center justify-center text-xs text-zinc-500">
-                  {summary.title.slice(0, 2)}
+
+        <div className="space-y-0">
+          {filtered.length === 0 ? (
+            <p className="px-4 py-10 text-sm text-zinc-600 text-center">No briefs match your search.</p>
+          ) : (
+            filtered.map((summary) => (
+              <div
+                key={summary.id}
+                className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-4 py-3.5 items-center hover:bg-white/[0.02] transition-colors border-b border-white/[0.04] group"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <PodcastCover showName={summary.showName} size={40} rounded="rounded-lg" className="shadow-md" />
+                  <div className="min-w-0">
+                    <p className="text-white font-semibold text-sm truncate">{summary.title}</p>
+                    <p className="text-zinc-500 text-[11px] truncate">{summary.showName}</p>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-white font-medium">{summary.title}</div>
-                  <div className="text-zinc-500 text-xs">{summary.source}</div>
+                <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
+                  <Calendar size={11} className="shrink-0" />{summary.date}
+                </div>
+                <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
+                  <Clock size={11} className="shrink-0" />{summary.length}
+                </div>
+                <div className="flex items-center gap-1">
+                  <button className="p-1.5 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                    <Download size={13} />
+                  </button>
+                  <button className="p-1.5 text-zinc-500 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                    <ExternalLink size={13} />
+                  </button>
+                  <button className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
-              
-              {/* Date */}
-              <div className="flex items-center gap-1.5 text-zinc-400">
-                <Calendar size={12} />
-                {summary.date}
-              </div>
-              
-              {/* Length */}
-              <div className="flex items-center gap-1.5 text-zinc-400">
-                <Clock size={12} />
-                {summary.length}
-              </div>
-              
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-all">
-                  <Download size={14} />
-                </button>
-                <button className="p-2 text-zinc-400 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-all">
-                  <ExternalLink size={14} />
-                </button>
-                <button className="p-2 text-zinc-400 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all">
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
-      
     </div>
   );
 }

@@ -160,7 +160,7 @@ export default function LandingPage() {
           <div className="relative z-10 w-full max-w-6xl mx-auto px-6 flex flex-col items-center">
             
             {/* Hero Headline */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter pb-4 mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter pb-2 mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
               Turn Hours of Audio<br />
               Into Minutes of Insight.
             </h1>
@@ -316,7 +316,7 @@ export default function LandingPage() {
                           className="w-full bg-black/40 border border-white/10 rounded-lg py-2 pl-9 pr-3 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50"
                         />
                       </div>
-                      <button className="px-4 py-2 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-lg text-white font-semibold text-xs flex items-center gap-1 hover:scale-105 transition-all">
+                      <button className="px-4 py-2 bg-transparent border border-white/20 rounded-lg text-white/50 font-semibold text-xs flex items-center gap-1 hover:border-white/40 hover:text-white/70 transition-all">
                         SUMMARIZE <ArrowRight size={12} />
                       </button>
                     </div>
@@ -451,8 +451,8 @@ export default function LandingPage() {
                   </div>
                 </div>
               
-              {/* Headphones - Positioned on Dashboard Corner */}
-              <div className="absolute -bottom-4 -right-8 w-48 h-48 pointer-events-none z-10">
+              {/* Headphones - Positioned bottom-left overlapping sidebar */}
+              <div className="absolute -bottom-6 -left-8 w-52 h-52 pointer-events-none z-10" style={{filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.8)) drop-shadow(0 0 30px rgba(0,0,0,0.6))'}}>
                 <Image
                   src="/headphones.png"
                   alt="Premium headphones"
@@ -475,17 +475,17 @@ export default function LandingPage() {
 
   {/* --- HOW IT WORKS --- */}
         <section className="py-8 relative overflow-hidden">
-          <div className="text-center mb-4">
-            <span className="text-xs font-mono text-zinc-500 uppercase tracking-[0.3em]">Trusted Signal: Compatible with 2.5M+ Feeds</span>
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em]">Trusted Signal: Compatible with 2.5M+ Feeds</span>
           </div>
           
           {/* Wall of Content with Radial Mask */}
-          <div className="w-full relative overflow-hidden" style={{ maskImage: 'radial-gradient(ellipse 80% 100% at 50% 50%, black 40%, transparent 80%)', WebkitMaskImage: 'radial-gradient(ellipse 80% 100% at 50% 50%, black 40%, transparent 80%)' }}>
+          <div className="w-full relative overflow-hidden flex flex-col gap-y-12" style={{ maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' }}>
             {/* Row 1 - Slow Left */}
-            <div className="flex items-center overflow-hidden -mb-4">
-              <div className="flex animate-marquee-row-1 gap-4">
+            <div className="flex items-center overflow-hidden">
+              <div className="flex animate-marquee-row-1 gap-x-12">
                 {[...Array(3)].map((_, setIndex) => (
-                  <div key={setIndex} className="flex gap-4 shrink-0">
+                  <div key={setIndex} className="flex gap-x-12 shrink-0">
                     {[
                       { name: "Huberman Lab", image: "/huberman.webp" },
                       { name: "Lex Fridman", image: "/Lex.webp" },
@@ -498,7 +498,7 @@ export default function LandingPage() {
                     ].map((podcast, i) => (
                       <div 
                         key={`r1-${setIndex}-${i}`} 
-                        className="w-36 h-36 md:w-40 md:h-40 shrink-0 rounded-2xl overflow-hidden grayscale opacity-40 hover:grayscale-0 hover:opacity-100 hover:scale-110 transition-all duration-300 cursor-pointer"
+                        className="w-28 h-28 shrink-0 rounded-2xl overflow-hidden saturate-0 opacity-40 hover:saturate-100 hover:opacity-100 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,102,0,0.2)] transition-all duration-300 cursor-pointer"
                       >
                         <img src={podcast.image} alt={podcast.name} className="w-full h-full object-cover" />
                       </div>
@@ -508,11 +508,11 @@ export default function LandingPage() {
               </div>
             </div>
             
-            {/* Row 2 - Fast Right - Offset */}
-            <div className="flex items-center overflow-hidden -mb-4 ml-20">
-              <div className="flex animate-marquee-row-2 gap-4">
+            {/* Row 2 - Fast Right */}
+            <div className="flex items-center overflow-hidden">
+              <div className="flex animate-marquee-row-2 gap-x-12">
                 {[...Array(3)].map((_, setIndex) => (
-                  <div key={setIndex} className="flex gap-4 shrink-0">
+                  <div key={setIndex} className="flex gap-x-12 shrink-0">
                     {[
                       { name: "The Futur", image: "/thefutur.webp" },
                       { name: "My First Million", image: "/first million.webp" },
@@ -525,7 +525,7 @@ export default function LandingPage() {
                     ].map((podcast, i) => (
                       <div 
                         key={`r2-${setIndex}-${i}`} 
-                        className="w-36 h-36 md:w-40 md:h-40 shrink-0 rounded-2xl overflow-hidden grayscale opacity-40 hover:grayscale-0 hover:opacity-100 hover:scale-110 transition-all duration-300 cursor-pointer"
+                        className="w-28 h-28 shrink-0 rounded-2xl overflow-hidden saturate-0 opacity-40 hover:saturate-100 hover:opacity-100 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,102,0,0.2)] transition-all duration-300 cursor-pointer"
                       >
                         <img src={podcast.image} alt={podcast.name} className="w-full h-full object-cover" />
                       </div>
@@ -535,11 +535,11 @@ export default function LandingPage() {
               </div>
             </div>
             
-            {/* Row 3 - Slow Left - Offset */}
-            <div className="flex items-center overflow-hidden ml-10">
-              <div className="flex animate-marquee-row-3 gap-4">
+            {/* Row 3 - Slow Left */}
+            <div className="flex items-center overflow-hidden">
+              <div className="flex animate-marquee-row-3 gap-x-12">
                 {[...Array(3)].map((_, setIndex) => (
-                  <div key={setIndex} className="flex gap-4 shrink-0">
+                  <div key={setIndex} className="flex gap-x-12 shrink-0">
                     {[
                       { name: "Smartless", image: "/smartless.webp" },
                       { name: "The Daily", image: "/daily.webp" },
@@ -552,7 +552,7 @@ export default function LandingPage() {
                     ].map((podcast, i) => (
                       <div 
                         key={`r3-${setIndex}-${i}`} 
-                        className="w-36 h-36 md:w-40 md:h-40 shrink-0 rounded-2xl overflow-hidden grayscale opacity-40 hover:grayscale-0 hover:opacity-100 hover:scale-110 transition-all duration-300 cursor-pointer"
+                        className="w-28 h-28 shrink-0 rounded-2xl overflow-hidden saturate-0 opacity-40 hover:saturate-100 hover:opacity-100 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,102,0,0.2)] transition-all duration-300 cursor-pointer"
                       >
                         <img src={podcast.image} alt={podcast.name} className="w-full h-full object-cover" />
                       </div>

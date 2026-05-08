@@ -335,38 +335,62 @@ export default function LandingPage() {
                       </div>
                       
                       {/* Voice Selector */}
-                      <div className="relative">
-                        <button
-                          onClick={() => setVoiceOpen(o => !o)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/10 rounded-full text-zinc-300 transition-all"
-                        >
+                      <div className="relative group">
+                        <button className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/10 rounded-full text-sm text-zinc-300 transition-all">
                           <Speaker size={14} />
-                          <span className="text-[10px]">Voice: {voices.find(v => v.id === selectedVoice)?.label}</span>
-                          <ArrowRight size={12} className={`transition-transform ${voiceOpen ? "-rotate-90" : "rotate-90"}`} />
+                          <span className="text-[10px]">Voice: Marcus (US)</span>
+                          <ArrowRight size={12} className="rotate-90" />
                         </button>
-
+                        
                         {/* Dropdown Menu */}
-                        {voiceOpen && (
-                          <div className="absolute top-full left-0 mt-2 w-56 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl p-2 z-50">
-                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2 px-2">Select Voice</div>
-                            {voices.map(v => (
-                              <button
-                                key={v.id}
-                                onClick={() => { setSelectedVoice(v.id); setVoiceOpen(false); }}
-                                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <div className={`w-6 h-6 bg-gradient-to-br ${v.gradient} rounded-full flex items-center justify-center text-[10px] font-bold text-white`}>{v.initial}</div>
-                                  <div className="text-left">
-                                    <div className="text-xs text-white">{v.id}</div>
-                                    <div className="text-[10px] text-zinc-500">{v.desc}</div>
-                                  </div>
-                                </div>
-                                {selectedVoice === v.id && <Check size={14} className="text-[#FF6600]" />}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        <div className="absolute top-full left-0 mt-2 w-56 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl p-2 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all z-50">
+                          <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2 px-2">Select Voice</div>
+                          
+                          {/* Marcus */}
+                          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-[10px] font-bold text-white">M</div>
+                              <div className="text-left">
+                                <div className="text-xs text-white">Marcus</div>
+                                <div className="text-[10px] text-zinc-500">US Male • Authoritative</div>
+                              </div>
+                            </div>
+                            <Check size={14} className="text-[#FF6600]" />
+                          </button>
+                          
+                          {/* Sarah */}
+                          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-gradient-to-br from-pink-500 to-pink-700 rounded-full flex items-center justify-center text-[10px] font-bold text-white">S</div>
+                              <div className="text-left">
+                                <div className="text-xs text-white">Sarah</div>
+                                <div className="text-[10px] text-zinc-500">US Female • Conversational</div>
+                              </div>
+                            </div>
+                          </button>
+                          
+                          {/* George */}
+                          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-[10px] font-bold text-white">G</div>
+                              <div className="text-left">
+                                <div className="text-xs text-white">George</div>
+                                <div className="text-[10px] text-zinc-500">UK Male • Analytical</div>
+                              </div>
+                            </div>
+                          </button>
+                          
+                          {/* Charlotte */}
+                          <button className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-[10px] font-bold text-white">C</div>
+                              <div className="text-left">
+                                <div className="text-xs text-white">Charlotte</div>
+                                <div className="text-[10px] text-zinc-500">UK Female • Sophisticated</div>
+                              </div>
+                            </div>
+                          </button>
+                        </div>
                       </div>
                     </div>
                     

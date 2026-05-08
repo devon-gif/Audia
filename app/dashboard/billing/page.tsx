@@ -13,24 +13,39 @@ async function startCheckout(
   setLoading: (v: boolean) => void,
   router: ReturnType<typeof useRouter>
 ) {
-  // Guard: ensure session is still valid
+  // Use getUser() — forces a server-side token validation, more reliable than getSession()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    router.push("/login");
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError) {
+    console.error("[billing] Auth error during upgrade:", authError.message, authError);
+  }
+
+  if (authError || !user) {
+    console.warn("[billing] No authenticated user found — redirecting to login. authError:", authError);
+    router.push("/login?returnTo=/dashboard/billing");
     return;
   }
+
+  console.log("[billing] User verified:", user.id, "— starting checkout for priceId:", priceId);
 
   setLoading(true);
   try {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId, userEmail: session.user.email }),
+      body: JSON.stringify({ priceId, userEmail: user.email }),
     });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      console.error("[billing] /api/checkout returned", res.status, errData);
+      throw new Error(errData.error || `Checkout API error ${res.status}`);
+    }
+
     const data = await res.json();
     if (data.url) {
       window.location.assign(data.url);
@@ -38,7 +53,7 @@ async function startCheckout(
       throw new Error(data.error || "No checkout URL returned");
     }
   } catch (err) {
-    console.error("[checkout] Error:", err);
+    console.error("[billing] Checkout error:", err);
     alert("Failed to start checkout. Please try again.");
     setLoading(false);
   }

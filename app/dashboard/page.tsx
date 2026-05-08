@@ -62,6 +62,7 @@ export default function DashboardPage() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>("trialing");
 
   // Developer mode — unlocked for admin email
   const [devMode, setDevMode] = useState(false);
@@ -87,8 +88,9 @@ export default function DashboardPage() {
   const [previewingVoice, setPreviewingVoice] = useState<VoiceName | null>(null);
   const voicePreviewRef = useRef<HTMLAudioElement | null>(null);
 
-  // Pro gate
-  const isPro = false; // TODO: derive from subscription
+  // Pro gate — derived from live subscription data; devMode always acts as Pro
+  const isPro = devMode || subscriptionStatus === "active" || subscriptionStatus === "pro";
+  const trialExpired = !isPro && daysRemaining !== null && daysRemaining <= 0;
   const [showProModal, setShowProModal] = useState(false);
 
   // Toasts
@@ -104,29 +106,32 @@ export default function DashboardPage() {
       if (!user) { router.push("/login"); return; }
       setUserEmail(user.email ?? null);
       if (user.email === "heydevon@gmail.com") setDevMode(true);
-      const trialEndsAt = user.user_metadata?.trial_ends_at as string | undefined;
-      if (trialEndsAt) {
-        const diff = Math.ceil(
-          (new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-        );
-        setDaysRemaining(Math.max(0, diff));
-      }
 
-      // Poll profiles table until the DB trigger creates the row (max ~12s)
+      // Poll profiles table for trial + subscription data
       let attempts = 0;
       const checkProfile = async () => {
         const { data } = await supabase
           .from("profiles")
-          .select("id")
+          .select("id, trial_ends_at, subscription_status")
           .eq("id", user.id)
           .maybeSingle();
         if (data) {
           setProfileReady(true);
+          // Subscription status
+          if (data.subscription_status) setSubscriptionStatus(data.subscription_status as string);
+          // Days remaining — prefer profiles row, fall back to user_metadata
+          const trialEndsAt: string | undefined =
+            data.trial_ends_at ?? (user.user_metadata?.trial_ends_at as string | undefined);
+          if (trialEndsAt) {
+            const diff = Math.ceil(
+              (new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+            );
+            setDaysRemaining(Math.max(0, diff));
+          }
         } else if (attempts < 8) {
           attempts++;
           pollTimer = setTimeout(checkProfile, 1500);
         } else {
-          // Give up gracefully — don't block the UI forever
           setProfileReady(true);
         }
       };
@@ -323,13 +328,26 @@ export default function DashboardPage() {
             </button>
           </nav>
 
-          {/* Trial badge */}
-          {daysRemaining !== null && (
-            <div className="mb-3 px-3 py-2 bg-orange-500/10 border border-orange-500/20 rounded-xl">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-orange-400">
-                Trial
+          {/* Trial / status badge */}
+          {!isPro && daysRemaining !== null && (
+            <div className={`mb-3 px-3 py-2 rounded-xl border ${
+              daysRemaining <= 2
+                ? "bg-orange-500/15 border-orange-500/40"
+                : "bg-white/[0.03] border-white/10"
+            }`}>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                {daysRemaining <= 2 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0" />
+                )}
+                <p className={`text-[10px] font-bold uppercase tracking-widest ${
+                  daysRemaining <= 2 ? "text-orange-400" : "text-zinc-500"
+                }`}>Trial</p>
+              </div>
+              <p className={`text-xs font-semibold ${
+                daysRemaining <= 2 ? "text-orange-300" : "text-white"
+              }`}>
+                {daysRemaining === 0 ? "Expired" : `${daysRemaining} Day${daysRemaining === 1 ? "" : "s"} Left`}
               </p>
-              <p className="text-xs text-white font-semibold">{daysRemaining} Days Remaining</p>
             </div>
           )}
 
@@ -376,14 +394,38 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* URL input + controls */}
-              <div className="px-8 pt-6">
+              {/* URL input + controls — wrapped in paywall when trial expired */}
+              <div className="px-8 pt-6 relative">
+                {/* ── Paywall overlay ── */}
+                {trialExpired && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-md rounded-2xl" />
+                    <div className="relative z-10 flex flex-col items-center text-center max-w-sm px-6">
+                      <div className="w-14 h-14 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex items-center justify-center mb-5">
+                        <Crown size={26} className="text-orange-400" />
+                      </div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-orange-500 mb-2">Signal Complete</p>
+                      <h2 className="text-xl font-black tracking-tighter text-white mb-3 leading-tight">
+                        Your 7-Day Signal is complete.
+                      </h2>
+                      <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+                        Upgrade to Pro to reactivate your intelligence engine and process unlimited episodes.
+                      </p>
+                      <button
+                        onClick={() => setShowProModal(true)}
+                        className="w-full py-3 px-6 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl font-bold text-white text-sm shadow-[0_0_30px_rgba(255,120,0,0.35)] hover:scale-[1.02] transition-all"
+                      >
+                        Upgrade Now — $9.99/mo
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {(() => {
                   const trimmed = urlInput.trim();
                   const isUrl = trimmed !== "" && /^https?:\/\//i.test(trimmed);
                   const isSearchMode = trimmed !== "" && !isUrl;
                   const handleAction = () => isSearchMode ? handleSearch() : handleSummarize();
-                  const isWorking = isSummarizing || isSearching;
+                  const isWorking = isSummarizing || isSearching || trialExpired;
                   return (
                 <div className="flex gap-3 mb-4">
                   <div className="flex-1 relative">

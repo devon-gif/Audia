@@ -59,6 +59,31 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // ── 1b. Trial / subscription enforcement ─────────────────────────────────
+  // Developer account always bypasses — never block heydevon@gmail.com
+  const isDeveloper = user.email === "heydevon@gmail.com";
+  if (!isDeveloper) {
+    const anonCheck = await anonSupabase
+      .from("profiles")
+      .select("trial_ends_at, subscription_status")
+      .eq("id", user.id)
+      .maybeSingle();
+    const profile = anonCheck.data;
+    const status: string = profile?.subscription_status ?? "trialing";
+    const isPro = status === "active" || status === "pro";
+    if (!isPro) {
+      const trialEndsAt: string | undefined = profile?.trial_ends_at;
+      const trialExpired =
+        !trialEndsAt || new Date(trialEndsAt).getTime() < Date.now();
+      if (trialExpired) {
+        return NextResponse.json(
+          { error: "Your trial has expired. Upgrade to Pro to continue." },
+          { status: 403 }
+        );
+      }
+    }
+  }
+
   // Service-role client — bypasses RLS for DB writes
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

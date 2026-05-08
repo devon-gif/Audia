@@ -80,8 +80,10 @@ export async function POST(request: NextRequest) {
 
   const fileName = `${user.id}/${recordId ?? `adhoc-${Date.now()}`}.mp3`;
 
+  // Bucket name MUST match lib/pipeline.ts so both code paths write to the
+  // same Supabase Storage bucket. The bucket must exist and be public.
   const { error: uploadError } = await supabase.storage
-    .from("summaries")
+    .from("audio-briefs")
     .upload(fileName, audioBuffer, { contentType: "audio/mpeg", upsert: true });
 
   if (uploadError) {
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Storage upload failed: ${uploadError.message}` }, { status: 502 });
   }
 
-  const { data: publicUrlData } = supabase.storage.from("summaries").getPublicUrl(fileName);
+  const { data: publicUrlData } = supabase.storage.from("audio-briefs").getPublicUrl(fileName);
   const audioUrl = publicUrlData.publicUrl;
 
   // ── Optionally backfill the audio_generations record ───────────────────────

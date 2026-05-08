@@ -48,7 +48,6 @@ export default function EpisodeVault({
   const [isAutoDistillOpen, setIsAutoDistillOpen] = useState(false);
   const [sendToEmail, setSendToEmail] = useState(true);
   const [sendToNotion, setSendToNotion] = useState(false);
-  const [sendToSMS, setSendToSMS] = useState(false);
   const [summaryLength, setSummaryLength] = useState<"Short" | "Deep Dive">("Short");
 
   const handleSubscribe = async () => {
@@ -77,8 +76,8 @@ export default function EpisodeVault({
       
       if (data.success) {
         setSubscribed(true);
+        onToast?.("Settings saved!", "success");
         setIsAutoDistillOpen(false);
-        onToast?.("Subscribed. We will notify you when the next episode drops.", "success");
         await onSubscribe?.(true, preferredLength);
       } else {
         throw new Error(data.error || "Failed to subscribe");
@@ -282,8 +281,14 @@ export default function EpisodeVault({
 
       {/* Auto-Distill Modal */}
       {isAutoDistillOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="relative bg-[#0A0A0A] border border-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+        <div 
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setIsAutoDistillOpen(false)}
+        >
+          <div 
+            className="relative bg-[#0A0A0A] border border-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Close button */}
             <button
               onClick={() => setIsAutoDistillOpen(false)}
@@ -354,30 +359,6 @@ export default function EpisodeVault({
                 </div>
               </button>
 
-              {/* SMS Toggle with Upsell Badge */}
-              <button
-                onClick={() => setSendToSMS(!sendToSMS)}
-                className="w-full flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                  </div>
-                  <div className="text-left">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-white">SMS Text Message</p>
-                      <span className="px-1.5 py-0.5 bg-[#FF6600]/20 border border-[#FF6600]/30 rounded text-[10px] font-semibold text-[#FF8A00]">+$1.00/mo</span>
-                    </div>
-                    <p className="text-xs text-zinc-500">Get a quick text when it's ready.</p>
-                  </div>
-                </div>
-                <div className={`w-11 h-6 rounded-full transition-all relative ${sendToSMS ? "bg-[#FF6600]" : "bg-zinc-700"}`}>
-                  <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all ${sendToSMS ? "translate-x-5" : "translate-x-0"}`} />
-                </div>
-              </button>
-
               {/* Summary Length Selector */}
               <div className="p-3 bg-white/[0.03] border border-white/10 rounded-xl mt-4">
                 <p className="text-sm font-medium text-white mb-3">Summary Length</p>
@@ -409,15 +390,13 @@ export default function EpisodeVault({
             </button>
 
             {/* Unsubscribe Link */}
-            {subscribed && (
-              <button
-                onClick={handleUnsubscribe}
-                disabled={subscribing}
-                className="w-full mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-              >
-                Stop automatic summaries for this show
-              </button>
-            )}
+            <button
+              onClick={handleUnsubscribe}
+              disabled={subscribing}
+              className="w-full mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              Stop automatic summaries for this show
+            </button>
           </div>
         </div>
       )}

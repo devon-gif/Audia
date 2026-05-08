@@ -23,20 +23,22 @@ export async function POST(request: NextRequest) {
   }
 
   // ── Parse body ──────────────────────────────────────────────────────────────
-  let body: { text?: string; recordId?: string };
+  let body: { text?: string; voice?: string; recordId?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const OPENAI_VOICE = "onyx" as const;
+  const VALID_VOICES = ["onyx", "nova", "shimmer", "echo", "alloy", "fable"] as const;
+  type OpenAIVoice = typeof VALID_VOICES[number];
+  const requestedVoice: OpenAIVoice = (VALID_VOICES.includes(body.voice as OpenAIVoice) ? body.voice : "onyx") as OpenAIVoice;
   const { text, recordId } = body;
   if (!text || typeof text !== "string" || text.trim().length === 0) {
     return NextResponse.json({ error: 'Missing required field: "text"' }, { status: 400 });
   }
 
-  console.log(`[audio-route] userId=${user.id} voice=${OPENAI_VOICE} recordId=${recordId ?? "none"} chars=${text.length} keyPresent=${!!process.env.OPENAI_API_KEY}`);
+  console.log(`[audio-route] userId=${user.id} voice=${requestedVoice} recordId=${recordId ?? "none"} chars=${text.length} keyPresent=${!!process.env.OPENAI_API_KEY}`);
 
   // ── OpenAI TTS ───────────────────────────────────────────────────────────
   let audioBuffer: Buffer;
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: "tts-1",
-        voice: OPENAI_VOICE,
+        voice: requestedVoice,
         input: text.slice(0, 4096), // OpenAI TTS input limit
         response_format: "mp3",
       }),

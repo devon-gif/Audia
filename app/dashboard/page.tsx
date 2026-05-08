@@ -21,26 +21,15 @@ import EpisodeVault from "@/app/components/EpisodeVault";
 import type { Episode } from "@/app/api/episodes/route";
 import type { ShowSelection } from "@/app/components/PodcastGrid";
 
-type VoiceName = "Rachel" | "Sarah" | "Marcus" | "George";
+type VoiceName = "onyx" | "nova" | "shimmer" | "echo";
 type TargetLanguage = "en" | "es";
 
-const voices: {
-  elevenLabsId: string;
-  id: VoiceName;
-  label: string;
-  desc: string;
-  initial: string;
-  gradient: string;
-  previewUrl: string;
-  category: "Conversational" | "Authoritative" | "Bilingual";
-}[] = [
-  { elevenLabsId: "21m00Tcm4TlvDq8ikWAM", id: "Rachel",  label: "Rachel (Calm)",      desc: "Calm • Warm • Storytelling",  initial: "R", gradient: "from-rose-400 to-rose-700",    previewUrl: "/Rachel.mp3",  category: "Conversational" },
-  { elevenLabsId: "EXAVITQu4vr4xnSDxMaL", id: "Sarah",  label: "Sarah (Broadcast)",  desc: "US Female • Broadcast",       initial: "S", gradient: "from-pink-500 to-pink-700",   previewUrl: "/Sarah.mp3",   category: "Conversational" },
-  { elevenLabsId: "bIHbv24MWmeRgasZH58o", id: "Marcus", label: "Marcus (Executive)", desc: "US Male • Authoritative",     initial: "M", gradient: "from-blue-500 to-blue-700",   previewUrl: "/Marcus.mp3",  category: "Authoritative" },
-  { elevenLabsId: "JBFqnCBsd6RMkjVDRZzb", id: "George", label: "George (Cinematic)", desc: "UK Male • Cinematic",          initial: "G", gradient: "from-green-500 to-green-700", previewUrl: "/George.mp3",  category: "Bilingual" },
+const voices: { id: VoiceName; label: string; desc: string }[] = [
+  { id: "onyx",    label: "Onyx",    desc: "Deep Male" },
+  { id: "nova",    label: "Nova",    desc: "Professional Female" },
+  { id: "shimmer", label: "Shimmer", desc: "Engaging Female" },
+  { id: "echo",    label: "Echo",    desc: "Conversational Male" },
 ];
-
-const VOICE_CATEGORIES = ["Conversational", "Authoritative", "Bilingual"] as const;
 
 type SearchResult = {
   trackId: number;
@@ -88,8 +77,7 @@ export default function DashboardPage() {
       return () => clearTimeout(timer);
     }
   }, [searchParams]);
-  const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Rachel");
-  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState<VoiceName>("onyx");
   const [outputLanguage, setOutputLanguage] = useState<TargetLanguage>("en");
   const [outputLangOpen, setOutputLangOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -115,10 +103,6 @@ export default function DashboardPage() {
   // Search results (when input is a text query, not a URL)
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-
-  // Voice preview
-  const [previewingVoice, setPreviewingVoice] = useState<VoiceName | null>(null);
-  const voicePreviewRef = useRef<HTMLAudioElement | null>(null);
 
   // Pro gate — derived from live subscription data; devMode always acts as Pro
   const isPro = devMode || subscriptionStatus === "active" || subscriptionStatus === "pro";
@@ -243,34 +227,7 @@ export default function DashboardPage() {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4500);
   };
 
-  const previewVoice = (voiceId: VoiceName, url: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Toggle off if already playing this voice
-    if (previewingVoice === voiceId) {
-      voicePreviewRef.current?.pause();
-      voicePreviewRef.current = null;
-      setPreviewingVoice(null);
-      return;
-    }
-    // Stop any current preview
-    if (voicePreviewRef.current) {
-      voicePreviewRef.current.pause();
-      voicePreviewRef.current = null;
-    }
-    const audio = new Audio(url);
-    voicePreviewRef.current = audio;
-    setPreviewingVoice(voiceId);
-    audio.play().catch(() => {
-      // Silent failure — file may not exist in dev
-      voicePreviewRef.current = null;
-      setPreviewingVoice(null);
-    });
-    audio.addEventListener("ended", () => {
-      voicePreviewRef.current = null;
-      setPreviewingVoice(null);
-    });
-  };
-
+  const handleSearch = async () => {
   const handleSearch = async () => {
     if (!urlInput.trim() || isSearching) return;
     setIsSearching(true);
@@ -467,7 +424,7 @@ export default function DashboardPage() {
           url: targetUrl,
           length: briefLength,
           bypassCredits,
-          voiceId: voices.find(v => v.id === selectedVoice)?.elevenLabsId,
+          voiceId: selectedVoice,
           targetLanguage: outputLanguage,
         }),
       });
@@ -498,7 +455,7 @@ export default function DashboardPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             text: data.brief,
-            voiceId: voices.find(v => v.id === selectedVoice)?.elevenLabsId,
+            voice: selectedVoice,
             recordId: data.id,
           }),
         })
@@ -924,60 +881,24 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Voice selector */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setVoiceOpen(o => !o)}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-full text-zinc-300 transition-all"
-                    >
-                      <Speaker size={13} />
-                      <span className="text-[10px]">Voice: {voices.find(v => v.id === selectedVoice)?.label}</span>
-                      <ArrowRight size={11} className={`transition-transform ${voiceOpen ? "-rotate-90" : "rotate-90"}`} />
-                    </button>
-                    {voiceOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-60 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl p-2 z-50 shadow-2xl">
-                        {VOICE_CATEGORIES.map(cat => {
-                          const catVoices = voices.filter(v => v.category === cat);
-                          if (!catVoices.length) return null;
-                          return (
-                            <div key={cat}>
-                              <p className="text-[9px] text-zinc-600 uppercase tracking-[0.2em] mb-1 mt-2 px-2 font-bold first:mt-0">{cat}</p>
-                              {catVoices.map(v => (
-                                <div key={v.id} className="flex items-center gap-1">
-                                  <button
-                                    onClick={() => { setSelectedVoice(v.id); setVoiceOpen(false); }}
-                                    className="flex-1 flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <div className={`w-6 h-6 bg-gradient-to-br ${v.gradient} rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0`}>{v.initial}</div>
-                                      <div className="text-left">
-                                        <p className="text-xs text-white font-medium">{v.label}</p>
-                                        <p className="text-[10px] text-zinc-500">{v.desc}</p>
-                                      </div>
-                                    </div>
-                                    {selectedVoice === v.id && <Check size={13} className="text-[#FF6600] shrink-0" />}
-                                  </button>
-                                  {/* Preview button */}
-                                  <button
-                                    onClick={(e) => previewVoice(v.id, v.previewUrl, e)}
-                                    title={previewingVoice === v.id ? "Stop preview" : "Preview voice"}
-                                    className={`relative p-1.5 rounded-lg transition-all shrink-0 ${
-                                      previewingVoice === v.id ? "text-orange-400" : "text-white/30 hover:text-orange-500"
-                                    }`}
-                                  >
-                                    {previewingVoice === v.id && (
-                                      <span className="absolute inset-0 rounded-lg ring-1 ring-orange-500/60 animate-pulse" />
-                                    )}
-                                    {previewingVoice === v.id
-                                      ? <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="1.5"/></svg>
-                                      : <Play size={10} />}
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        })}
-                      </div>
+                  {/* Voice selector — 4 OpenAI TTS pills */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-widest mr-1">Voice</span>
+                    {voices.map(v => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVoice(v.id)}
+                        title={v.desc}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
+                          selectedVoice === v.id
+                            ? "bg-orange-500/20 border-orange-500/50 text-orange-300 shadow-[0_0_10px_rgba(255,102,0,0.2)]"
+                            : "bg-white/[0.03] border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-200"
+                        }`}
+                      >
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
                     )}
                   </div>
 

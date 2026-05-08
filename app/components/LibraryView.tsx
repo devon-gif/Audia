@@ -1,73 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Download, Trash2, ExternalLink, Clock, Calendar, Play } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Download, ExternalLink, Clock, Calendar, Play, RefreshCw } from "lucide-react";
 import PodcastCover from "@/app/components/PodcastCover";
+
+interface LibraryItem {
+  id: string;
+  source_url: string;
+  summary_text: string;
+  brief_audio_url: string | null;
+  voice: string;
+  created_at: string;
+  brief_length: string;
+}
 
 interface Props {
   onPlay?: (audioUrl: string, title: string) => void;
 }
 
-// ─── Mock data ─────────────────────────────────────────────────────────────
-// showName drives real artwork lookups inside PodcastCover
+// Derive a human-readable title from a URL
+function titleFromUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    const slug = u.pathname.split("/").filter(Boolean).pop() ?? "";
+    return slug
+      ? decodeURIComponent(slug).replace(/[-_]+/g, " ").replace(/\.\w+$/, "")
+      : u.hostname;
+  } catch {
+    return url;
+  }
+}
 
-const savedSummaries = [
-  { id: 1, title: "The Art of Focus",       showName: "Cal Newport Deep Questions", date: "2 hours ago", length: "4m 32s", briefAudioUrl: null as string | null },
-  { id: 2, title: "GPT-5 and the Future",   showName: "Lex Fridman Podcast",        date: "Yesterday",   length: "6m 18s", briefAudioUrl: null as string | null },
-  { id: 3, title: "Dopamine Detox",         showName: "Huberman Lab",               date: "3 days ago",  length: "3m 45s", briefAudioUrl: null as string | null },
-  { id: 4, title: "Crypto Market Analysis", showName: "Bankless",                   date: "1 week ago",  length: "8m 12s", briefAudioUrl: null as string | null },
-  { id: 5, title: "Startup Fundraising",    showName: "Y Combinator Podcast",       date: "1 week ago",  length: "5m 22s", briefAudioUrl: null as string | null },
-];
+function relativeDate(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
 
-const recentShows = [
-  "Huberman Lab",
-  "Lex Fridman Podcast",
-  "The Joe Rogan Experience",
-  "The Daily",
-  "The Tim Ferriss Show",
-  "Planet Money",
-  "Radiolab",
-  "How I Built This",
-  "The Knowledge Project",
-  "Invest Like the Best",
-  "My First Million",
-  "Diary of a CEO",
-];
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
-export default function LibraryView({ onPlay }: Props) {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filtered = savedSummaries.filter(
-    (s) =>
-      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.showName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleDownload = async (audioUrl: string, title: string) => {
-    try {
-      const res = await fetch(audioUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.mp3`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch {
-      // Fallback: open in new tab
-      window.open(audioUrl, "_blank");
-    }
-  };
-
-  const row1 = [...recentShows, ...recentShows];
-  const row2 = [...recentShows.slice().reverse(), ...recentShows.slice().reverse()];
-  const row3 = [...recentShows.slice(4), ...recentShows.slice(4)];
-
-  return (
     <div className="flex-1 flex flex-col h-full">
 
       {/* Header */}

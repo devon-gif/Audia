@@ -19,11 +19,17 @@ const elevenlabs = new ElevenLabsClient({
   apiKey: process.env.ELEVENLABS_API_KEY!,
 });
 
-// ElevenLabs voice ID for "Brian" — a steady, authoritative premium voice
-// Switch to your preferred voice ID from the ElevenLabs dashboard if desired
-const ELEVENLABS_VOICE_ID = "nPczCjzI2devNBz1zQrb"; // Brian
+// Default voice: Rachel (calm, warm) — overridden by voiceId in request body
+const DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
 
 const rssParser = new Parser();
+
+// Credit caps per plan tier
+const CREDIT_CAPS: Record<string, number> = {
+  free: 3,
+  pro: 15,
+  max: 100,
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -62,10 +68,14 @@ export async function POST(request: NextRequest) {
   // ── 1b. Trial / subscription enforcement ─────────────────────────────────
   // Developer account always bypasses — never block heydevon@gmail.com
   const isDeveloper = user.email === "heydevon@gmail.com";
+
+  // Read profile — trial status + credit fields
+  let planTier = "free";
+  let monthlyGenerations = 0;
   if (!isDeveloper) {
     const anonCheck = await anonSupabase
       .from("profiles")
-      .select("trial_ends_at, subscription_status")
+      .select("trial_ends_at, subscription_status, plan_tier, monthly_generations")
       .eq("id", user.id)
       .maybeSingle();
     const profile = anonCheck.data;
@@ -82,6 +92,24 @@ export async function POST(request: NextRequest) {
         );
       }
     }
+    planTier = (profile?.plan_tier as string | null) ?? "free";
+    monthlyGenerations = (profile?.monthly_generations as number | null) ?? 0;
+  }
+
+  // ── 1c. Credit cap enforcement ────────────────────────────────────────────
+  if (!isDeveloper) {
+    const cap = CREDIT_CAPS[planTier] ?? CREDIT_CAPS.free;
+    if (monthlyGenerations >= cap) {
+      const messages: Record<string, string> = {
+        free: `Free tier limit reached (${cap}/month). Upgrade to Pro to continue.`,
+        pro: `Pro tier limit reached (${cap}/month). Upgrade to Max for unlimited access.`,
+        max: `Fair use limit reached (${cap}/month). Contact support if you need more.`,
+      };
+      return NextResponse.json(
+        { error: messages[planTier] ?? messages.free, upgradeRequired: true },
+        { status: 403 }
+      );
+    }
   }
 
   // Service-role client — bypasses RLS for DB writes
@@ -92,14 +120,14 @@ export async function POST(request: NextRequest) {
   );
 
   // ── 2. Parse & validate body ──────────────────────────────────────────────
-  let body: { url?: string; length?: "3m" | "5m" | "10m" };
+  let body: { url?: string; length?: "3m" | "5m" | "10m"; voiceId?: string; bypassCredits?: boolean };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { url, length = "5m" } = body;
+  const { url, length = "5m", voiceId = DEFAULT_VOICE_ID } = body;
   if (!url || typeof url !== "string") {
     return NextResponse.json({ error: 'Missing required field: "url"' }, { status: 400 });
   }
@@ -202,7 +230,7 @@ Rules:
   let briefAudioUrl: string | null = null;
   try {
     // Generate audio from the brief text
-    const audioStream = await elevenlabs.textToSpeech.convert(ELEVENLABS_VOICE_ID, {
+    const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
       text: brief,
       model_id: "eleven_turbo_v2_5",
       voice_settings: {
@@ -242,17 +270,22 @@ Rules:
     console.warn("[summarize] ElevenLabs TTS failed:", (err as Error).message);
   }
 
-  // ── 8. Mark completed ────────────────────────────────────────────────────
-  if (recordId) {
-    await supabase
-      .from("audio_generations")
-      .update({
-        summary_text: brief,
-        brief_audio_url: briefAudioUrl,
-        status: "completed",
-      })
-      .eq("id", recordId);
-  }
+  // ── 8. Mark completed + increment credit counter ────────────────────────
+  await Promise.all([
+    recordId
+      ? supabase
+          .from("audio_generations")
+          .update({ summary_text: brief, brief_audio_url: briefAudioUrl, status: "completed" })
+          .eq("id", recordId)
+      : Promise.resolve(),
+    // Increment monthly_generations (developer and bypassCredits are exempt)
+    !isDeveloper
+      ? supabase
+          .from("profiles")
+          .update({ monthly_generations: monthlyGenerations + 1 })
+          .eq("id", user.id)
+      : Promise.resolve(),
+  ]);
 
   return NextResponse.json({
     id: recordId,

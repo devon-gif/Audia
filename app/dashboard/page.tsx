@@ -96,6 +96,10 @@ export default function DashboardPage() {
   const trialExpired = !isPro && daysRemaining !== null && daysRemaining <= 0;
   const [showProModal, setShowProModal] = useState(false);
 
+  // Credit tracking
+  const [planTier, setPlanTier] = useState<"free" | "pro" | "max">("free");
+  const [monthlyGenerations, setMonthlyGenerations] = useState(0);
+
   // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -120,13 +124,16 @@ export default function DashboardPage() {
       const checkProfile = async () => {
         const { data } = await supabase
           .from("profiles")
-          .select("id, trial_ends_at, subscription_status")
+          .select("id, trial_ends_at, subscription_status, plan_tier, monthly_generations")
           .eq("id", user.id)
           .maybeSingle();
         if (data) {
           setProfileReady(true);
           // Subscription status
           if (data.subscription_status) setSubscriptionStatus(data.subscription_status as string);
+          // Credit tier
+          if (data.plan_tier) setPlanTier(data.plan_tier as "free" | "pro" | "max");
+          if (data.monthly_generations != null) setMonthlyGenerations(data.monthly_generations as number);
           // Days remaining — prefer profiles row, fall back to user_metadata
           const trialEndsAt: string | undefined =
             data.trial_ends_at ?? (user.user_metadata?.trial_ends_at as string | undefined);
@@ -165,7 +172,18 @@ export default function DashboardPage() {
     const m = Math.floor(s / 60);
     return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   };
-
+  // Auto-play the audio brief as soon as it loads
+  useEffect(() => {
+    if (briefResult?.briefAudioUrl && audioRef.current) {
+      audioRef.current.load();
+      const el = audioRef.current;
+      const onCanPlay = () => {
+        el.play().then(() => setIsPlaying(true)).catch(() => {});
+        el.removeEventListener("canplaythrough", onCanPlay);
+      };
+      el.addEventListener("canplaythrough", onCanPlay);
+    }
+  }, [briefResult?.briefAudioUrl]);
   const toastCounter = useRef(0);
 
   const showToast = (message: string, type: Toast["type"] = "error") => {
@@ -267,11 +285,17 @@ export default function DashboardPage() {
       const res = await fetch("/api/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: urlInput.trim(), length: briefLength, bypassCredits }),
+        body: JSON.stringify({
+          url: urlInput.trim(),
+          length: briefLength,
+          bypassCredits,
+          voiceId: voices.find(v => v.id === selectedVoice)?.elevenLabsId,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
         if (devMode) devLog(`✗ Error ${res.status}: ${data.error}`);
+        if (data.upgradeRequired) setShowProModal(true);
         throw new Error(data.error ?? "Summarization failed");
       }
       if (devMode) {
@@ -281,6 +305,8 @@ export default function DashboardPage() {
         devLog(`✓ DB — record id: ${data.id}`);
       }
       setBriefResult(data as BriefResult);
+      // Optimistically increment local credit counter
+      setMonthlyGenerations(prev => prev + 1);
     } catch (err) {
       showToast((err as Error).message);
     } finally {
@@ -386,6 +412,44 @@ export default function DashboardPage() {
               </p>
             </div>
           )}
+
+          {/* Credit counter */}
+          {(() => {
+            const caps: Record<string, number> = { free: 3, pro: 15, max: 100 };
+            const cap = caps[planTier] ?? 3;
+            const pct = Math.min((monthlyGenerations / cap) * 100, 100);
+            const isMax = planTier === "max";
+            const nearLimit = !isMax && pct >= 75;
+            const atLimit = !isMax && monthlyGenerations >= cap;
+            return (
+              <div className="mb-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Credits</span>
+                  <span className={`text-[10px] font-semibold tabular-nums ${
+                    isMax ? "text-emerald-400" : atLimit ? "text-red-400" : nearLimit ? "text-orange-400" : "text-zinc-300"
+                  }`}>
+                    {isMax ? "∞" : `${monthlyGenerations}/${cap}`}
+                  </span>
+                </div>
+                {isMax ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <p className="text-[9px] text-emerald-500/80 uppercase tracking-widest font-semibold">Signal Active</p>
+                  </div>
+                ) : (
+                  <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${
+                        atLimit ? "bg-red-500" : nearLimit ? "bg-orange-400" : "bg-emerald-500"
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                )}
+                <p className="text-[9px] text-zinc-600 mt-1.5 capitalize">{planTier} Plan</p>
+              </div>
+            );
+          })()}
 
           {/* Upgrade card */}
           <div className="p-3 bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-orange-500/20 rounded-xl">

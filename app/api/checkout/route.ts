@@ -28,6 +28,7 @@ export async function POST(req: Request) {
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     console.log(`[STRIPE LOG] Creating checkout for Price: ${priceId}`);
+    console.log("FINAL PRICE ID RECEIVED:", priceId);
 
     // 3. Create the Session
     const session = await stripe.checkout.sessions.create({

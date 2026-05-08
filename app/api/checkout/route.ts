@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
     // 2. Resolve authenticated user so we can attach client_reference_id
     const cookieStore = await cookies();
-    const supabase = createClient(
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {

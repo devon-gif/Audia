@@ -204,6 +204,7 @@ Rules:
       .update({
         summary_text: brief,
         brief_audio_url: briefAudioUrl,
+        voice: voiceId,
         status: "completed",
       })
       .eq("id", recordId);

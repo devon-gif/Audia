@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, Radio, ArrowRight, Loader2, Bell, BellOff } from "lucide-react";
+import { X, Radio, ArrowRight, Loader2, Bell, BellOff, HelpCircle, Check } from "lucide-react";
+import * as Popover from "@radix-ui/react-popover";
+import * as Tooltip from "@radix-ui/react-tooltip";
 import { type Episode } from "@/app/api/episodes/route";
 
 interface Props {
@@ -11,9 +13,11 @@ interface Props {
   episodes: Episode[];
   loading: boolean;
   onSelect: (audioUrl: string) => void;
-  onSubscribe?: (subscribed: boolean) => void;
+  onSubscribe?: (subscribed: boolean, preferredLength: string) => void;
   initialSubscribed?: boolean;
+  initialPreferredLength?: string;
   onClose: () => void;
+  onToast?: (message: string, type: "success" | "error" | "info") => void;
 }
 
 function formatDate(raw: string) {
@@ -25,21 +29,96 @@ function formatDate(raw: string) {
   }
 }
 
-export default function EpisodeVault({ showName, artworkUrl, feedUrl, episodes, loading, onSelect, onSubscribe, initialSubscribed = false, onClose }: Props) {
+export default function EpisodeVault({ 
+  showName, 
+  artworkUrl, 
+  feedUrl, 
+  episodes, 
+  loading, 
+  onSelect, 
+  onSubscribe, 
+  initialSubscribed = false,
+  initialPreferredLength = "5m",
+  onClose,
+  onToast
+}: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [subscribed, setSubscribed] = useState(initialSubscribed);
   const [subscribing, setSubscribing] = useState(false);
+  const [preferredLength, setPreferredLength] = useState(initialPreferredLength);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
-  const handleToggleSubscribe = async () => {
+  const handleSubscribe = async () => {
     if (subscribing) return;
     setSubscribing(true);
-    const next = !subscribed;
-    setSubscribed(next);
+    
     try {
-      await onSubscribe?.(next);
-    } catch {
-      // Revert optimistic update on failure
-      setSubscribed(!next);
+      // Make API call to subscribe
+      const response = await fetch("/api/subscriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          feedUrl,
+          podcastName: showName,
+          preferredLength,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to subscribe");
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSubscribed(true);
+        setPopoverOpen(false);
+        onToast?.("Subscribed. We will notify you when the next episode drops.", "success");
+        await onSubscribe?.(true, preferredLength);
+      } else {
+        throw new Error(data.error || "Failed to subscribe");
+      }
+    } catch (error) {
+      console.error("Error subscribing:", error);
+      onToast?.("Failed to subscribe. Please try again.", "error");
+    } finally {
+      setSubscribing(false);
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    if (subscribing) return;
+    setSubscribing(true);
+    
+    try {
+      const response = await fetch("/api/subscriptions", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          feedUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to unsubscribe");
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSubscribed(false);
+        onToast?.("Unsubscribed successfully", "info");
+        await onSubscribe?.(false, preferredLength);
+      } else {
+        throw new Error(data.error || "Failed to unsubscribe");
+      }
+    } catch (error) {
+      console.error("Error unsubscribing:", error);
+      onToast?.("Failed to unsubscribe. Please try again.", "error");
     } finally {
       setSubscribing(false);
     }
@@ -88,25 +167,129 @@ export default function EpisodeVault({ showName, artworkUrl, feedUrl, episodes, 
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Auto-Distill toggle */}
+            {/* Auto-Distill Popover */}
             {feedUrl && (
-              <button
-                onClick={handleToggleSubscribe}
-                disabled={subscribing}
-                title={subscribed ? "Unsubscribe from Auto-Distill" : "Auto-Distill New Episodes"}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all ${
-                  subscribed
-                    ? "bg-orange-500/15 border-orange-500/40 text-orange-300 shadow-[0_0_12px_rgba(255,102,0,0.15)]"
-                    : "bg-white/[0.03] border-white/10 text-zinc-400 hover:border-orange-500/30 hover:text-orange-300"
-                } disabled:opacity-50`}
-              >
-                {subscribed ? <Bell size={11} className="shrink-0" /> : <BellOff size={11} className="shrink-0" />}
-                {subscribing ? "Saving…" : subscribed ? "Auto-Distill On" : "Auto-Distill"}
-                {/* Pulse dot when subscribed */}
-                {subscribed && !subscribing && (
-                  <span className="w-1 h-1 rounded-full bg-orange-400 animate-pulse" />
-                )}
-              </button>
+              <Tooltip.Provider>
+                <Popover.Root open={popoverOpen} onOpenChange={setPopoverOpen}>
+                  {subscribed ? (
+                    // Active state - show manage button with popover for unsubscribe
+                    <Popover.Trigger asChild>
+                      <button
+                        disabled={subscribing}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all bg-orange-500/15 border-orange-500/40 text-orange-300 shadow-[0_0_12px_rgba(255,102,0,0.15)] disabled:opacity-50"
+                      >
+                        <Bell size={11} className="shrink-0" />
+                        {subscribing ? "Saving…" : "Manage Automation"}
+                        <span className="w-1 h-1 rounded-full bg-orange-400 animate-pulse" />
+                      </button>
+                    </Popover.Trigger>
+                  ) : (
+                    // Inactive state - show subscribe popover
+                    <Popover.Trigger asChild>
+                      <button
+                        disabled={subscribing}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all bg-white/[0.03] border-white/10 text-zinc-400 hover:border-orange-500/30 hover:text-orange-300 disabled:opacity-50"
+                      >
+                        <BellOff size={11} className="shrink-0" />
+                        {subscribing ? "Saving…" : "Auto-Distill"}
+                        
+                        {/* Help Circle with Tooltip */}
+                        <Tooltip.Root>
+                          <Tooltip.Trigger asChild>
+                            <span 
+                              className="ml-1 p-0.5 rounded-full hover:bg-white/10 cursor-help"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <HelpCircle size={12} className="text-zinc-500" />
+                            </span>
+                          </Tooltip.Trigger>
+                          <Tooltip.Portal>
+                            <Tooltip.Content
+                              className="bg-black/90 backdrop-blur-xl border border-white/10 rounded-lg px-3 py-2 text-xs text-zinc-300 max-w-[200px] shadow-xl"
+                              sideOffset={5}
+                            >
+                              Automatically receive an audio brief in your inbox whenever a new episode drops.
+                              <Tooltip.Arrow className="fill-white/10" />
+                            </Tooltip.Content>
+                          </Tooltip.Portal>
+                        </Tooltip.Root>
+                      </button>
+                    </Popover.Trigger>
+                  )}
+
+                  <Popover.Portal>
+                    <Popover.Content
+                      className="bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 w-[280px] shadow-[0_0_40px_rgba(0,0,0,0.8)] z-50"
+                      sideOffset={8}
+                      align="end"
+                    >
+                      {subscribed ? (
+                        // Manage Automation Popover
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-sm font-semibold text-white mb-1">Manage Automation</h4>
+                            <p className="text-xs text-zinc-400">
+                              You are subscribed to Auto-Distill for this show.
+                            </p>
+                          </div>
+                          
+                          <div className="pt-2 border-t border-white/10">
+                            <p className="text-xs text-zinc-500 mb-2">
+                              Preferred length: <span className="text-orange-400">{preferredLength}</span>
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={handleUnsubscribe}
+                            disabled={subscribing}
+                            className="w-full py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-sm text-white font-medium transition-all disabled:opacity-50"
+                          >
+                            {subscribing ? "Unsubscribing…" : "Unsubscribe"}
+                          </button>
+                        </div>
+                      ) : (
+                        // Subscribe Popover
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-sm font-semibold text-white mb-1">Automate this Show</h4>
+                            <p className="text-xs text-zinc-400">
+                              Choose your default brief length for new episodes.
+                            </p>
+                          </div>
+
+                          {/* Length Selector */}
+                          <div className="bg-black/60 border border-white/10 rounded-full p-0.5 flex items-center">
+                            {["3m", "5m", "10m"].map((length) => (
+                              <button
+                                key={length}
+                                onClick={() => setPreferredLength(length)}
+                                className={`flex-1 py-1.5 px-2 rounded-full text-[11px] font-medium transition-all ${
+                                  preferredLength === length
+                                    ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]"
+                                    : "text-zinc-400 hover:text-white"
+                                }`}
+                              >
+                                {length}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Subscribe Button */}
+                          <button
+                            onClick={handleSubscribe}
+                            disabled={subscribing}
+                            className="w-full py-2.5 px-4 bg-gradient-to-r from-[#FF6600] to-[#FF8A00] hover:opacity-90 rounded-lg text-sm text-white font-semibold transition-all shadow-[0_0_20px_rgba(255,102,0,0.3)] disabled:opacity-50"
+                          >
+                            {subscribing ? "Subscribing…" : "Subscribe"}
+                          </button>
+                        </div>
+                      )}
+
+                      <Popover.Arrow className="fill-white/10" />
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
+              </Tooltip.Provider>
             )}
 
             <button

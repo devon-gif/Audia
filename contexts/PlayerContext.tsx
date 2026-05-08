@@ -21,6 +21,7 @@ interface PlayerState {
   isPlaying: boolean;
   progress: number;   // seconds elapsed
   duration: number;   // total seconds
+  volume: number;     // 0–1
 }
 
 interface PlayerActions {
@@ -40,6 +41,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolumeState] = useState(1);
 
   // Lazily create the Audio element once (client-only)
   useEffect(() => {
@@ -90,6 +92,20 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setProgress(seconds);
   }, []);
 
+  const skip = useCallback((delta: number) => {
+    const el = audioRef.current;
+    if (!el) return;
+    const next = Math.min(Math.max(el.currentTime + delta, 0), el.duration || 0);
+    el.currentTime = next;
+    setProgress(next);
+  }, []);
+
+  const setVolume = useCallback((v: number) => {
+    const clamped = Math.min(Math.max(v, 0), 1);
+    setVolumeState(clamped);
+    if (audioRef.current) audioRef.current.volume = clamped;
+  }, []);
+
   const dismiss = useCallback(() => {
     const el = audioRef.current;
     if (el) { el.pause(); el.src = ""; }
@@ -100,7 +116,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <PlayerContext.Provider value={{ track, isPlaying, progress, duration, load, toggle, seek, dismiss }}>
+    <PlayerContext.Provider value={{ track, isPlaying, progress, duration, volume, load, toggle, seek, skip, setVolume, dismiss }}>
       {children}
     </PlayerContext.Provider>
   );

@@ -10,7 +10,6 @@ import {
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayer } from "@/contexts/PlayerContext";
-import GlobalPlayer from "@/app/components/dashboard/GlobalPlayer";
 import DiscoverView from "@/app/components/DiscoverView";
 import LibraryView from "@/app/components/LibraryView";
 import PodcastGrid from "@/app/components/PodcastGrid";
@@ -705,9 +704,6 @@ export default function DashboardPage() {
 
         {/* ── Main content column ── */}
         <div className="flex-1 flex flex-col overflow-y-auto justify-start items-start">
-
-        {/* ── Global Audio Player ── rendered from context, persists across view/route changes */}
-        <GlobalPlayer />
 
         {/* ── View content ── */}
         {activeView === "new-summary" ? (

@@ -29,8 +29,11 @@ export default function LoginPage() {
       setError(error.message);
       return;
     }
+    // Ensure the client-side session is committed, then hard-navigate so the
+    // browser sends the new cookies on the very first request to /dashboard
+    await supabase.auth.getSession();
     router.refresh();
-    router.push("/dashboard");
+    window.location.href = "/dashboard";
   };
 
   return (

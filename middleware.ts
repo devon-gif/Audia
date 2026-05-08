@@ -4,6 +4,13 @@ import { createServerClient } from "@supabase/ssr";
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  const { pathname } = request.nextUrl;
+
+  // Let the auth callback route handle its own code exchange uninterrupted
+  if (pathname.startsWith("/auth")) {
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -30,13 +37,6 @@ export async function middleware(request: NextRequest) {
 
   // Refresh the session on every request (keeps tokens alive)
   const { data: { user } } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
-
-  // Let the auth callback route handle its own flow uninterrupted
-  if (pathname.startsWith("/auth")) {
-    return response;
-  }
 
   // Guard /dashboard routes
   if (pathname.startsWith("/dashboard") && !user) {

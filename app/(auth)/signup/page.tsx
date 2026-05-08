@@ -45,10 +45,11 @@ export default function SignupPage() {
       return;
     }
 
-    // Session exists — refresh server-side cookies then navigate
+    // Session exists — hard-navigate so cookies are sent on the first request
     setSuccess(true);
+    await supabase.auth.getSession();
     router.refresh();
-    setTimeout(() => router.push("/dashboard"), 1200);
+    setTimeout(() => { window.location.href = "/dashboard"; }, 1200);
   };
 
   return (

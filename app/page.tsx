@@ -160,7 +160,7 @@ export default function LandingPage() {
           <div className="relative z-10 w-full max-w-6xl mx-auto px-6 flex flex-col items-center">
             
             {/* Hero Headline */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter pb-2 mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter pb-4 mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
               Turn Hours of Audio<br />
               Into Minutes of Insight.
             </h1>

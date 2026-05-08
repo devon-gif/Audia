@@ -503,19 +503,34 @@ export default function DashboardPage() {
           }),
         })
           .then(async (r) => {
-            const audioData = await r.json();
             if (!r.ok) {
-              console.warn("[audio] /api/summarize/audio error:", r.status, audioData?.error);
-              if (r.status === 402) {
-                showToast("Audio generation paused: System capacity reached. Your text summary is ready below.");
+              // Safely parse — body may be plain text on 502/504 gateway errors
+              let errMsg: string | undefined;
+              try {
+                const errData = await r.json();
+                errMsg = errData?.error;
+              } catch {
+                errMsg = await r.text().catch(() => undefined);
+              }
+              console.warn("[audio] /api/summarize/audio error:", r.status, errMsg);
+              // All capacity / billing / gateway errors → single friendly message
+              if (r.status === 402 || r.status === 502 || r.status === 503 || r.status === 504) {
+                showToast("Audio generation paused: AI provider capacity reached. Your text summary is ready below.");
               } else {
-                showToast(`Audio generation failed: ${audioData?.error ?? r.status}`);
+                showToast(`Audio generation paused: ${errMsg ?? r.status}. Your text summary is ready below.`);
               }
               return;
             }
+            // Happy path — safe to parse JSON
+            let audioData: { audioUrl?: string } = {};
+            try {
+              audioData = await r.json();
+            } catch {
+              console.warn("[audio] Could not parse success response as JSON");
+            }
             if (audioData.audioUrl) {
               setBriefResult((prev) => prev ? { ...prev, briefAudioUrl: audioData.audioUrl } : prev);
-              loadTrack({ url: audioData.audioUrl, title: "Audia Brief" });
+              loadTrack({ url: audioData.audioUrl!, title: "Audia Brief" });
             } else {
               console.warn("[audio] Response OK but no audioUrl returned:", audioData);
             }

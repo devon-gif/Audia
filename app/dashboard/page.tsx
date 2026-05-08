@@ -1102,11 +1102,6 @@ export default function DashboardPage() {
                     loading={vaultLoading}
                     onSelect={handleEpisodeSelect}
                     onSummarize={handleEpisodeSummarize}
-                    onListen={(audioUrl, title) => {
-                      loadTrack({ url: audioUrl, title, artwork: vaultShow?.artwork ?? undefined });
-                      setVaultShow(null);
-                      setVaultEpisodes([]);
-                    }}
                     isFavorited={vaultShow!.feedUrl ? favoriteShows.has(vaultShow!.feedUrl as string) : false}
                     onFavoriteToggle={(feedUrl) => handleFavoriteToggle(feedUrl, vaultShow!.name)}
                     onClose={() => { setVaultShow(null); setVaultEpisodes([]); }}

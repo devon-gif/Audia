@@ -69,23 +69,33 @@ export default function PricingPage() {
   const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string>("");
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  // Get user email on mount
+  // Get user session on mount
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email) {
-        setUserEmail(user.email);
-      }
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      setAuthLoading(false);
     };
-    getUser();
+    
+    getSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleCheckout = async (plan: PricingPlan) => {
-    // Check if user is logged in
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    // Wait for auth check to complete
+    if (authLoading) {
+      return; // Button should be disabled while loading
+    }
+
     if (!user) {
       // Not logged in - redirect to signup
       router.push("/signup");
@@ -207,7 +217,7 @@ export default function PricingPage() {
             {PLANS.map((plan) => {
               const currentPrice = billingCycle === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
               const annualTotal = (plan.yearlyPrice * 12).toFixed(2);
-              const isLoading = loadingPlanId === plan.id;
+              const isLoading = loadingPlanId === plan.id || authLoading;
 
               return (
                 <div
@@ -293,7 +303,7 @@ export default function PricingPage() {
                     {isLoading ? (
                       <>
                         <Loader2 size={18} className="animate-spin" />
-                        Processing...
+                        {authLoading ? "Loading..." : "Processing..."}
                       </>
                     ) : (
                       plan.id === "free" ? "Get Started" : billingCycle === "yearly" ? "START YEARLY PLAN" : "Upgrade to " + plan.name

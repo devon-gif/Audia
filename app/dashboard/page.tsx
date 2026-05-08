@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, ArrowRight, Play, Layout, Sparkles,
-  Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell,
+  Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import LibraryView from "@/app/components/LibraryView";
 import PodcastGrid from "@/app/components/PodcastGrid";
 import BillingPage from "@/app/dashboard/billing/page";
+import HelpPage from "@/app/dashboard/help/page";
 import EpisodeVault from "@/app/components/EpisodeVault";
 import type { Episode } from "@/app/api/episodes/route";
 import type { ShowSelection } from "@/app/components/PodcastGrid";
@@ -60,7 +61,7 @@ type BriefResult = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [activeView, setActiveView] = useState<"new-summary" | "library" | "billing">("new-summary");
+  const [activeView, setActiveView] = useState<"new-summary" | "library" | "billing" | "help">("new-summary");
   const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Rachel");
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -463,6 +464,17 @@ export default function DashboardPage() {
             >
               <CreditCard size={14} className={activeView === "billing" ? "text-orange-400" : ""} />
               Billing
+            </button>
+            <button
+              onClick={() => setActiveView("help")}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                activeView === "help"
+                  ? "bg-gradient-to-r from-orange-500/20 to-transparent border border-orange-500/30 text-white"
+                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <LifeBuoy size={14} className={activeView === "help" ? "text-orange-400" : ""} />
+              Help &amp; Support
             </button>
           </nav>
 
@@ -914,6 +926,8 @@ export default function DashboardPage() {
             <div className="flex-1 overflow-auto p-8">
               <LibraryView onPlay={handlePlayLibraryBrief} />
             </div>
+          ) : activeView === "help" ? (
+            <HelpPage />
           ) : (
             <BillingPage />
           )}

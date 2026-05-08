@@ -1,39 +1,48 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // Refresh the session on every request (keeps tokens alive)
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { pathname } = request.nextUrl;
 
-  // Only guard /dashboard routes
-  if (!pathname.startsWith("/dashboard")) {
-    return NextResponse.next();
-  }
-
-  // Read the Supabase session cookie set by the JS client
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  // Build a server-side client using the request cookies for auth
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: { cookie: request.headers.get("cookie") ?? "" },
-    },
-  });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  // Guard /dashboard routes
+  if (pathname.startsWith("/dashboard") && !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: [
+    // Run on all routes except static files and Next internals
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|woff2?)$).*)",
+  ],
 };

@@ -14,6 +14,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +37,8 @@ export default function SignupPage() {
       setError(error.message);
       return;
     }
-    router.push("/dashboard");
+    setSuccess(true);
+    setTimeout(() => router.push("/dashboard"), 1200);
   };
 
   return (
@@ -100,13 +102,21 @@ export default function SignupPage() {
         {/* Submit Button - Filament CTA */}
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="w-full mt-6 px-6 py-4 bg-black/60 backdrop-blur-2xl border border-[#FF6600]/60 text-white font-semibold rounded-full hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_40px_rgba(255,102,0,0.3)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isSubmitting || success}
+          className={`w-full mt-6 px-6 py-4 backdrop-blur-2xl border text-white font-semibold rounded-full transition-all flex items-center justify-center gap-2 disabled:cursor-not-allowed ${
+            success
+              ? "bg-emerald-500/20 border-emerald-500/60 shadow-[0_0_30px_rgba(16,185,129,0.2)]"
+              : "bg-black/60 border-[#FF6600]/60 hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(255,102,0,0.3)]"
+          }`}
         >
           <span className="font-mono tracking-widest uppercase text-sm">
-            {isSubmitting ? "CREATING ACCOUNT..." : "START 7-DAY FREE TRIAL"}
+            {success ? "SUCCESS! REDIRECTING..." : isSubmitting ? "CREATING ACCOUNT..." : "START 7-DAY FREE TRIAL"}
           </span>
-          {isSubmitting ? (
+          {success ? (
+            <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          ) : isSubmitting ? (
             <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>

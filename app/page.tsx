@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import LibraryView from "./components/LibraryView";
+import VideoModal from "./components/VideoModal";
 
 // FAQ Item Component
 function FAQItem({ question, answer }: { question: string; answer: string }) {
@@ -70,6 +71,7 @@ export default function LandingPage() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [activeView, setActiveView] = useState<"new-summary" | "library">("new-summary");
   const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
   const router = useRouter();
 
   const handleSummarize = () => {
@@ -216,7 +218,7 @@ export default function LandingPage() {
                   START FREE TRIAL <ArrowRight size={18} />
                 </button>
                 <button 
-                  onClick={() => setStatus("found")}
+                  onClick={() => setVideoOpen(true)}
                   className="px-8 py-4 bg-black/50 backdrop-blur-md border border-white/20 rounded-full text-white font-medium text-base flex items-center gap-2 hover:bg-white/10 transition-all"
                 >
                   <Play size={18} fill="white" /> See How It Works
@@ -929,6 +931,9 @@ export default function LandingPage() {
         </footer>
 
       </div>
+
+      {/* Video explainer modal */}
+      <VideoModal open={videoOpen} onOpenChange={setVideoOpen} />
     </main>
   );
 }

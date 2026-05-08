@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Search, ArrowRight, Play, Layout, Sparkles,
+  Search, ArrowRight, ArrowLeft, Play, Layout, Sparkles,
   Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
   Globe, Compass, Volume2, Star,
 } from "lucide-react";
@@ -981,7 +981,16 @@ export default function DashboardPage() {
               <div className={`space-y-3 transition-all duration-700 ${briefResult ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deep Signal Brief</span>
-                      <span className="text-[10px] text-zinc-500 font-mono">{(briefResult.transcriptLength / 5 / 60).toFixed(0)} min transcript</span>
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => { setBriefResult(null); setUrlInput(""); setGeneratingAudio(false); }}
+                          className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/80 transition-colors duration-200"
+                        >
+                          <ArrowLeft size={12} />
+                          Start Over
+                        </button>
+                        <span className="text-[10px] text-zinc-500 font-mono">{(briefResult.transcriptLength / 5 / 60).toFixed(0)} min transcript</span>
+                      </div>
                     </div>
 
                     {/* Brief text card */}

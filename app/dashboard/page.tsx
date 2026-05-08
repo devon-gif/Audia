@@ -1014,11 +1014,11 @@ export default function DashboardPage() {
                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deep Signal Brief</span>
                       <div className="flex items-center gap-4">
                         <button
-                          onClick={() => { setBriefResult(null); setUrlInput(""); setGeneratingAudio(false); }}
+                          onClick={() => { setBriefResult(null); setUrlInput(""); setGeneratingAudio(false); router.push("/dashboard"); }}
                           className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/80 transition-colors duration-200"
                         >
                           <ArrowLeft size={12} />
-                          Start Over
+                          Return to Dashboard
                         </button>
                         <span className="text-[10px] text-zinc-500 font-mono">{(briefResult.transcriptLength / 5 / 60).toFixed(0)} min transcript</span>
                       </div>

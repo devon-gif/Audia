@@ -16,10 +16,58 @@ export default function StereoPlayer() {
   const { track, isPlaying, progress, duration, volume, toggle, seek, skip, setVolume, dismiss } = usePlayer();
   const [showVolume, setShowVolume] = useState(false);
 
-  if (!track) return null;
-
   const pct = duration > 0 ? (progress / duration) * 100 : 0;
   const isMuted = volume === 0;
+
+  /* ── Idle / empty state ─────────────────────────────────────────── */
+  if (!track) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-center px-4 pb-3 pt-1 pointer-events-none">
+        <div className="relative w-full max-w-3xl bg-black/50 backdrop-blur-xl border border-white/[0.06] rounded-2xl pointer-events-auto">
+          <div className="flex items-center gap-3 px-5 py-3">
+            {/* Idle artwork placeholder */}
+            <div className="shrink-0 w-11 h-11 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+              <Headphones size={17} className="text-zinc-600" />
+            </div>
+
+            {/* Idle label */}
+            <div className="hidden sm:flex flex-col min-w-0 w-36 shrink-0">
+              <span className="text-[11px] font-bold text-zinc-600 truncate leading-tight">No track loaded</span>
+              <span className="text-[9px] text-zinc-700 uppercase tracking-widest mt-0.5">Audia Player</span>
+            </div>
+
+            {/* Idle waveform bars */}
+            <div className="hidden md:flex items-end gap-[3px] h-5 shrink-0">
+              {[3, 5, 8, 6, 10, 7, 4, 9, 5, 3].map((h, i) => (
+                <div key={i} className="w-[3px] rounded-full bg-white/[0.06]" style={{ height: `${h * 2}px` }} />
+              ))}
+            </div>
+
+            {/* Idle transport */}
+            <div className="flex items-center gap-1.5 shrink-0 mx-auto">
+              <button disabled className="p-2 rounded-xl text-zinc-800 transition-all cursor-default"><RotateCcw size={15} /></button>
+              <div className="w-11 h-11 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+                <Play size={15} className="text-zinc-700 ml-0.5" />
+              </div>
+              <button disabled className="p-2 rounded-xl text-zinc-800 transition-all cursor-default"><RotateCw size={15} /></button>
+            </div>
+
+            {/* Idle scrubber */}
+            <div className="flex-1 min-w-0 hidden sm:block">
+              <div className="h-1.5 bg-white/[0.05] rounded-full" />
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px] font-mono text-zinc-800">0:00</span>
+                <span className="text-[9px] font-mono text-zinc-800">--:--</span>
+              </div>
+            </div>
+
+            <div className="p-2 shrink-0"><Volume2 size={15} className="text-zinc-800" /></div>
+            <div className="w-6 shrink-0" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-center px-4 pb-3 pt-1">

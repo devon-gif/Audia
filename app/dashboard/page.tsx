@@ -509,55 +509,8 @@ export default function DashboardPage() {
             {t.sidebar.help}
           </button>
         </nav>
-          {/* Nav */}
-          <nav className="space-y-1 flex-1">
-            <button
-              onClick={() => setActiveView("new-summary")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                activeView === "new-summary"
-                  ? "bg-gradient-to-r from-orange-500/20 to-transparent border border-orange-500/30 text-white"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <Sparkles size={14} className={activeView === "new-summary" ? "text-orange-400" : ""} />
-              {t.sidebar.newSummary}
-            </button>
-            <button
-              onClick={() => setActiveView("library")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                activeView === "library"
-                  ? "bg-gradient-to-r from-orange-500/20 to-transparent border border-orange-500/30 text-white"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <Layout size={14} className={activeView === "library" ? "text-orange-400" : ""} />
-              {t.sidebar.library}
-            </button>
-            <button
-              onClick={() => setActiveView("billing")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                activeView === "billing"
-                  ? "bg-gradient-to-r from-orange-500/20 to-transparent border border-orange-500/30 text-white"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <CreditCard size={14} className={activeView === "billing" ? "text-orange-400" : ""} />
-              {t.sidebar.billing || "Billing"}
-            </button>
-            <button
-              onClick={() => setActiveView("help")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                activeView === "help"
-                  ? "bg-gradient-to-r from-orange-500/20 to-transparent border border-orange-500/30 text-white"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <LifeBuoy size={14} className={activeView === "help" ? "text-orange-400" : ""} />
-              {t.sidebar.help}
-            </button>
-          </nav>
 
-          {/* Trial / status badge */}
+        {/* Trial / status badge */}
           {!isPro && daysRemaining !== null && (
             <div className={`mb-3 px-3 py-2 rounded-xl border ${
               daysRemaining <= 2
@@ -1049,9 +1002,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-      </div>
-
-      {/* ── Episode Vault ── */}
+        {/* ── Episode Vault ── */}
       {vaultShow && (
         <EpisodeVault
           showName={vaultShow!.name}

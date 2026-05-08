@@ -123,6 +123,7 @@ export default function DashboardPage() {
   const isPro = devMode || subscriptionStatus === "active" || subscriptionStatus === "pro";
   const trialExpired = !isPro && daysRemaining !== null && daysRemaining <= 0;
   const [showProModal, setShowProModal] = useState(false);
+  const [proUpgradeLoading, setProUpgradeLoading] = useState(false);
 
   // Credit tracking
   const [planTier, setPlanTier] = useState<"free" | "pro" | "max">("free");
@@ -1199,10 +1200,33 @@ export default function DashboardPage() {
                 <span className="text-sm text-zinc-500 pb-1.5">/month</span>
               </div>
               <button
-                onClick={() => window.open("https://buy.stripe.com/placeholder", "_blank")}
-                className="w-full py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl font-bold text-white text-sm shadow-[0_0_20px_rgba(255,120,0,0.3)] hover:scale-[1.02] transition-all mb-2"
+                type="button"
+                disabled={proUpgradeLoading}
+                onClick={async () => {
+                  setProUpgradeLoading(true);
+                  try {
+                    const res = await fetch("/api/checkout", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (data.url) {
+                      window.location.assign(data.url);
+                    } else {
+                      throw new Error(data.error || "No checkout URL returned");
+                    }
+                  } catch (err) {
+                    console.error("[checkout] Error:", err);
+                    showToast("Failed to start checkout. Please try again.", "error");
+                    setProUpgradeLoading(false);
+                  }
+                }}
+                className="w-full py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl font-bold text-white text-sm shadow-[0_0_20px_rgba(255,120,0,0.3)] hover:scale-[1.02] transition-all mb-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                Upgrade to Pro
+                {proUpgradeLoading ? "Redirecting…" : "Upgrade to Pro"}
               </button>
               <button
                 onClick={() => setShowProModal(false)}

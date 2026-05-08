@@ -249,7 +249,7 @@ export default function LandingPage() {
                   
                   {/* Left Sidebar */}
                   <div className="w-[200px] bg-black/30 border-r border-white/5 p-5 flex flex-col">
-                    <div className="text-lg font-bold text-white mb-6">Audia.</div>
+                    <div className="text-lg font-bold text-white mb-6">Audia<span className="text-[#FF6600]">.</span></div>
                     <nav className="space-y-1 flex-1">
                       <button 
                         onClick={() => setActiveView("new-summary")}
@@ -862,7 +862,7 @@ export default function LandingPage() {
               
               {/* Column 1: Brand Identity */}
               <div className="md:col-span-1">
-                <div className="text-2xl font-bold tracking-tight mb-3 text-white font-mono">Audia.</div>
+                <div className="text-2xl font-bold tracking-tight mb-3 text-white font-mono">Audia<span className="text-[#FF6600]">.</span></div>
                 <p className="text-zinc-500 text-sm mb-6">The neural engine for audio intelligence.</p>
                 
                 {/* Social Icons */}

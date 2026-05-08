@@ -33,6 +33,11 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Let the auth callback route handle its own flow uninterrupted
+  if (pathname.startsWith("/auth")) {
+    return response;
+  }
+
   // Guard /dashboard routes
   if (pathname.startsWith("/dashboard") && !user) {
     const loginUrl = new URL("/login", request.url);

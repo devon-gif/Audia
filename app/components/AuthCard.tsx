@@ -16,7 +16,7 @@ export default function AuthCard({ children, title, subtitle }: AuthCardProps) {
         
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-2xl font-bold tracking-tight mb-2 text-white font-mono">Audia.</div>
+          <div className="text-2xl font-bold tracking-tight mb-2 text-white font-mono">Audia<span className="text-[#FF6600]">.</span></div>
           <h1 className="text-xl font-semibold text-white mb-1">{title}</h1>
           {subtitle && (
             <p className="text-sm text-zinc-400">{subtitle}</p>

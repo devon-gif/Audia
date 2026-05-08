@@ -1,60 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { AssemblyAI } from "assemblyai";
-import OpenAI from "openai";
-import Parser from "rss-parser";
-import { ElevenLabsClient } from "elevenlabs";
+import { DEFAULT_VOICE_ID, CREDIT_CAPS, runPipeline } from "@/lib/pipeline";
 
-// ─── Clients ──────────────────────────────────────────────────────────────────
-
-const assemblyai = new AssemblyAI({
-  apiKey: process.env.ASSEMBLYAI_API_KEY!,
-});
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
-
-const elevenlabs = new ElevenLabsClient({
-  apiKey: process.env.ELEVENLABS_API_KEY!,
-});
-
-// Default voice: Rachel (calm, warm) — overridden by voiceId in request body
-const DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
-
-const rssParser = new Parser();
-
-// Credit caps per plan tier
-const CREDIT_CAPS: Record<string, number> = {
-  free: 3,
-  pro: 15,
-  max: 100,
-};
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** True when the URL is likely an RSS/Atom feed rather than a direct audio file. */
-function looksLikeFeed(url: string): boolean {
-  return !url.match(/\.(mp3|mp4|m4a|ogg|wav|aac)(\?.*)?$/i);
-}
-
-/** Extract the most recent audio enclosure URL from an RSS feed. */
-async function extractAudioFromFeed(feedUrl: string): Promise<string> {
-  const feed = await rssParser.parseURL(feedUrl);
-  const firstItem = feed.items.find(
-    (item) => item.enclosure?.url && item.enclosure.url.length > 0
-  );
-  if (!firstItem?.enclosure?.url) {
-    throw new Error("No audio enclosure found in feed. Try pasting a direct episode URL.");
-  }
-  return firstItem.enclosure.url;
-}
-
-// ─── POST /api/summarize ───────────────────────────────────────────────────────
+// ─── POST /api/summarize ──────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   // ── 1. Auth ───────────────────────────────────────────────────────────────
-  // Anon client — used only to verify the caller's session cookie
   const anonSupabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -66,10 +17,8 @@ export async function POST(request: NextRequest) {
   }
 
   // ── 1b. Trial / subscription enforcement ─────────────────────────────────
-  // Developer account always bypasses — never block heydevon@gmail.com
   const isDeveloper = user.email === "heydevon@gmail.com";
 
-  // Read profile — trial status + credit fields
   let planTier = "free";
   let monthlyGenerations = 0;
   if (!isDeveloper) {
@@ -83,8 +32,7 @@ export async function POST(request: NextRequest) {
     const isPro = status === "active" || status === "pro";
     if (!isPro) {
       const trialEndsAt: string | undefined = profile?.trial_ends_at;
-      const trialExpired =
-        !trialEndsAt || new Date(trialEndsAt).getTime() < Date.now();
+      const trialExpired = !trialEndsAt || new Date(trialEndsAt).getTime() < Date.now();
       if (trialExpired) {
         return NextResponse.json(
           { error: "Your trial has expired. Upgrade to Pro to continue." },
@@ -112,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Service-role client — bypasses RLS for DB writes
+  // Service-role client for DB writes
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -132,9 +80,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required field: "url"' }, { status: 400 });
   }
 
-  const wordTargets: Record<string, number> = { "3m": 450, "5m": 750, "10m": 1500 };
-  const targetWords = wordTargets[length] ?? 750;
-
   // ── 3. Create a pending DB record ─────────────────────────────────────────
   const { data: generation } = await supabase
     .from("audio_generations")
@@ -144,7 +89,6 @@ export async function POST(request: NextRequest) {
 
   const recordId: string | null = generation?.id ?? null;
 
-  /** Mark the DB record as failed and return an error response. */
   async function fail(message: string, httpStatus = 502): Promise<NextResponse> {
     if (recordId) {
       await supabase
@@ -156,142 +100,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message, id: recordId }, { status: httpStatus });
   }
 
-  // ── 4. Resolve audio URL (RSS → direct mp3) ───────────────────────────────
-  let audioUrl = url;
-  try {
-    if (looksLikeFeed(url)) {
-      audioUrl = await extractAudioFromFeed(url);
-    }
-    if (recordId) {
-      await supabase
-        .from("audio_generations")
-        .update({ audio_url: audioUrl })
-        .eq("id", recordId);
-    }
-  } catch (err) {
-    return fail((err as Error).message, 422);
-  }
-
-  // ── 5. Transcribe via AssemblyAI (SDK handles polling internally) ─────────
-  let transcript: string;
-  try {
-    const result = await assemblyai.transcripts.transcribe({
-      audio_url: audioUrl,
-      // Use the validated model names the live API requires.
-      // "universal-3-pro" is attempted first; API falls back to "universal-2".
-      // Cast to string[] because SDK type definitions lag behind the live API.
-      speech_models: ["universal-3-pro", "universal-2"] as string[],
-      language_detection: true,
-    });
-    // SDK polling resolves only when status is "completed" or "error"
-    if (result.status !== "completed" || !result.text) {
-      throw new Error(result.error ?? "Transcription returned empty result");
-    }
-    transcript = result.text;
-    if (recordId) {
-      await supabase
-        .from("audio_generations")
-        .update({ transcript_text: transcript })
-        .eq("id", recordId);
-    }
-  } catch (err) {
-    return fail(`Transcription failed: ${(err as Error).message}`);
-  }
-
-  // ── 6. Distil via gpt-4o-mini ─────────────────────────────────────────────
-  const systemPrompt = `You are an elite research assistant. Take this podcast transcript and create a "Deep Signal" brief.
-
-Rules:
-- Focus on high-level insights, contrarian takes, and actionable data.
-- Surface the three most important ideas with precision — distil, do not summarize.
-- Include a "Key Quotes" section (2–3 verbatim lines worth remembering).
-- Include an "Action Items" section (3–5 concrete next steps the listener can take today).
-- Format for a professional listener who has ${length} to extract the core value.
-- Tone: sharp, direct, zero filler. No "in this episode" preambles.
-- Target length: ~${targetWords} words.`;
-
+  // ── 4-8. Core pipeline (transcribe → distil → TTS → storage → DB) ─────────
   let brief: string;
+  let briefAudioUrl: string | null;
+  let resolvedAudioUrl: string;
+  let transcriptLength: number;
+
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `TRANSCRIPT:\n\n${transcript.slice(0, 100_000)}` },
-      ],
-      temperature: 0.4,
-    });
-    brief = completion.choices[0]?.message?.content ?? "";
-    if (!brief) throw new Error("Model returned an empty response");
+    ({ brief, briefAudioUrl, resolvedAudioUrl, transcriptLength } = await runPipeline({
+      supabase,
+      userId: user.id,
+      sourceUrl: url,
+      length,
+      voiceId,
+      recordId,
+    }));
   } catch (err) {
-    return fail(`Distillation failed: ${(err as Error).message}`);
+    return fail((err as Error).message);
   }
 
-  // ── 7. Text-to-Speech via ElevenLabs ────────────────────────────────────
-  let briefAudioUrl: string | null = null;
-  try {
-    // Generate audio from the brief text
-    const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
-      text: brief,
-      model_id: "eleven_turbo_v2_5",
-      voice_settings: {
-        stability: 0.75,
-        similarity_boost: 0.85,
-        style: 0.2,
-        use_speaker_boost: true,
-      },
-    });
-
-    // Collect the stream into a buffer
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of audioStream) {
-      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
-    }
-    const audioBuffer = Buffer.concat(chunks);
-
-    // Upload to Supabase Storage — audio-briefs bucket
-    const fileName = `${user.id}/${recordId ?? Date.now()}.mp3`;
-    const { error: uploadError } = await supabase.storage
-      .from("audio-briefs")
-      .upload(fileName, audioBuffer, {
-        contentType: "audio/mpeg",
-        upsert: true,
-      });
-
-    if (!uploadError) {
-      const { data: publicUrlData } = supabase.storage
-        .from("audio-briefs")
-        .getPublicUrl(fileName);
-      briefAudioUrl = publicUrlData.publicUrl;
-    } else {
-      console.warn("[summarize] Storage upload failed:", uploadError.message);
-    }
-  } catch (err) {
-    // TTS is non-fatal — we still return the text brief
-    console.warn("[summarize] ElevenLabs TTS failed:", (err as Error).message);
+  // ── 9. Increment credit counter ───────────────────────────────────────────
+  if (!isDeveloper) {
+    await supabase
+      .from("profiles")
+      .update({ monthly_generations: monthlyGenerations + 1 })
+      .eq("id", user.id);
   }
-
-  // ── 8. Mark completed + increment credit counter ────────────────────────
-  await Promise.all([
-    recordId
-      ? supabase
-          .from("audio_generations")
-          .update({ summary_text: brief, brief_audio_url: briefAudioUrl, status: "completed" })
-          .eq("id", recordId)
-      : Promise.resolve(),
-    // Increment monthly_generations (developer and bypassCredits are exempt)
-    !isDeveloper
-      ? supabase
-          .from("profiles")
-          .update({ monthly_generations: monthlyGenerations + 1 })
-          .eq("id", user.id)
-      : Promise.resolve(),
-  ]);
 
   return NextResponse.json({
     id: recordId,
     brief,
-    audioUrl,
+    audioUrl: resolvedAudioUrl,
     briefAudioUrl,
-    transcriptLength: transcript.length,
+    transcriptLength,
   });
 }

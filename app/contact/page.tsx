@@ -97,18 +97,27 @@ export default function ContactPage() {
                       <CheckCircle size={40} className="text-emerald-400" />
                     </div>
                     <h3 className="text-2xl font-bold mb-3">Message Sent!</h3>
-                    <p className="text-orange-100/70 mb-6">
-                      Thank you for reaching out. We will get back to you within 24 hours.
+                    <p className="text-orange-100/70 mb-8 max-w-sm mx-auto">
+                      Thank you! Your message has been sent. We will get back to you shortly.
                     </p>
-                    <button
-                      onClick={() => {
-                        setIsSubmitted(false);
-                        setFormData({ name: "", email: "", subject: "", message: "" });
-                      }}
-                      className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-sm font-medium"
-                    >
-                      Send Another Message
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Link
+                        href="/"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 rounded-xl transition-all text-sm font-semibold"
+                      >
+                        <ArrowLeft size={14} />
+                        Return Home
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setIsSubmitted(false);
+                          setFormData({ name: "", email: "", subject: "", message: "" });
+                        }}
+                        className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-sm font-medium"
+                      >
+                        Send Another Message
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">

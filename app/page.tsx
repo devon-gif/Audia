@@ -116,9 +116,9 @@ export default function LandingPage() {
             {/* Center Navigation */}
             <nav className="hidden md:flex items-center justify-center gap-8">
               <Link href="/#features" className="text-sm text-white/70 hover:text-white transition-colors">Features</Link>
-              <Link href="/#hero" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</Link>
+              <Link href="/#pricing" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</Link>
               <Link href="/#how-it-works" className="text-sm text-white/70 hover:text-white transition-colors">How it Works</Link>
-              <a href="mailto:devon@audia.ai" className="text-sm text-white/70 hover:text-white transition-colors">Contact</a>
+              <Link href="/contact" className="text-sm text-white/70 hover:text-white transition-colors">Contact</Link>
             </nav>
             
             {/* Right Actions */}

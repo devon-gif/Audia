@@ -42,12 +42,20 @@ export default function EpisodeVault({
   onToast
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const [subscribed, setSubscribed] = useState(initialSubscribed);
   const [subscribing, setSubscribing] = useState(false);
   const [preferredLength, setPreferredLength] = useState(initialPreferredLength);
   const [isAutoDistillOpen, setIsAutoDistillOpen] = useState(false);
   const [sendToEmail, setSendToEmail] = useState(true);
   const [sendToNotion, setSendToNotion] = useState(false);
+  const [headerImageError, setHeaderImageError] = useState(false);
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === backdropRef.current) {
+      setIsAutoDistillOpen(false);
+    }
+  };
   const [summaryLength, setSummaryLength] = useState<"Short" | "Deep Dive">("Short");
 
   const handleSubscribe = async () => {
@@ -154,12 +162,17 @@ export default function EpisodeVault({
         {/* Handle + Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-3">
-            {artworkUrl ? (
+            {artworkUrl && !headerImageError ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={artworkUrl} alt={showName} className="w-10 h-10 rounded-xl object-cover" />
+              <img 
+                src={artworkUrl} 
+                alt={showName} 
+                className="w-10 h-10 rounded-xl object-cover"
+                onError={() => setHeaderImageError(true)}
+              />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                <Radio size={16} className="text-orange-400" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6600] to-[#FF8A00] flex items-center justify-center shadow-[0_0_12px_rgba(255,102,0,0.3)]">
+                <span className="text-base font-black text-white">{showName?.charAt(0)?.toUpperCase() || "?"}</span>
               </div>
             )}
             <div>
@@ -282,15 +295,16 @@ export default function EpisodeVault({
       {/* Auto-Distill Modal */}
       {isAutoDistillOpen && (
         <div 
+          ref={backdropRef}
+          onClick={handleBackdropClick}
           className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={() => setIsAutoDistillOpen(false)}
         >
           <div 
             className="relative bg-[#0A0A0A] border border-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
+              type="button"
               onClick={() => setIsAutoDistillOpen(false)}
               className="absolute top-4 right-4 p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
             >
@@ -317,6 +331,7 @@ export default function EpisodeVault({
 
               {/* Email Toggle */}
               <button
+                type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSendToEmail(!sendToEmail); }}
                 className="w-full flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all"
               >
@@ -339,6 +354,7 @@ export default function EpisodeVault({
 
               {/* Notion Toggle */}
               <button
+                type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSendToNotion(!sendToNotion); }}
                 className="w-full flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all"
               >
@@ -366,6 +382,7 @@ export default function EpisodeVault({
                   {["Short", "Deep Dive"].map((length) => (
                     <button
                       key={length}
+                      type="button"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSummaryLength(length as "Short" | "Deep Dive"); }}
                       className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                         summaryLength === length
@@ -382,6 +399,7 @@ export default function EpisodeVault({
 
             {/* Action Button */}
             <button
+              type="button"
               onClick={(e) => { e.stopPropagation(); handleSubscribe(); }}
               disabled={subscribing}
               className="w-full py-3 px-4 bg-[#FF6600] hover:bg-[#FF7A00] rounded-xl text-sm text-white font-semibold transition-all shadow-[0_0_20px_rgba(255,102,0,0.3)] disabled:opacity-50"
@@ -391,6 +409,7 @@ export default function EpisodeVault({
 
             {/* Unsubscribe Link */}
             <button
+              type="button"
               onClick={(e) => { e.stopPropagation(); handleUnsubscribe(); }}
               disabled={subscribing}
               className="w-full mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"

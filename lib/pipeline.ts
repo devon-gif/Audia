@@ -2,14 +2,13 @@
  * lib/pipeline.ts
  *
  * Shared summarization pipeline: audio URL resolution → AssemblyAI transcription
- * → GPT-4o-mini distillation → ElevenLabs TTS → Supabase Storage upload.
+ * → GPT-4o-mini distillation → OpenAI TTS → Supabase Storage upload.
  *
  * Used by both /api/summarize (user-triggered) and /api/cron/sync (automated).
  */
 
 import { AssemblyAI } from "assemblyai";
 import OpenAI from "openai";
-import { ElevenLabsClient } from "elevenlabs";
 import Parser from "rss-parser";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -17,13 +16,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const assemblyai = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY! });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
-const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY! });
 const rssParser = new Parser();
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-/** Default ElevenLabs voice: Rachel (calm, warm) */
-export const DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
+/** Default OpenAI TTS voice */
+export const DEFAULT_VOICE_ID = "onyx";
 
 /** Monthly generation credit caps per plan tier */
 export const CREDIT_CAPS: Record<string, number> = {
@@ -62,12 +60,11 @@ export interface PipelineOptions {
   sourceUrl: string;
   /** Desired brief length: 3, 5, or 10 minutes. Defaults to "5m". */
   length?: "3m" | "5m" | "10m";
-  /** ElevenLabs voice ID. Falls back to DEFAULT_VOICE_ID. */
+  /** OpenAI TTS voice (alloy | echo | fable | onyx | nova | shimmer). Falls back to DEFAULT_VOICE_ID. */
   voiceId?: string;
   /**
-   * Output language for GPT distillation and TTS. Defaults to "en".
-   * When set to "es", the LLM is instructed to produce Spanish output and
-   * ElevenLabs uses eleven_multilingual_v2.
+   * Output language for GPT distillation. Defaults to "en".
+   * OpenAI TTS handles multilingual content automatically.
    */
   targetLanguage?: "en" | "es";
   /**
@@ -167,26 +164,18 @@ Rules:
   const brief = completion.choices[0]?.message?.content ?? "";
   if (!brief) throw new Error("GPT returned an empty brief.");
 
-  // ── Step 4: Text-to-Speech via ElevenLabs ────────────────────────────────
+  // ── Step 4: Text-to-Speech via OpenAI ─────────────────────────────────
   let briefAudioUrl: string | null = null;
-  console.log(`[pipeline] TTS — voiceId=${voiceId}, chars=${brief.length}, keyPresent=${!!process.env.ELEVENLABS_API_KEY}`);
+  console.log(`[pipeline] TTS — voice=${voiceId}, chars=${brief.length}, keyPresent=${!!process.env.OPENAI_API_KEY}`);
   try {
-    const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
-      text: brief,
-      model_id: isSpanish ? "eleven_multilingual_v2" : "eleven_turbo_v2_5",
-      voice_settings: {
-        stability: 0.75,
-        similarity_boost: 0.85,
-        style: 0.2,
-        use_speaker_boost: true,
-      },
+    const ttsResponse = await openai.audio.speech.create({
+      model: "tts-1",
+      voice: (voiceId ?? "onyx") as "onyx" | "alloy" | "echo" | "fable" | "nova" | "shimmer",
+      input: brief.slice(0, 4096), // OpenAI TTS limit guard
+      response_format: "mp3",
     });
 
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of audioStream) {
-      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
-    }
-    const audioBuffer = Buffer.concat(chunks);
+    const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer());
 
     // ── Step 5: Upload to Supabase Storage ──────────────────────────────────
     const fileName = `${userId}/${recordId ?? Date.now()}.mp3`;
@@ -205,7 +194,7 @@ Rules:
     }
   } catch (err) {
     // TTS is non-fatal — text brief is still returned
-    console.error("[pipeline] ElevenLabs TTS failed:", (err as Error).message);
+    console.error("[pipeline] OpenAI TTS failed:", (err as Error).message);
   }
 
   // ── Step 6: Mark DB record as completed ──────────────────────────────────

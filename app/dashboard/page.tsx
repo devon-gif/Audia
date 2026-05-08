@@ -19,6 +19,22 @@ const voices: { id: VoiceName; label: string; desc: string; initial: string; gra
   { id: "Charlotte", label: "Charlotte (UK)", desc: "UK Female • Sophisticated",  initial: "C", gradient: "from-purple-500 to-purple-700" },
 ];
 
+const LOADING_STAGES = [
+  "Fetching feed…",
+  "Submitting to transcription engine…",
+  "Analyzing waveforms…",
+  "Neural distillation in progress…",
+  "Composing Deep Signal brief…",
+  "Persisting to library…",
+];
+
+type BriefResult = {
+  id: string | null;
+  brief: string;
+  audioUrl: string;
+  transcriptLength: number;
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<"new-summary" | "library">("new-summary");
@@ -26,6 +42,14 @@ export default function DashboardPage() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
+
+  // Summarize state
+  const [urlInput, setUrlInput] = useState("");
+  const [briefLength, setBriefLength] = useState<"3m" | "5m" | "10m">("5m");
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [stageIndex, setStageIndex] = useState(0);
+  const [briefResult, setBriefResult] = useState<BriefResult | null>(null);
+  const [summarizeError, setSummarizeError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -44,6 +68,36 @@ export default function DashboardPage() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/");
+  };
+
+  const handleSummarize = async () => {
+    if (!urlInput.trim() || isSummarizing) return;
+    setIsSummarizing(true);
+    setSummarizeError(null);
+    setBriefResult(null);
+    setStageIndex(0);
+
+    // Cycle through loading stage labels while the request is in flight
+    const stageTimer = setInterval(() => {
+      setStageIndex((i) => Math.min(i + 1, LOADING_STAGES.length - 1));
+    }, 4000);
+
+    try {
+      const res = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: urlInput.trim(), length: briefLength }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Summarization failed");
+      setBriefResult(data as BriefResult);
+    } catch (err) {
+      setSummarizeError((err as Error).message);
+    } finally {
+      clearInterval(stageTimer);
+      setIsSummarizing(false);
+      setStageIndex(0);
+    }
   };
 
   return (

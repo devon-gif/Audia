@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Search, ArrowRight, Play, FileText, Layout, Star, Sparkles,
-  Crown, SkipBack, SkipForward, Speaker, Check, LogOut, CreditCard, Terminal, Zap,
+  Search, ArrowRight, Play, Pause, FileText, Layout, Star, Sparkles,
+  Crown, SkipBack, SkipForward, Speaker, Check, LogOut, CreditCard, Terminal, Zap, Lock,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import LibraryView from "@/app/components/LibraryView";
@@ -13,12 +13,22 @@ import BillingPage from "@/app/dashboard/billing/page";
 
 type VoiceName = "Marcus" | "Sarah" | "George" | "Charlotte";
 
-const voices: { id: VoiceName; label: string; desc: string; initial: string; gradient: string }[] = [
-  { id: "Marcus",    label: "Marcus (US)",    desc: "US Male • Authoritative",    initial: "M", gradient: "from-blue-500 to-blue-700" },
-  { id: "Sarah",     label: "Sarah (US)",     desc: "US Female • Conversational", initial: "S", gradient: "from-pink-500 to-pink-700" },
-  { id: "George",    label: "George (UK)",    desc: "UK Male • Analytical",       initial: "G", gradient: "from-green-500 to-green-700" },
-  { id: "Charlotte", label: "Charlotte (UK)", desc: "UK Female • Sophisticated",  initial: "C", gradient: "from-purple-500 to-purple-700" },
+const voices: { id: VoiceName; label: string; desc: string; initial: string; gradient: string; previewUrl: string }[] = [
+  { id: "Marcus",    label: "Marcus (US)",    desc: "US Male • Authoritative",    initial: "M", gradient: "from-blue-500 to-blue-700",   previewUrl: "/previews/marcus.mp3" },
+  { id: "Sarah",     label: "Sarah (US)",     desc: "US Female • Conversational", initial: "S", gradient: "from-pink-500 to-pink-700",   previewUrl: "/previews/sarah.mp3" },
+  { id: "George",    label: "George (UK)",    desc: "UK Male • Analytical",       initial: "G", gradient: "from-green-500 to-green-700", previewUrl: "/previews/george.mp3" },
+  { id: "Charlotte", label: "Charlotte (UK)", desc: "UK Female • Sophisticated",  initial: "C", gradient: "from-purple-500 to-purple-700", previewUrl: "/previews/charlotte.mp3" },
 ];
+
+type SearchResult = {
+  trackId: number;
+  trackName: string;
+  artistName: string;
+  artworkUrl600: string;
+  feedUrl: string;
+};
+
+type Toast = { id: number; message: string; type: "error" | "info" };
 
 const LOADING_STAGES = [
   "Fetching feed…",
@@ -56,11 +66,25 @@ export default function DashboardPage() {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [stageIndex, setStageIndex] = useState(0);
   const [briefResult, setBriefResult] = useState<BriefResult | null>(null);
-  const [summarizeError, setSummarizeError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Search results (when input is a text query, not a URL)
+  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Voice preview
+  const [previewingVoice, setPreviewingVoice] = useState<VoiceName | null>(null);
+  const voicePreviewRef = useRef<HTMLAudioElement | null>(null);
+
+  // Pro gate
+  const isPro = false; // TODO: derive from subscription
+  const [showProModal, setShowProModal] = useState(false);
+
+  // Toasts
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   // Onboarding: true once the DB trigger has created the profiles row
   const [profileReady, setProfileReady] = useState(false);
@@ -121,6 +145,46 @@ export default function DashboardPage() {
     return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   };
 
+  const showToast = (message: string, type: Toast["type"] = "error") => {
+    const id = Date.now();
+    setToasts((t) => [...t, { id, message, type }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4500);
+  };
+
+  const previewVoice = (voiceId: VoiceName, url: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (previewingVoice === voiceId) {
+      voicePreviewRef.current?.pause();
+      setPreviewingVoice(null);
+      return;
+    }
+    voicePreviewRef.current?.pause();
+    const audio = new Audio(url);
+    voicePreviewRef.current = audio;
+    audio.play().catch(() => showToast("Preview unavailable.", "info"));
+    setPreviewingVoice(voiceId);
+    audio.addEventListener("ended", () => setPreviewingVoice(null));
+  };
+
+  const handleSearch = async () => {
+    if (!urlInput.trim() || isSearching) return;
+    setIsSearching(true);
+    setSearchResults(null);
+    try {
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(urlInput.trim())}&media=podcast&entity=podcast&limit=9`
+      );
+      const data = await res.json();
+      const results: SearchResult[] = (data.results ?? []).filter((r: SearchResult) => r.feedUrl);
+      if (results.length === 0) showToast("No podcasts found. Try a different search.", "info");
+      setSearchResults(results);
+    } catch {
+      showToast("Search failed. Check your connection.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const devLog = (msg: string) =>
     setDevLogs((l) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...l].slice(0, 100));
 
@@ -155,7 +219,7 @@ export default function DashboardPage() {
       }
       setBriefResult(data as BriefResult);
     } catch (err) {
-      setSummarizeError((err as Error).message);
+      showToast((err as Error).message);
     } finally {
       clearInterval(stageTimer);
       setIsSummarizing(false);
@@ -253,7 +317,10 @@ export default function DashboardPage() {
               <Crown size={12} className="text-orange-400" />
               <span className="text-xs font-bold tracking-widest uppercase text-white">Pro Plan</span>
             </div>
-            <button className="w-full py-1.5 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg text-[10px] text-orange-300 font-semibold transition-all">
+            <button
+              onClick={() => setShowProModal(true)}
+              className="w-full py-1.5 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg text-[10px] text-orange-300 font-semibold transition-all"
+            >
               Upgrade
             </button>
           </div>
@@ -289,50 +356,75 @@ export default function DashboardPage() {
 
               {/* URL input + controls */}
               <div className="px-8 pt-6">
+                {(() => {
+                  const trimmed = urlInput.trim();
+                  const isUrl = trimmed !== "" && /^https?:\/\//i.test(trimmed);
+                  const isSearchMode = trimmed !== "" && !isUrl;
+                  const handleAction = () => isSearchMode ? handleSearch() : handleSummarize();
+                  const isWorking = isSummarizing || isSearching;
+                  return (
                 <div className="flex gap-3 mb-4">
                   <div className="flex-1 relative">
                     <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
                     <input
                       type="text"
                       value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleSummarize()}
-                      placeholder="Paste podcast URL or RSS feed…"
-                      disabled={isSummarizing}
+                      onChange={(e) => { setUrlInput(e.target.value); setSearchResults(null); }}
+                      onKeyDown={(e) => e.key === "Enter" && handleAction()}
+                      placeholder="Paste a URL, RSS feed, or search for a podcast…"
+                      disabled={isWorking}
                       className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 transition-all disabled:opacity-50"
                     />
                   </div>
                   <button
-                    onClick={handleSummarize}
-                    disabled={isSummarizing || !urlInput.trim()}
+                    onClick={handleAction}
+                    disabled={isWorking || !urlInput.trim()}
                     className="px-5 py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl text-white font-bold text-sm flex items-center gap-2 hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,120,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 min-w-[150px] justify-center"
                   >
-                    {isSummarizing ? (
+                    {isWorking ? (
                       <>
                         <svg className="animate-spin w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                         </svg>
-                        <span className="font-mono text-xs tracking-widest uppercase truncate">{LOADING_STAGES[stageIndex]}</span>
+                        <span className="font-mono text-xs tracking-widest uppercase truncate">
+                          {isSummarizing ? LOADING_STAGES[stageIndex] : "Searching…"}
+                        </span>
                       </>
+                    ) : isSearchMode ? (
+                      <><Search size={14} /> SEARCH SHOWS</>
                     ) : (
                       <>SUMMARIZE <ArrowRight size={14} /></>
                     )}
                   </button>
                 </div>
+                  );
+                })()}
 
                 {/* Controls row */}
                 <div className="flex items-center gap-5 mb-6">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Length:</span>
                     <div className="bg-black/60 border border-white/10 rounded-full p-0.5 flex items-center">
-                      {(["3m", "5m", "10m"] as const).map((l) => (
-                        <button
-                          key={l}
-                          onClick={() => setBriefLength(l)}
-                          className={`px-3 py-1 rounded-full text-[10px] transition-all ${l === briefLength ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]" : "text-zinc-400 hover:text-white"}`}
-                        >{l}</button>
-                      ))}
+                      {(["3m", "5m", "10m"] as const).map((l) => {
+                        const locked = l === "10m" && !isPro;
+                        return (
+                          <button
+                            key={l}
+                            onClick={() => locked ? setShowProModal(true) : setBriefLength(l)}
+                            title={locked ? "Requires Pro Plan" : undefined}
+                            className={`px-3 py-1 rounded-full text-[10px] transition-all flex items-center gap-1 ${
+                              locked
+                                ? "text-zinc-600 cursor-pointer"
+                                : l === briefLength
+                                  ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]"
+                                  : "text-zinc-400 hover:text-white"
+                            }`}
+                          >
+                            {l}{locked && <Lock size={8} className="text-zinc-600" />}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -350,32 +442,41 @@ export default function DashboardPage() {
                       <div className="absolute top-full left-0 mt-2 w-56 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl p-2 z-50 shadow-2xl">
                         <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2 px-2 font-bold">Select Voice</p>
                         {voices.map(v => (
-                          <button
-                            key={v.id}
-                            onClick={() => { setSelectedVoice(v.id); setVoiceOpen(false); }}
-                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className={`w-6 h-6 bg-gradient-to-br ${v.gradient} rounded-full flex items-center justify-center text-[10px] font-black text-white`}>{v.initial}</div>
-                              <div className="text-left">
-                                <p className="text-xs text-white font-medium">{v.id}</p>
-                                <p className="text-[10px] text-zinc-500">{v.desc}</p>
+                          <div key={v.id} className="flex items-center gap-1">
+                            <button
+                              onClick={() => { setSelectedVoice(v.id); setVoiceOpen(false); }}
+                              className="flex-1 flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className={`w-6 h-6 bg-gradient-to-br ${v.gradient} rounded-full flex items-center justify-center text-[10px] font-black text-white`}>{v.initial}</div>
+                                <div className="text-left">
+                                  <p className="text-xs text-white font-medium">{v.id}</p>
+                                  <p className="text-[10px] text-zinc-500">{v.desc}</p>
+                                </div>
                               </div>
-                            </div>
-                            {selectedVoice === v.id && <Check size={13} className="text-[#FF6600]" />}
-                          </button>
+                              {selectedVoice === v.id && <Check size={13} className="text-[#FF6600]" />}
+                            </button>
+                            <button
+                              onClick={(e) => previewVoice(v.id, v.previewUrl, e)}
+                              title="Preview voice"
+                              className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                                previewingVoice === v.id
+                                  ? "text-orange-400 bg-orange-500/10"
+                                  : "text-zinc-600 hover:text-zinc-300 hover:bg-white/5"
+                              }`}
+                            >
+                              {previewingVoice === v.id
+                                ? <Pause size={11} />
+                                : <Play size={11} />}
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Error state */}
-                {summarizeError && (
-                  <div className="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 font-mono">
-                    ⚠ {summarizeError}
-                  </div>
-                )}
+
 
                 {/* Results: Deep Signal Brief + Audio Player */}
                 {briefResult ? (
@@ -503,7 +604,34 @@ export default function DashboardPage() {
                         ))}
                       </div>
                     </div>
-                    <PodcastGrid onSelect={(name) => setUrlInput(`Search: ${name}`)} />
+                    {/* Search results grid */}
+                    {searchResults !== null && (
+                      <div className="mb-4">
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3">
+                          {searchResults.length > 0 ? `${searchResults.length} Results` : "No results"}
+                        </p>
+                        {searchResults.length > 0 && (
+                          <div className="grid grid-cols-3 gap-3">
+                            {searchResults.map((r) => (
+                              <button
+                                key={r.trackId}
+                                onClick={() => { setUrlInput(r.feedUrl); setSearchResults(null); }}
+                                className="group flex items-center gap-3 p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-orange-500/30 rounded-xl transition-all text-left"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={r.artworkUrl600} alt={r.trackName} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                                <div className="min-w-0">
+                                  <p className="text-xs font-semibold text-white truncate">{r.trackName}</p>
+                                  <p className="text-[10px] text-zinc-500 truncate">{r.artistName}</p>
+                                </div>
+                                <ArrowRight size={11} className="text-zinc-600 group-hover:text-orange-400 shrink-0 ml-auto transition-colors" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <PodcastGrid onSelect={(name) => setUrlInput(name)} />
                   </>
                 )}
               </div>
@@ -539,6 +667,65 @@ export default function DashboardPage() {
           )}
         </div>
 
+      </div>
+
+      {/* ── Pro Gate Modal ── */}
+      {showProModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setShowProModal(false)}
+        >
+          <div
+            className="relative bg-black/90 border border-orange-500/30 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-[0_0_80px_rgba(255,102,0,0.15)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Glow */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
+            <div className="relative">
+              <div className="w-12 h-12 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center justify-center mb-4">
+                <Crown size={22} className="text-orange-400" />
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-orange-500 mb-1">Pro Plan Required</p>
+              <h2 className="text-xl font-black tracking-tighter text-white mb-2">Extended Intelligence</h2>
+              <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+                10-minute deep-dive summaries are a Pro feature. Unlock unlimited length, priority processing, and advanced voice options.
+              </p>
+              <div className="flex items-end gap-1.5 mb-6">
+                <span className="text-4xl font-black text-white">$9.99</span>
+                <span className="text-sm text-zinc-500 pb-1.5">/month</span>
+              </div>
+              <button
+                onClick={() => window.open("https://buy.stripe.com/placeholder", "_blank")}
+                className="w-full py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl font-bold text-white text-sm shadow-[0_0_20px_rgba(255,120,0,0.3)] hover:scale-[1.02] transition-all mb-2"
+              >
+                Upgrade to Pro
+              </button>
+              <button
+                onClick={() => setShowProModal(false)}
+                className="w-full py-2 text-zinc-600 hover:text-zinc-400 text-xs transition-colors"
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Toast Notifications ── */}
+      <div className="fixed top-6 right-6 z-[200] flex flex-col gap-2 pointer-events-none">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`pointer-events-auto flex items-start gap-3 px-4 py-3 bg-black/95 backdrop-blur-xl rounded-xl shadow-2xl text-xs font-medium max-w-xs border ${
+              t.type === "error"
+                ? "border-red-500/40 text-red-400"
+                : "border-white/10 text-zinc-300"
+            }`}
+          >
+            <span className="shrink-0 mt-0.5">{t.type === "error" ? "⚠" : "ℹ"}</span>
+            <span className="leading-snug">{t.message}</span>
+          </div>
+        ))}
       </div>
 
       {/* ── Developer Mode Panel ── */}

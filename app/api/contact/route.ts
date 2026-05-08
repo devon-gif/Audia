@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
 
   try {
     await resend.emails.send({
-      // Must be a verified Resend sender domain. Update once domain is verified.
-      from: "Audia Support <support@audia.ai>",
+      // Resend requires using onboarding@resend.dev for unverified domains
+      from: "onboarding@resend.dev",
       // Strictly hardcoded — all support messages route to the owner inbox
       to: "heydevon@gmail.com",
       replyTo: email,
@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("[contact] Resend error:", err);
     return NextResponse.json(
-      { error: "Failed to send message. Please try again or email devon@audia.ai directly." },
-      { status: 502 }
+      { error: "Failed to send message" },
+      { status: 500 }
     );
   }
 }

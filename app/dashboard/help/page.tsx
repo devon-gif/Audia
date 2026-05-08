@@ -94,10 +94,12 @@ function ContactForm({ defaultEmail }: { defaultEmail: string }) {
         body: JSON.stringify({ email: email.trim(), message: message.trim() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Something went wrong.");
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send message. Please try again.");
+      }
       setSent(true);
     } catch (err) {
-      setError((err as Error).message);
+      setError("Failed to send message. Please try again.");
     } finally {
       setLoading(false);
     }

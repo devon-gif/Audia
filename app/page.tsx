@@ -163,7 +163,7 @@ export default function LandingPage() {
             {/* Hero Headline */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter pb-4 mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
               Turn Hours of Audio<br />
-              Into Minutes of Insight.
+              Into Minutes of Insight<span className="text-[#FF6600]" style={{WebkitTextFillColor:"#FF6600"}}>.</span>
             </h1>
             
             <p className="text-base md:text-lg text-zinc-400 max-w-xl mx-auto mb-6 text-center leading-relaxed">

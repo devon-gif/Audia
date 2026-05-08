@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { X, ArrowRight, Loader2, Bell, BellOff, HelpCircle } from "lucide-react";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { type Episode } from "@/app/api/episodes/route";
+import AutoDistillModal from "@/app/components/AutoDistillModal";
 
 interface Props {
   showName: string;
@@ -42,29 +43,11 @@ export default function EpisodeVault({
   onToast
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const backdropRef = useRef<HTMLDivElement>(null);
   const [subscribed, setSubscribed] = useState(initialSubscribed);
   const [subscribing, setSubscribing] = useState(false);
   const [preferredLength] = useState(initialPreferredLength);
   const [isAutoDistillOpen, setIsAutoDistillOpen] = useState(false);
-  const [emailEnabled, setEmailEnabled] = useState(true);
-  const [notionEnabled, setNotionEnabled] = useState(false);
-  const [summaryLength, setSummaryLength] = useState<"short" | "deep">("short");
   const [headerImageError, setHeaderImageError] = useState(false);
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === backdropRef.current) {
-      setIsAutoDistillOpen(false);
-    }
-  };
-
-  const handleSaveSettings = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleSubscribe();
-    onToast?.("Auto-Distill settings saved!", "success");
-    setIsAutoDistillOpen(false);
-  };
 
   const handleSubscribe = async () => {
     if (subscribing) return;
@@ -300,138 +283,15 @@ export default function EpisodeVault({
         </div>
       </div>
 
-      {/* Auto-Distill Modal */}
-      {isAutoDistillOpen && (
-        <div
-          ref={backdropRef}
-          onClick={handleBackdropClick}
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm"
-        >
-          <div
-            className="relative bg-[#0A0A0A] border border-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setIsAutoDistillOpen(false); }}
-              className="absolute top-4 right-4 p-2 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Header */}
-            <div className="mb-6">
-              <div className="w-12 h-12 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center justify-center mb-4">
-                <Bell size={24} className="text-orange-400" />
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">Automatic Summaries</h2>
-              <p className="text-sm text-zinc-400">
-                We&apos;ll automatically summarize new episodes the moment they drop. Choose where to send them.
-              </p>
-            </div>
-
-            {/* Delivery Methods */}
-            <div className="space-y-3 mb-6">
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Delivery Methods</p>
-
-              {/* Email Toggle row */}
-              <div
-                onClick={(e) => { e.stopPropagation(); setEmailEnabled(!emailEnabled); }}
-                className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all cursor-pointer select-none"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center shrink-0">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400">
-                      <rect x="2" y="4" width="20" height="16" rx="2"/>
-                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white">Email Notifications</p>
-                    <p className="text-xs text-zinc-500">Send directly to my inbox.</p>
-                  </div>
-                </div>
-                {/* Toggle pill */}
-                <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 shrink-0 ${emailEnabled ? "bg-[#F97316]" : "bg-gray-600"}`}>
-                  <span className={`w-4 h-4 bg-white rounded-full transition-transform ${emailEnabled ? "translate-x-5" : "translate-x-0"}`} />
-                </div>
-              </div>
-
-              {/* Notion Toggle row */}
-              <div
-                onClick={(e) => { e.stopPropagation(); setNotionEnabled(!notionEnabled); }}
-                className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all cursor-pointer select-none"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center shrink-0">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white">Sync to Notion</p>
-                    <p className="text-xs text-zinc-500">Push directly to your workspace.</p>
-                  </div>
-                </div>
-                {/* Toggle pill */}
-                <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 shrink-0 ${notionEnabled ? "bg-[#F97316]" : "bg-gray-600"}`}>
-                  <span className={`w-4 h-4 bg-white rounded-full transition-transform ${notionEnabled ? "translate-x-5" : "translate-x-0"}`} />
-                </div>
-              </div>
-
-              {/* Summary Length */}
-              <div className="p-3 bg-white/[0.03] border border-white/10 rounded-xl">
-                <p className="text-sm font-medium text-white mb-3">Summary Length</p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setSummaryLength("short"); }}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-all ${
-                      summaryLength === "short"
-                        ? "border-[#F97316] text-[#F97316] bg-[#F97316]/10"
-                        : "border-gray-700 text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    Short
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setSummaryLength("deep"); }}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-all ${
-                      summaryLength === "deep"
-                        ? "border-[#F97316] text-[#F97316] bg-[#F97316]/10"
-                        : "border-gray-700 text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    Deep Dive
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Save Button */}
-            <button
-              type="button"
-              onClick={handleSaveSettings}
-              className="w-full py-3 px-4 bg-[#F97316] hover:bg-[#FB923C] rounded-xl text-sm text-white font-semibold transition-all shadow-[0_0_20px_rgba(249,115,22,0.35)]"
-            >
-              Save Settings
-            </button>
-
-            {/* Unsubscribe Link */}
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); handleUnsubscribe(); }}
-              disabled={subscribing}
-              className="w-full mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-40"
-            >
-              Stop automatic summaries for this show
-            </button>
-          </div>
-        </div>
-      )}
+      <AutoDistillModal
+        isOpen={isAutoDistillOpen}
+        onClose={() => setIsAutoDistillOpen(false)}
+        onSave={() => {
+          handleSubscribe();
+          onToast?.("Auto-Distill settings saved!", "success");
+        }}
+        onUnsubscribe={handleUnsubscribe}
+      />
     </div>
   );
 }

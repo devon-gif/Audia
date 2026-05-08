@@ -1086,6 +1086,11 @@ export default function DashboardPage() {
                     loading={vaultLoading}
                     onSelect={handleEpisodeSelect}
                     onSummarize={handleEpisodeSummarize}
+                    onListen={(audioUrl, title) => {
+                      loadTrack({ url: audioUrl, title, artwork: vaultShow?.artwork ?? undefined });
+                      setVaultShow(null);
+                      setVaultEpisodes([]);
+                    }}
                     isFavorited={vaultShow!.feedUrl ? favoriteShows.has(vaultShow!.feedUrl as string) : false}
                     onFavoriteToggle={(feedUrl) => handleFavoriteToggle(feedUrl, vaultShow!.name)}
                     onClose={() => { setVaultShow(null); setVaultEpisodes([]); }}
@@ -1099,13 +1104,7 @@ export default function DashboardPage() {
             </div>
           ) : activeView === "discover" ? (
             <DiscoverView
-              userId={userId}
-              favoriteRssUrls={favoriteShows}
-              onFavoriteToggle={handleFavoriteToggle}
-              onEpisodeSelect={(audioUrl, title, artwork) => {
-                loadTrack({ url: audioUrl, title, artwork });
-              }}
-              onToast={(msg, type) => showToast(msg, type)}
+              onSelectShow={handleShowSelect}
             />
           ) : activeView === "help" ? (
             <div className="px-8 py-6 w-full">

@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { X, Radio, ArrowRight, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { X, Radio, ArrowRight, Loader2, Bell, BellOff } from "lucide-react";
 import { type Episode } from "@/app/api/episodes/route";
 
 interface Props {
   showName: string;
   artworkUrl?: string | null;
+  feedUrl?: string | null;
   episodes: Episode[];
   loading: boolean;
   onSelect: (audioUrl: string) => void;
+  onSubscribe?: (subscribed: boolean) => void;
+  initialSubscribed?: boolean;
   onClose: () => void;
 }
 
@@ -22,8 +25,25 @@ function formatDate(raw: string) {
   }
 }
 
-export default function EpisodeVault({ showName, artworkUrl, episodes, loading, onSelect, onClose }: Props) {
+export default function EpisodeVault({ showName, artworkUrl, feedUrl, episodes, loading, onSelect, onSubscribe, initialSubscribed = false, onClose }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const [subscribed, setSubscribed] = useState(initialSubscribed);
+  const [subscribing, setSubscribing] = useState(false);
+
+  const handleToggleSubscribe = async () => {
+    if (subscribing) return;
+    setSubscribing(true);
+    const next = !subscribed;
+    setSubscribed(next);
+    try {
+      await onSubscribe?.(next);
+    } catch {
+      // Revert optimistic update on failure
+      setSubscribed(!next);
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   // Close on outside click
   useEffect(() => {
@@ -66,12 +86,36 @@ export default function EpisodeVault({ showName, artworkUrl, episodes, loading, 
               <h3 className="text-sm font-black tracking-tighter text-white leading-none">{showName}</h3>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
-          >
-            <X size={16} />
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Auto-Distill toggle */}
+            {feedUrl && (
+              <button
+                onClick={handleToggleSubscribe}
+                disabled={subscribing}
+                title={subscribed ? "Unsubscribe from Auto-Distill" : "Auto-Distill New Episodes"}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all ${
+                  subscribed
+                    ? "bg-orange-500/15 border-orange-500/40 text-orange-300 shadow-[0_0_12px_rgba(255,102,0,0.15)]"
+                    : "bg-white/[0.03] border-white/10 text-zinc-400 hover:border-orange-500/30 hover:text-orange-300"
+                } disabled:opacity-50`}
+              >
+                {subscribed ? <Bell size={11} className="shrink-0" /> : <BellOff size={11} className="shrink-0" />}
+                {subscribing ? "Saving…" : subscribed ? "Auto-Distill On" : "Auto-Distill"}
+                {/* Pulse dot when subscribed */}
+                {subscribed && !subscribing && (
+                  <span className="w-1 h-1 rounded-full bg-orange-400 animate-pulse" />
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Episode list */}

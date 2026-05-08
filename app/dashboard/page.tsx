@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, ArrowRight, Play, Layout, Sparkles,
-  Crown, SkipBack, SkipForward, Speaker, Check, LogOut, CreditCard, Terminal, Lock,
+  Crown, SkipBack, SkipForward, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import LibraryView from "@/app/components/LibraryView";
@@ -103,6 +103,14 @@ export default function DashboardPage() {
   // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // Settings modal
+  const [showSettings, setShowSettings] = useState(false);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [savingNotif, setSavingNotif] = useState(false);
+
+  // Subscribed feeds — Set of feedUrls the user has Auto-Distill enabled
+  const [subscribedFeeds, setSubscribedFeeds] = useState<Set<string>>(new Set());
+
   // Episode Vault
   const [vaultShow, setVaultShow] = useState<ShowSelection | null>(null);
   const [vaultEpisodes, setVaultEpisodes] = useState<Episode[]>([]);
@@ -124,7 +132,7 @@ export default function DashboardPage() {
       const checkProfile = async () => {
         const { data } = await supabase
           .from("profiles")
-          .select("id, trial_ends_at, subscription_status, plan_tier, monthly_generations")
+          .select("id, trial_ends_at, subscription_status, plan_tier, monthly_generations, email_notifications")
           .eq("id", user.id)
           .maybeSingle();
         if (data) {
@@ -134,6 +142,8 @@ export default function DashboardPage() {
           // Credit tier
           if (data.plan_tier) setPlanTier(data.plan_tier as "free" | "pro" | "max");
           if (data.monthly_generations != null) setMonthlyGenerations(data.monthly_generations as number);
+          // Notification pref
+          if (data.email_notifications != null) setEmailNotifications(data.email_notifications as boolean);
           // Days remaining — prefer profiles row, fall back to user_metadata
           const trialEndsAt: string | undefined =
             data.trial_ends_at ?? (user.user_metadata?.trial_ends_at as string | undefined);
@@ -151,6 +161,15 @@ export default function DashboardPage() {
         }
       };
       checkProfile();
+
+      // Load existing subscriptions so toggle reflects correct state
+      supabase
+        .from("subscriptions")
+        .select("feed_url")
+        .eq("user_id", user.id)
+        .then(({ data: subs }) => {
+          if (subs) setSubscribedFeeds(new Set(subs.map((s: { feed_url: string }) => s.feed_url)));
+        });
     });
 
     return () => { if (pollTimer) clearTimeout(pollTimer); };
@@ -269,6 +288,45 @@ export default function DashboardPage() {
 
   const devLog = (msg: string) =>
     setDevLogs((l) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...l].slice(0, 100));
+
+  const handleSubscribe = async (subscribed: boolean) => {
+    if (!vaultShow?.feedUrl) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    if (subscribed) {
+      const { error } = await supabase.from("subscriptions").upsert(
+        { user_id: user.id, podcast_name: vaultShow.name, feed_url: vaultShow.feedUrl },
+        { onConflict: "user_id,feed_url" }
+      );
+      if (error) throw error;
+      setSubscribedFeeds(prev => new Set([...prev, vaultShow.feedUrl!]));
+      showToast(`Auto-Distill enabled for ${vaultShow.name}`, "info");
+    } else {
+      const { error } = await supabase
+        .from("subscriptions")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("feed_url", vaultShow.feedUrl);
+      if (error) throw error;
+      setSubscribedFeeds(prev => { const s = new Set(prev); s.delete(vaultShow.feedUrl!); return s; });
+      showToast(`Unsubscribed from ${vaultShow.name}`, "info");
+    }
+  };
+
+  const handleToggleEmailNotifications = async (enabled: boolean) => {
+    setSavingNotif(true);
+    setEmailNotifications(enabled);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("profiles").update({ email_notifications: enabled }).eq("id", user.id);
+    } catch {
+      setEmailNotifications(!enabled); // revert
+      showToast("Failed to save notification preference.");
+    } finally {
+      setSavingNotif(false);
+    }
+  };
 
   const handleSummarize = async () => {
     if (!urlInput.trim() || isSummarizing) return;
@@ -468,13 +526,22 @@ export default function DashboardPage() {
           {/* User / sign out */}
           <div className="mt-4 pt-4 border-t border-white/5">
             <p className="text-[10px] text-zinc-500 truncate mb-3">{userEmail ?? "—"}</p>
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all text-xs font-medium"
-            >
-              <LogOut size={13} />
-              Sign Out
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleSignOut}
+                className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all text-xs font-medium"
+              >
+                <LogOut size={13} />
+                Sign Out
+              </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                title="Settings"
+                className="p-2 rounded-xl text-zinc-600 hover:text-zinc-300 hover:bg-white/5 transition-all"
+              >
+                <Settings size={13} />
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -847,11 +914,105 @@ export default function DashboardPage() {
         <EpisodeVault
           showName={vaultShow.name}
           artworkUrl={vaultShow.artwork}
+          feedUrl={vaultShow.feedUrl}
           episodes={vaultEpisodes}
           loading={vaultLoading}
           onSelect={handleEpisodeSelect}
+          onSubscribe={handleSubscribe}
+          initialSubscribed={vaultShow.feedUrl ? subscribedFeeds.has(vaultShow.feedUrl) : false}
           onClose={() => { setVaultShow(null); setVaultEpisodes([]); }}
         />
+      )}
+
+      {/* ── Settings Modal ── */}
+      {showSettings && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setShowSettings(false)}
+        >
+          <div
+            className="relative bg-black/90 border border-white/10 rounded-2xl p-7 max-w-sm w-full mx-4 shadow-[0_0_80px_rgba(0,0,0,0.6)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Deep-glass gradient */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
+            <div className="relative">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center">
+                    <Settings size={14} className="text-zinc-300" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">Preferences</p>
+                    <h2 className="text-sm font-black tracking-tighter text-white leading-none">Settings</h2>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-white/5 transition-all"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 1l10 10M11 1L1 11"/>
+                  </svg>
+                </button>
+              </div>
+
+              {/* Notification preference */}
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 mb-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-2.5">
+                    <div className="mt-0.5">
+                      <Bell size={13} className={emailNotifications ? "text-orange-400" : "text-zinc-600"} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-white mb-0.5">Delivery Method</p>
+                      <p className="text-[11px] text-zinc-500 leading-snug">
+                        {emailNotifications
+                          ? "Email me the audio brief when new episodes are distilled."
+                          : "Dashboard only — no emails will be sent."}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Toggle */}
+                  <button
+                    onClick={() => !savingNotif && handleToggleEmailNotifications(!emailNotifications)}
+                    disabled={savingNotif}
+                    className={`relative w-10 h-5 rounded-full shrink-0 transition-colors duration-200 ${
+                      emailNotifications ? "bg-orange-500" : "bg-zinc-700"
+                    } disabled:opacity-50`}
+                    aria-label="Toggle email notifications"
+                  >
+                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+                      emailNotifications ? "translate-x-5" : "translate-x-0.5"
+                    }`} />
+                  </button>
+                </div>
+                {/* Label below toggle */}
+                <div className="mt-3 flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${emailNotifications ? "bg-orange-400 animate-pulse" : "bg-zinc-700"}`} />
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                    {savingNotif ? "Saving…" : emailNotifications ? "Email Briefs On" : "Dashboard Only"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Subscriptions count */}
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-white mb-0.5">Auto-Distill Feeds</p>
+                    <p className="text-[11px] text-zinc-500">Shows set to auto-summarize new episodes.</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-black text-white tabular-nums">{subscribedFeeds.size}</p>
+                    <p className="text-[9px] text-zinc-600 uppercase tracking-widest">Active</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Pro Gate Modal ── */}

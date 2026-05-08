@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, ArrowRight, Loader2, Bell, BellOff, HelpCircle } from "lucide-react";
-import * as Tooltip from "@radix-ui/react-tooltip";
+import { X, ArrowRight, Loader2, Heart } from "lucide-react";
 import { type Episode } from "@/app/api/episodes/route";
-import AutoDistillModal from "@/app/components/AutoDistillModal";
 
 interface Props {
   showName: string;
@@ -13,9 +11,8 @@ interface Props {
   episodes: Episode[];
   loading: boolean;
   onSelect: (audioUrl: string) => void;
-  onSubscribe?: (subscribed: boolean, preferredLength: string) => void;
-  initialSubscribed?: boolean;
-  initialPreferredLength?: string;
+  isFavorited?: boolean;
+  onFavoriteToggle?: (feedUrl: string) => void;
   onClose: () => void;
   onToast?: (message: string, type: "success" | "error" | "info") => void;
 }
@@ -35,95 +32,15 @@ export default function EpisodeVault({
   feedUrl, 
   episodes, 
   loading, 
-  onSelect, 
-  onSubscribe, 
-  initialSubscribed = false,
-  initialPreferredLength = "5m",
+  onSelect,
+  isFavorited = false,
+  onFavoriteToggle,
   onClose,
-  onToast
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onToast: _onToast
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [subscribed, setSubscribed] = useState(initialSubscribed);
-  const [subscribing, setSubscribing] = useState(false);
-  const [preferredLength] = useState(initialPreferredLength);
-  const [isAutoDistillOpen, setIsAutoDistillOpen] = useState(false);
   const [headerImageError, setHeaderImageError] = useState(false);
-
-  const handleSubscribe = async () => {
-    if (subscribing) return;
-    setSubscribing(true);
-    
-    try {
-      // Make API call to subscribe
-      const response = await fetch("/api/subscriptions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          feedUrl,
-          podcastName: showName,
-          preferredLength,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to subscribe");
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setSubscribed(true);
-        onToast?.("Settings saved!", "success");
-        setIsAutoDistillOpen(false);
-        await onSubscribe?.(true, preferredLength);
-      } else {
-        throw new Error(data.error || "Failed to subscribe");
-      }
-    } catch (error) {
-      console.error("Error subscribing:", error);
-      onToast?.("Failed to subscribe. Please try again.", "error");
-    } finally {
-      setSubscribing(false);
-    }
-  };
-
-  const handleUnsubscribe = async () => {
-    if (subscribing) return;
-    setSubscribing(true);
-    
-    try {
-      const response = await fetch("/api/subscriptions", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          feedUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to unsubscribe");
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setSubscribed(false);
-        onToast?.("Unsubscribed successfully", "info");
-        await onSubscribe?.(false, preferredLength);
-      } else {
-        throw new Error(data.error || "Failed to unsubscribe");
-      }
-    } catch (error) {
-      console.error("Error unsubscribing:", error);
-      onToast?.("Failed to unsubscribe. Please try again.", "error");
-    } finally {
-      setSubscribing(false);
-    }
-  };
 
   // Close on outside click
   useEffect(() => {
@@ -173,51 +90,21 @@ export default function EpisodeVault({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Auto-Distill Button */}
+            {/* Favorites Button */}
             {feedUrl && (
-              <Tooltip.Provider>
-                {subscribed ? (
-                  <button
-                    onClick={() => setIsAutoDistillOpen(true)}
-                    disabled={subscribing}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all bg-orange-500/15 border-orange-500/40 text-orange-300 shadow-[0_0_12px_rgba(255,102,0,0.15)] disabled:opacity-50"
-                  >
-                    <Bell size={11} className="shrink-0" />
-                    {subscribing ? "Saving…" : "Manage Automation"}
-                    <span className="w-1 h-1 rounded-full bg-orange-400 animate-pulse" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setIsAutoDistillOpen(true)}
-                    disabled={subscribing}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all bg-white/[0.03] border-white/10 text-zinc-400 hover:border-orange-500/30 hover:text-orange-300 disabled:opacity-50"
-                  >
-                    <BellOff size={11} className="shrink-0" />
-                    {subscribing ? "Saving…" : "Auto-Distill"}
-                    
-                    {/* Help Circle with Tooltip */}
-                    <Tooltip.Root>
-                      <Tooltip.Trigger asChild>
-                        <span 
-                          className="ml-1 p-0.5 rounded-full hover:bg-white/10 cursor-help"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <HelpCircle size={12} className="text-zinc-500" />
-                        </span>
-                      </Tooltip.Trigger>
-                      <Tooltip.Portal>
-                        <Tooltip.Content
-                          className="bg-black/90 backdrop-blur-xl border border-white/10 rounded-lg px-3 py-2 text-xs text-zinc-300 max-w-[200px] shadow-xl"
-                          sideOffset={5}
-                        >
-                          Automatically receive an audio brief in your inbox whenever a new episode drops.
-                          <Tooltip.Arrow className="fill-white/10" />
-                        </Tooltip.Content>
-                      </Tooltip.Portal>
-                    </Tooltip.Root>
-                  </button>
-                )}
-              </Tooltip.Provider>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onFavoriteToggle?.(feedUrl); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all ${
+                  isFavorited
+                    ? "bg-rose-500/15 border-rose-500/40 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.15)]"
+                    : "bg-white/[0.03] border-white/10 text-zinc-400 hover:border-rose-500/30 hover:text-rose-300"
+                }`}
+              >
+                <Heart size={11} className={isFavorited ? "fill-rose-400 text-rose-400 shrink-0" : "shrink-0"} />
+                {isFavorited ? "Favorited" : "Add to Favorites"}
+                {isFavorited && <span className="w-1 h-1 rounded-full bg-rose-400 animate-pulse" />}
+              </button>
             )}
 
             <button
@@ -283,15 +170,6 @@ export default function EpisodeVault({
         </div>
       </div>
 
-      <AutoDistillModal
-        isOpen={isAutoDistillOpen}
-        onClose={() => setIsAutoDistillOpen(false)}
-        onSave={() => {
-          handleSubscribe();
-          onToast?.("Auto-Distill settings saved!", "success");
-        }}
-        onUnsubscribe={handleUnsubscribe}
-      />
     </div>
   );
 }

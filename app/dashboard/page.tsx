@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, ArrowRight, ArrowLeft, Play, Layout, Sparkles,
   Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
-  Globe, Compass, Volume2, Star,
+  Globe, Compass, Volume2, Star, X,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -940,6 +940,14 @@ export default function DashboardPage() {
                         >
                           <ArrowLeft size={12} />
                           Return to Dashboard
+                        </button>
+                        <button
+                          onClick={() => { setBriefResult(null); setGeneratingAudio(false); }}
+                          className="flex items-center gap-1 text-[11px] text-white/30 hover:text-white/70 hover:bg-white/5 px-2 py-0.5 rounded-lg transition-all duration-200"
+                          title="Close brief — audio keeps playing"
+                        >
+                          <X size={11} />
+                          Close Brief
                         </button>
                         <span className="text-[10px] text-zinc-500 font-mono">{(briefResult.transcriptLength / 5 / 60).toFixed(0)} min transcript</span>
                       </div>

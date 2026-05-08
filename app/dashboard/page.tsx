@@ -442,7 +442,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white font-sans antialiased flex flex-col overflow-hidden">
+    <main className="min-h-screen bg-black text-white font-sans antialiased flex flex-row overflow-hidden">
       {/* Success Toast */}
       {showSuccessToast && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -608,7 +608,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* ── Main content column ── */}
-        <div className="flex-1 flex flex-col overflow-y-auto">
+        <div className="flex-1 flex flex-col overflow-y-auto justify-start items-start">
 
         {/* ── Global Audio Player ── always visible when audio is loaded, persists across views */}
         {globalAudio && (
@@ -692,7 +692,7 @@ export default function DashboardPage() {
 
         {/* ── View content ── */}
         {activeView === "new-summary" ? (
-          <div className="flex-1 px-8 py-6">
+          <div className="px-8 py-6 w-full">
             {/* Top bar */}
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -1008,15 +1008,15 @@ export default function DashboardPage() {
               )}
             </div>
           ) : activeView === "library" ? (
-            <div className="flex-1 px-8 py-6">
+            <div className="px-8 py-6 w-full">
               <LibraryView onPlay={handlePlayLibraryBrief} />
             </div>
           ) : activeView === "help" ? (
-            <div className="flex-1 px-8 py-6">
+            <div className="px-8 py-6 w-full">
               <HelpPage />
             </div>
           ) : (
-            <div className="flex-1 px-8 py-6">
+            <div className="px-8 py-6 w-full">
               <BillingPage />
             </div>
           )}

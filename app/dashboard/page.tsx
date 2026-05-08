@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Search, ArrowRight, Play, Pause, Layout, Sparkles,
+  Search, ArrowRight, Play, Layout, Sparkles,
   Crown, SkipBack, SkipForward, Speaker, Check, LogOut, CreditCard, Terminal, Lock,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
@@ -11,13 +11,21 @@ import LibraryView from "@/app/components/LibraryView";
 import PodcastGrid from "@/app/components/PodcastGrid";
 import BillingPage from "@/app/dashboard/billing/page";
 
-type VoiceName = "Marcus" | "Sarah" | "George" | "Charlotte";
+type VoiceName = "Rachel" | "Sarah" | "Marcus" | "George";
 
-const voices: { id: VoiceName; label: string; desc: string; initial: string; gradient: string; previewUrl: string }[] = [
-  { id: "Marcus",    label: "Marcus (US)",    desc: "US Male • Authoritative",    initial: "M", gradient: "from-blue-500 to-blue-700",   previewUrl: "/previews/marcus.mp3" },
-  { id: "Sarah",     label: "Sarah (US)",     desc: "US Female • Conversational", initial: "S", gradient: "from-pink-500 to-pink-700",   previewUrl: "/previews/sarah.mp3" },
-  { id: "George",    label: "George (UK)",    desc: "UK Male • Analytical",       initial: "G", gradient: "from-green-500 to-green-700", previewUrl: "/previews/george.mp3" },
-  { id: "Charlotte", label: "Charlotte (UK)", desc: "UK Female • Sophisticated",  initial: "C", gradient: "from-purple-500 to-purple-700", previewUrl: "/previews/charlotte.mp3" },
+const voices: {
+  elevenLabsId: string;
+  id: VoiceName;
+  label: string;
+  desc: string;
+  initial: string;
+  gradient: string;
+  previewUrl: string;
+}[] = [
+  { elevenLabsId: "21m00Tcm4TlvDq8ikWAM", id: "Rachel",  label: "Rachel (Calm)",       desc: "Calm • Warm • Storytelling",  initial: "R", gradient: "from-rose-400 to-rose-700",    previewUrl: "/Rachel.mp3" },
+  { elevenLabsId: "EXAVITQu4vr4xnSDxMaL", id: "Sarah",   label: "Sarah (Broadcast)",   desc: "US Female • Broadcast",       initial: "S", gradient: "from-pink-500 to-pink-700",   previewUrl: "/Sarah.mp3" },
+  { elevenLabsId: "bIHbv24MWmeRgasZH58o", id: "Marcus",  label: "Marcus (Executive)",  desc: "US Male • Authoritative",    initial: "M", gradient: "from-blue-500 to-blue-700",   previewUrl: "/Marcus.mp3" },
+  { elevenLabsId: "JBFqnCBsd6RMkjVDRZzb", id: "George",  label: "George (Cinematic)",  desc: "UK Male • Cinematic",         initial: "G", gradient: "from-green-500 to-green-700", previewUrl: "/George.mp3" },
 ];
 
 type SearchResult = {
@@ -50,7 +58,7 @@ type BriefResult = {
 export default function DashboardPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<"new-summary" | "library" | "billing">("new-summary");
-  const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Marcus");
+  const [selectedVoice, setSelectedVoice] = useState<VoiceName>("Rachel");
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
@@ -155,17 +163,30 @@ export default function DashboardPage() {
 
   const previewVoice = (voiceId: VoiceName, url: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    // Toggle off if already playing this voice
     if (previewingVoice === voiceId) {
       voicePreviewRef.current?.pause();
+      voicePreviewRef.current = null;
       setPreviewingVoice(null);
       return;
     }
-    voicePreviewRef.current?.pause();
+    // Stop any current preview
+    if (voicePreviewRef.current) {
+      voicePreviewRef.current.pause();
+      voicePreviewRef.current = null;
+    }
     const audio = new Audio(url);
     voicePreviewRef.current = audio;
-    audio.play().catch(() => showToast("Preview unavailable.", "info"));
     setPreviewingVoice(voiceId);
-    audio.addEventListener("ended", () => setPreviewingVoice(null));
+    audio.play().catch(() => {
+      // Silent failure — file may not exist in dev
+      voicePreviewRef.current = null;
+      setPreviewingVoice(null);
+    });
+    audio.addEventListener("ended", () => {
+      voicePreviewRef.current = null;
+      setPreviewingVoice(null);
+    });
   };
 
   const handleSearch = async () => {
@@ -449,26 +470,32 @@ export default function DashboardPage() {
                               className="flex-1 flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FF6600]/10 transition-colors"
                             >
                               <div className="flex items-center gap-2">
-                                <div className={`w-6 h-6 bg-gradient-to-br ${v.gradient} rounded-full flex items-center justify-center text-[10px] font-black text-white`}>{v.initial}</div>
+                                <div className={`w-6 h-6 bg-gradient-to-br ${v.gradient} rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0`}>{v.initial}</div>
                                 <div className="text-left">
-                                  <p className="text-xs text-white font-medium">{v.id}</p>
+                                  <p className="text-xs text-white font-medium">{v.label}</p>
                                   <p className="text-[10px] text-zinc-500">{v.desc}</p>
                                 </div>
                               </div>
-                              {selectedVoice === v.id && <Check size={13} className="text-[#FF6600]" />}
+                              {selectedVoice === v.id && <Check size={13} className="text-[#FF6600] shrink-0" />}
                             </button>
+
+                            {/* Preview button */}
                             <button
                               onClick={(e) => previewVoice(v.id, v.previewUrl, e)}
-                              title="Preview voice"
-                              className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                              title={previewingVoice === v.id ? "Stop preview" : "Preview voice"}
+                              className={`relative p-1.5 rounded-lg transition-all shrink-0 ${
                                 previewingVoice === v.id
-                                  ? "text-orange-400 bg-orange-500/10"
-                                  : "text-zinc-600 hover:text-zinc-300 hover:bg-white/5"
+                                  ? "text-orange-400"
+                                  : "text-white/30 hover:text-orange-500"
                               }`}
                             >
+                              {/* Pulse ring while playing */}
+                              {previewingVoice === v.id && (
+                                <span className="absolute inset-0 rounded-lg ring-1 ring-orange-500/60 animate-pulse" />
+                              )}
                               {previewingVoice === v.id
-                                ? <Pause size={11} />
-                                : <Play size={11} />}
+                                ? <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="1.5"/></svg>
+                                : <Play size={10} />}
                             </button>
                           </div>
                         ))}

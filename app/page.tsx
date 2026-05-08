@@ -661,7 +661,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Text-only Bento layouts</div>
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Web app access</div>
                 </div>
-                <button className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10 transition-all font-semibold text-white border border-white/5">Start Free</button>
+                <Link href="/signup" className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10 transition-all font-semibold text-white border border-white/5 text-center block">Start Free</Link>
               </div>
 
               {/* Pro Tier (Highlighted) - Deep Glass */}
@@ -676,7 +676,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Export to Notion / Obsidian</div>
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Mobile PWA integration</div>
                 </div>
-                <button className="w-full py-4 rounded-xl bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/40 transition-all font-semibold text-white shadow-lg shadow-orange-500/25">Upgrade to Pro</button>
+                <Link href="/signup" className="w-full py-4 rounded-xl bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/40 transition-all font-semibold text-white shadow-lg shadow-orange-500/25 text-center block">Upgrade to Pro</Link>
               </div>
 
               {/* Elite Tier - Deep Glass */}
@@ -689,7 +689,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Custom AI Voice Clones</div>
                   <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Priority iMac Server Queue</div>
                 </div>
-                <button className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10 transition-all font-semibold text-white border border-white/5">Get Elite</button>
+                <Link href="/signup" className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10 transition-all font-semibold text-white border border-white/5 text-center block">Get Elite</Link>
               </div>
 
             </div>

@@ -73,7 +73,7 @@ export default function LandingPage() {
   const [activeView, setActiveView] = useState<"new-summary" | "library">("new-summary");
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const router = useRouter();
 
   const handleSummarize = () => {

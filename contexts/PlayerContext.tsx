@@ -27,6 +27,8 @@ interface PlayerActions {
   load: (track: Track) => void;
   toggle: () => void;
   seek: (seconds: number) => void;
+  skip: (delta: number) => void;   // e.g. +15 / -15
+  setVolume: (v: number) => void;  // 0–1
   dismiss: () => void;
 }
 

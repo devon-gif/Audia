@@ -899,8 +899,6 @@ export default function DashboardPage() {
                       </button>
                     ))}
                   </div>
-                    )}
-                  </div>
 
                   {/* Output Language toggle */}
                   <div className="flex items-center gap-2">

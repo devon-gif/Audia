@@ -112,7 +112,7 @@ export default function LandingPage() {
             {/* Center Navigation */}
             <nav className="hidden md:flex items-center justify-center gap-8">
               <Link href="/#features" className="text-sm text-white/70 hover:text-white transition-colors">Features</Link>
-              <Link href="/#pricing" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</Link>
+              <Link href="/#hero" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</Link>
               <Link href="/#integrations" className="text-sm text-white/70 hover:text-white transition-colors">Integrations</Link>
               <Link href="/changelog" className="text-sm text-white/70 hover:text-white transition-colors">Changelog</Link>
             </nav>
@@ -804,131 +804,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* --- PRICING --- */}
-        <section id="pricing" className="py-32 bg-black relative">
-          <div className="max-w-6xl mx-auto px-6 md:px-12">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                Predictable pricing. Infinite leverage.
-              </h2>
-              
-              {/* Toggle */}
-              <div className="inline-flex items-center gap-3 p-1 bg-white/5 border border-white/10 rounded-full mt-8">
-                <button className="px-4 py-2 bg-white/10 rounded-full text-sm text-white font-medium">Monthly</button>
-                <button className="px-4 py-2 rounded-full text-sm text-zinc-400 hover:text-white transition-colors">
-                  Annual <span className="text-orange-400">(Save 20%)</span>
-                </button>
-              </div>
-            </div>
-            
-            {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              {/* Free */}
-              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-3xl p-8">
-                <div className="text-sm text-zinc-400 uppercase tracking-wider mb-2">Free</div>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-4xl font-bold text-white">$0</span>
-                  <span className="text-zinc-500">/mo</span>
-                </div>
-                <p className="text-zinc-400 text-sm mb-8">Perfect for dipping your toes.</p>
-                
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    2 hours of audio processing/mo
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    Text-only bento-briefs
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    Web dashboard access
-                  </li>
-                </ul>
-                
-                <button className="w-full py-3 border border-white/20 rounded-full text-white font-medium hover:bg-white/5 transition-all">
-                  Get Started
-                </button>
-              </div>
-              
-              {/* Pro - Highlighted */}
-              <div className="bg-[#FF6600]/10 backdrop-blur-sm border-2 border-[#FF6600]/50 rounded-3xl p-8 relative shadow-[0_0_40px_rgba(255,102,0,0.15)]">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full text-xs font-semibold text-white">
-                  Most Popular
-                </div>
-                <div className="text-sm text-zinc-400 uppercase tracking-wider mb-2">Pro</div>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-4xl font-bold text-white">$4.99</span>
-                  <span className="text-zinc-500">/mo</span>
-                </div>
-                <p className="text-zinc-400 text-sm mb-8">The commuter's command center.</p>
-                
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    15 hours of audio processing/mo
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    Neural Audio Briefs (Listen anywhere)
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    Automated Email Delivery
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    Notion Export
-                  </li>
-                </ul>
-                
-                <button 
-                  onClick={() => router.push("/signup")}
-                  className="w-full py-3 bg-white rounded-full text-black font-semibold hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-                >
-                  START 7-DAY FREE TRIAL
-                </button>
-              </div>
-              
-              {/* Max */}
-              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-3xl p-8">
-                <div className="text-sm text-zinc-400 uppercase tracking-wider mb-2">Max</div>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-4xl font-bold text-white">$9.99</span>
-                  <span className="text-zinc-500">/mo</span>
-                </div>
-                <p className="text-zinc-400 text-sm mb-8">For extreme knowledge synthesis.</p>
-                
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    50 hours of audio processing/mo
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    Private RSS Feed integration
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    Multilingual audio generation
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-zinc-300">
-                    <Check size={16} className="text-orange-400" />
-                    Full API access
-                  </li>
-                </ul>
-                
-                <button className="w-full py-3 border border-white/20 rounded-full text-white font-medium hover:bg-white/5 transition-all">
-                  Upgrade to Max
-                </button>
-              </div>
-              
-            </div>
-          </div>
-        </section>
-
         {/* --- FAQ --- */}
         <section id="faq" className="py-32 bg-black relative">
           <div className="max-w-3xl mx-auto px-6 md:px-12">
@@ -1008,7 +883,7 @@ export default function LandingPage() {
               <div>
                 <div className="font-bold text-xs uppercase tracking-widest text-orange-500 mb-4">Product</div>
                 <nav className="flex flex-col gap-3">
-                  <Link href="/pricing" className="text-zinc-400 hover:text-white transition-colors text-sm">Pricing</Link>
+                  <Link href="/#hero" className="text-zinc-400 hover:text-white transition-colors text-sm">Pricing</Link>
                   <Link href="/features" className="text-zinc-400 hover:text-white transition-colors text-sm">Features</Link>
                   <Link href="/use-cases" className="text-zinc-400 hover:text-white transition-colors text-sm">Use Cases</Link>
                   <Link href="/changelog" className="text-zinc-400 hover:text-white transition-colors text-sm">Changelog</Link>

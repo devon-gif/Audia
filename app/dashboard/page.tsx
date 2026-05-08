@@ -228,7 +228,6 @@ export default function DashboardPage() {
   };
 
   const handleSearch = async () => {
-  const handleSearch = async () => {
     if (!urlInput.trim() || isSearching) return;
     setIsSearching(true);
     setSearchResults(null);

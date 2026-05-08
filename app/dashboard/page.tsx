@@ -692,9 +692,9 @@ export default function DashboardPage() {
 
         {/* ── View content ── */}
         {activeView === "new-summary" ? (
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
             {/* Top bar */}
-              <div className="flex items-center justify-between px-8 py-5 border-b border-white/5">
+            <div className="flex items-center justify-between px-8 py-5 border-b border-white/5">
                 <div>
                   <h1 className="text-lg font-black tracking-tighter text-white">{t.sidebar.newSummary}</h1>
                   <p className="text-xs text-zinc-500 mt-0.5">{t.dashboard.searchPlaceholder}</p>
@@ -990,33 +990,39 @@ export default function DashboardPage() {
                 )}
               </div>
 
-          </div>
+              {/* Episode Vault Overlay - Fixed position so it doesn't push content */}
+              {vaultShow && (
+                <div className="fixed inset-0 z-[90]">
+                  <EpisodeVault
+                    showName={vaultShow!.name}
+                    artworkUrl={vaultShow!.artwork}
+                    feedUrl={vaultShow!.feedUrl}
+                    episodes={vaultEpisodes}
+                    loading={vaultLoading}
+                    onSelect={handleEpisodeSelect}
+                    onSubscribe={handleSubscribe}
+                    initialSubscribed={vaultShow!.feedUrl ? subscribedFeeds.has(vaultShow!.feedUrl as string) : false}
+                    onClose={() => { setVaultShow(null); setVaultEpisodes([]); }}
+                  />
+                </div>
+              )}
+            </div>
           ) : activeView === "library" ? (
-            <div className="flex-1 overflow-auto p-8">
+            <div className="flex-1 overflow-auto p-8 max-w-7xl mx-auto w-full">
               <LibraryView onPlay={handlePlayLibraryBrief} />
             </div>
           ) : activeView === "help" ? (
-            <HelpPage />
+            <div className="flex-1 overflow-auto max-w-7xl mx-auto w-full">
+              <HelpPage />
+            </div>
           ) : (
-            <BillingPage />
+            <div className="flex-1 overflow-auto max-w-7xl mx-auto w-full">
+              <BillingPage />
+            </div>
           )}
         </div>
 
-        {/* ── Episode Vault ── */}
-      {vaultShow && (
-        <EpisodeVault
-          showName={vaultShow!.name}
-          artworkUrl={vaultShow!.artwork}
-          feedUrl={vaultShow!.feedUrl}
-          episodes={vaultEpisodes}
-          loading={vaultLoading}
-          onSelect={handleEpisodeSelect}
-          onSubscribe={handleSubscribe}
-          initialSubscribed={vaultShow!.feedUrl ? subscribedFeeds.has(vaultShow!.feedUrl as string) : false}
-          onClose={() => { setVaultShow(null); setVaultEpisodes([]); }}
-        />
-      )}
-
+  
       {/* ── Settings Modal ── */}
       {showSettings && (
         <div

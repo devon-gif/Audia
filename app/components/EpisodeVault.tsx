@@ -46,7 +46,9 @@ export default function EpisodeVault({
   const [subscribing, setSubscribing] = useState(false);
   const [preferredLength, setPreferredLength] = useState(initialPreferredLength);
   const [isAutoDistillOpen, setIsAutoDistillOpen] = useState(false);
-  const [pushToNotion, setPushToNotion] = useState(false);
+  const [sendToEmail, setSendToEmail] = useState(true);
+  const [sendToNotion, setSendToNotion] = useState(false);
+  const [sendToSMS, setSendToSMS] = useState(false);
   const [summaryLength, setSummaryLength] = useState<"Short" | "Deep Dive">("Short");
 
   const handleSubscribe = async () => {
@@ -296,17 +298,45 @@ export default function EpisodeVault({
                 <Bell size={24} className="text-orange-400" />
               </div>
               <h2 className="text-xl font-bold text-white mb-2">
-                {subscribed ? "Manage Auto-Distill" : "Enable Auto-Distill"}
+                Automatic Summaries
               </h2>
               <p className="text-sm text-zinc-400">
-                Never miss a signal. We will automatically transcribe and summarize new episodes of this show the moment they drop.
+                We'll automatically summarize new episodes of this show the moment they drop. Where should we send them?
               </p>
             </div>
 
             {/* Controls */}
-            <div className="space-y-4 mb-6">
-              {/* Push to Notion Toggle */}
-              <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl">
+            <div className="space-y-3 mb-6">
+              {/* Delivery Methods */}
+              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Delivery Methods</p>
+
+              {/* Email Toggle */}
+              <button
+                onClick={() => setSendToEmail(!sendToEmail)}
+                className="w-full flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400">
+                      <rect x="2" y="4" width="20" height="16" rx="2"/>
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-white">Email Notifications</p>
+                    <p className="text-xs text-zinc-500">Send directly to my inbox.</p>
+                  </div>
+                </div>
+                <div className={`w-11 h-6 rounded-full transition-all relative ${sendToEmail ? "bg-[#FF6600]" : "bg-zinc-700"}`}>
+                  <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all ${sendToEmail ? "translate-x-5" : "translate-x-0"}`} />
+                </div>
+              </button>
+
+              {/* Notion Toggle */}
+              <button
+                onClick={() => setSendToNotion(!sendToNotion)}
+                className="w-full flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400">
@@ -314,25 +344,42 @@ export default function EpisodeVault({
                       <polyline points="14 2 14 8 20 8"/>
                     </svg>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-white">Push to Notion</p>
-                    <p className="text-xs text-zinc-500">Sync briefs to your workspace</p>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-white">Sync to Notion</p>
+                    <p className="text-xs text-zinc-500">Push directly to your workspace.</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setPushToNotion(!pushToNotion)}
-                  className={`relative w-11 h-6 rounded-full transition-all ${
-                    pushToNotion ? "bg-[#FF6600]" : "bg-zinc-700"
-                  }`}
-                >
-                  <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all ${
-                    pushToNotion ? "translate-x-5" : "translate-x-0"
-                  }`} />
-                </button>
-              </div>
+                <div className={`w-11 h-6 rounded-full transition-all relative ${sendToNotion ? "bg-[#FF6600]" : "bg-zinc-700"}`}>
+                  <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all ${sendToNotion ? "translate-x-5" : "translate-x-0"}`} />
+                </div>
+              </button>
+
+              {/* SMS Toggle with Upsell Badge */}
+              <button
+                onClick={() => setSendToSMS(!sendToSMS)}
+                className="w-full flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-white">SMS Text Message</p>
+                      <span className="px-1.5 py-0.5 bg-[#FF6600]/20 border border-[#FF6600]/30 rounded text-[10px] font-semibold text-[#FF8A00]">+$1.00/mo</span>
+                    </div>
+                    <p className="text-xs text-zinc-500">Get a quick text when it's ready.</p>
+                  </div>
+                </div>
+                <div className={`w-11 h-6 rounded-full transition-all relative ${sendToSMS ? "bg-[#FF6600]" : "bg-zinc-700"}`}>
+                  <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all ${sendToSMS ? "translate-x-5" : "translate-x-0"}`} />
+                </div>
+              </button>
 
               {/* Summary Length Selector */}
-              <div className="p-3 bg-white/[0.03] border border-white/10 rounded-xl">
+              <div className="p-3 bg-white/[0.03] border border-white/10 rounded-xl mt-4">
                 <p className="text-sm font-medium text-white mb-3">Summary Length</p>
                 <div className="flex gap-2">
                   {["Short", "Deep Dive"].map((length) => (
@@ -353,21 +400,22 @@ export default function EpisodeVault({
             </div>
 
             {/* Action Button */}
-            {subscribed ? (
+            <button
+              onClick={handleSubscribe}
+              disabled={subscribing}
+              className="w-full py-3 px-4 bg-[#FF6600] hover:bg-[#FF7A00] rounded-xl text-sm text-white font-semibold transition-all shadow-[0_0_20px_rgba(255,102,0,0.3)] disabled:opacity-50"
+            >
+              {subscribing ? "Saving…" : "Save Settings"}
+            </button>
+
+            {/* Unsubscribe Link */}
+            {subscribed && (
               <button
                 onClick={handleUnsubscribe}
                 disabled={subscribing}
-                className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl text-sm text-white font-medium transition-all disabled:opacity-50"
+                className="w-full mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
               >
-                {subscribing ? "Unsubscribing…" : "Unsubscribe from Auto-Distill"}
-              </button>
-            ) : (
-              <button
-                onClick={handleSubscribe}
-                disabled={subscribing}
-                className="w-full py-3 px-4 bg-[#FF6600] hover:bg-[#FF7A00] rounded-xl text-sm text-white font-semibold transition-all shadow-[0_0_20px_rgba(255,102,0,0.3)] disabled:opacity-50"
-              >
-                {subscribing ? "Confirming…" : "Confirm Auto-Distill"}
+                Stop automatic summaries for this show
               </button>
             )}
           </div>

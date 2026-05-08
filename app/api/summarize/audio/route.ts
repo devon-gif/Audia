@@ -9,10 +9,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { ElevenLabsClient } from "elevenlabs";
-import { DEFAULT_VOICE_ID } from "@/lib/pipeline";
-
-const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY! });
 
 export async function POST(request: NextRequest) {
   // ── Auth ────────────────────────────────────────────────────────────────────
@@ -27,45 +23,50 @@ export async function POST(request: NextRequest) {
   }
 
   // ── Parse body ──────────────────────────────────────────────────────────────
-  let body: { text?: string; voiceId?: string; recordId?: string };
+  let body: { text?: string; recordId?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { text, voiceId = DEFAULT_VOICE_ID, recordId } = body;
+  const OPENAI_VOICE = "onyx" as const;
+  const { text, recordId } = body;
   if (!text || typeof text !== "string" || text.trim().length === 0) {
     return NextResponse.json({ error: 'Missing required field: "text"' }, { status: 400 });
   }
 
-  console.log(`[audio-route] userId=${user.id} voiceId=${voiceId} recordId=${recordId ?? "none"} chars=${text.length} keyPresent=${!!process.env.ELEVENLABS_API_KEY}`);
+  console.log(`[audio-route] userId=${user.id} voice=${OPENAI_VOICE} recordId=${recordId ?? "none"} chars=${text.length} keyPresent=${!!process.env.OPENAI_API_KEY}`);
 
-  // ── ElevenLabs TTS ──────────────────────────────────────────────────────────
+  // ── OpenAI TTS ───────────────────────────────────────────────────────────
   let audioBuffer: Buffer;
   try {
-    const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
-      text: text.slice(0, 5000), // ElevenLabs limit guard
-      model_id: "eleven_turbo_v2_5",
-      voice_settings: {
-        stability: 0.75,
-        similarity_boost: 0.85,
-        style: 0.2,
-        use_speaker_boost: true,
+    const ttsRes = await fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        model: "tts-1",
+        voice: OPENAI_VOICE,
+        input: text.slice(0, 4096), // OpenAI TTS input limit
+        response_format: "mp3",
+      }),
     });
 
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of audioStream) {
-      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    if (!ttsRes.ok) {
+      const errText = await ttsRes.text().catch(() => String(ttsRes.status));
+      console.error(`[audio-route] OpenAI TTS error ${ttsRes.status}:`, errText);
+      const is402 = ttsRes.status === 402 || errText.toLowerCase().includes("quota") || errText.toLowerCase().includes("insufficient");
+      return NextResponse.json({ error: errText }, { status: is402 ? 402 : 502 });
     }
-    audioBuffer = Buffer.concat(chunks);
+
+    audioBuffer = Buffer.from(await ttsRes.arrayBuffer());
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "ElevenLabs TTS failed";
-    console.error("[audio] TTS error:", msg);
-    // 402 from ElevenLabs means quota / billing limit — surface it with its own status
-    const is402 = msg.includes("402") || msg.toLowerCase().includes("payment") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("insufficient");
-    return NextResponse.json({ error: msg }, { status: is402 ? 402 : 502 });
+    const msg = err instanceof Error ? err.message : "OpenAI TTS request failed";
+    console.error("[audio-route] TTS fetch error:", msg);
+    return NextResponse.json({ error: msg }, { status: 502 });
   }
 
   // ── Upload to Supabase Storage ("summaries" bucket) ─────────────────────────

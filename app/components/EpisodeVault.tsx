@@ -317,7 +317,7 @@ export default function EpisodeVault({
 
               {/* Email Toggle */}
               <button
-                onClick={() => setSendToEmail(!sendToEmail)}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSendToEmail(!sendToEmail); }}
                 className="w-full flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all"
               >
                 <div className="flex items-center gap-3">
@@ -339,7 +339,7 @@ export default function EpisodeVault({
 
               {/* Notion Toggle */}
               <button
-                onClick={() => setSendToNotion(!sendToNotion)}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSendToNotion(!sendToNotion); }}
                 className="w-full flex items-center justify-between p-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.05] transition-all"
               >
                 <div className="flex items-center gap-3">
@@ -366,7 +366,7 @@ export default function EpisodeVault({
                   {["Short", "Deep Dive"].map((length) => (
                     <button
                       key={length}
-                      onClick={() => setSummaryLength(length as "Short" | "Deep Dive")}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSummaryLength(length as "Short" | "Deep Dive"); }}
                       className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                         summaryLength === length
                           ? "bg-[#FF6600]/20 border border-[#FF6600]/50 text-[#FF8A00]"
@@ -382,7 +382,7 @@ export default function EpisodeVault({
 
             {/* Action Button */}
             <button
-              onClick={handleSubscribe}
+              onClick={(e) => { e.stopPropagation(); handleSubscribe(); }}
               disabled={subscribing}
               className="w-full py-3 px-4 bg-[#FF6600] hover:bg-[#FF7A00] rounded-xl text-sm text-white font-semibold transition-all shadow-[0_0_20px_rgba(255,102,0,0.3)] disabled:opacity-50"
             >
@@ -391,7 +391,7 @@ export default function EpisodeVault({
 
             {/* Unsubscribe Link */}
             <button
-              onClick={handleUnsubscribe}
+              onClick={(e) => { e.stopPropagation(); handleUnsubscribe(); }}
               disabled={subscribing}
               className="w-full mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
             >

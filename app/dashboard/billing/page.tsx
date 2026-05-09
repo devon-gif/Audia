@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Crown, CreditCard, ArrowRight, Check, Sparkles } from "lucide-react";
+import { Crown, CreditCard, ArrowRight, Check, Sparkles, X, Zap } from "lucide-react";
 
 const PRO_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY;
 const ELITE_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_ELITE_MONTHLY;
@@ -54,15 +54,102 @@ async function startCheckout(
 interface BillingPageProps {
   userId?: string | null;
   userEmail?: string | null;
+  activePlan?: "free" | "starter" | "pro" | "max";
 }
 
-export default function BillingPage({ userId = null, userEmail = null }: BillingPageProps) {
+export default function BillingPage({ userId = null, userEmail = null, activePlan = "free" }: BillingPageProps) {
   const router = useRouter();
   const [proLoading, setProLoading] = useState(false);
   const [eliteLoading, setEliteLoading] = useState(false);
   const [starterLoading, setStarterLoading] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+
+  const retentionOffer: Record<string, { price: string; savings: string }> = {
+    starter: { price: "$2.49", savings: "50% off" },
+    pro:     { price: "$4.99", savings: "50% off" },
+    max:     { price: "$9.99", savings: "50% off" },
+  };
+  const offer = retentionOffer[activePlan] ?? null;
+
+  const handleClaimOffer = () => {
+    console.log("[billing] User claimed retention offer:", activePlan, offer?.price);
+    setIsCancelModalOpen(false);
+    // TODO: apply coupon / discounted subscription via Stripe
+  };
+
+  const handleProceedCancel = () => {
+    console.log("[billing] User proceeded to cancel:", activePlan);
+    setIsCancelModalOpen(false);
+    // TODO: redirect to Stripe customer portal cancel flow
+  };
+
   return (
     <div className="flex-1 overflow-auto p-8 max-w-4xl">
+      {/* ── Cancel Retention Modal ── */}
+      {isCancelModalOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setIsCancelModalOpen(false)}
+        >
+          <div
+            className="relative bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-md w-full mx-4 shadow-[0_0_80px_rgba(0,0,0,0.7)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Ambient glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Close button */}
+            <button
+              onClick={() => setIsCancelModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+            >
+              <X size={15} />
+            </button>
+
+            <div className="relative z-10">
+              {/* Icon */}
+              <div className="w-12 h-12 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex items-center justify-center mb-5">
+                <Zap size={22} className="text-orange-400" />
+              </div>
+
+              {/* Headline */}
+              <h2 className="text-2xl font-black tracking-tighter text-white mb-2">Before you go...</h2>
+              <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+                Keep your Intelligence Hub active. Claim this exclusive offer to get
+                <span className="text-white font-semibold"> 3 months of your current plan </span>
+                at a heavily discounted rate.
+              </p>
+
+              {/* Offer card */}
+              {offer && (
+                <div className="bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/25 rounded-2xl p-5 mb-6">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-orange-400 mb-1">{offer.savings} — Limited Time</p>
+                  <div className="flex items-end gap-2">
+                    <span className="text-4xl font-black tracking-tighter text-white">{offer.price}</span>
+                    <span className="text-sm text-zinc-400 mb-1">/mo for 3 months</span>
+                  </div>
+                  <p className="text-xs text-zinc-500 mt-1">Then resumes at your normal rate. Cancel anytime.</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <button
+                onClick={handleClaimOffer}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl text-white font-bold text-sm hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,120,0,0.3)] mb-3"
+              >
+                <Zap size={14} />
+                Claim Offer &amp; Stay
+              </button>
+              <button
+                onClick={handleProceedCancel}
+                className="w-full py-2.5 rounded-xl text-xs text-zinc-500 hover:text-red-400 border border-white/5 hover:border-red-500/20 transition-all"
+              >
+                Proceed to Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-lg font-black tracking-tighter text-white mb-1">Billing & Plan</h1>
@@ -107,6 +194,14 @@ export default function BillingPage({ userId = null, userEmail = null }: Billing
           <CreditCard size={14} />
           Manage Subscription
         </a>
+        {activePlan !== "free" && (
+          <button
+            onClick={() => setIsCancelModalOpen(true)}
+            className="w-full mt-3 text-xs text-zinc-600 hover:text-red-400 transition-colors py-1"
+          >
+            Cancel Subscription
+          </button>
+        )}
       </div>
 
       {/* All 4 upgrade plan cards */}

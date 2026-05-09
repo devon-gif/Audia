@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     console.log("🚀 Starting deep signal analysis for:", url);
 
     // 1. Transcription - This 'transcribe' method waits for completion
-    const transcript = await aai.transcripts.transcribe({ audio: url });
+    const transcript = await aai.transcripts.transcribe({ audio: url, speech_model: "universal-3-pro" });
     
     if (!transcript.text) {
       throw new Error("Transcription completed but returned no text.");
@@ -34,14 +34,10 @@ export async function POST(req: Request) {
     const briefContent = response.choices[0].message.content;
 
     // 3. Return both keys to satisfy the Dashboard UI
-    return NextResponse.json({ 
-      brief: briefContent, 
-      summary: briefContent, 
-      transcriptLength: transcript.text.length 
-    });
+    return NextResponse.json({ brief: briefContent, summary: briefContent, transcriptLength: transcript.text.length });
 
   } catch (err) {
     console.error("❌ API ERROR:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ brief: briefContent, summary: briefContent, transcriptLength: transcript.text.length });
   }
 }

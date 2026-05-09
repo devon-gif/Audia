@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useState } from "react";
 import { usePlayer } from "@/contexts/PlayerContext";
 import {
   Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Headphones, X,
@@ -13,6 +13,9 @@ function fmt(s: number) {
 }
 
 export default function StereoPlayer() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
   const { track, isPlaying, progress, duration, volume, toggle, seek, skip, setVolume, dismiss } = usePlayer();
   const [showVolume, setShowVolume] = useState(false);
 

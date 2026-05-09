@@ -1082,6 +1082,7 @@ export default function LandingPage() {
                   <Link href="/help" className="text-zinc-400 hover:text-white transition-colors text-sm">Help Center</Link>
                   <Link href="/docs" className="text-zinc-400 hover:text-white transition-colors text-sm">API Docs</Link>
                   <Link href="/blog" className="text-zinc-400 hover:text-white transition-colors text-sm">Blog</Link>
+                  <Link href="/partners" className="text-zinc-400 hover:text-white transition-colors text-sm">Partner Program</Link>
                   <a href="mailto:support@audia.com" className="text-zinc-400 hover:text-white transition-colors text-sm">Contact Support</a>
                 </nav>
               </div>
@@ -1092,6 +1093,7 @@ export default function LandingPage() {
                 <nav className="flex flex-col gap-3">
                   <Link href="/privacy" className="text-zinc-400 hover:text-white transition-colors text-sm">Privacy Policy</Link>
                   <Link href="/terms" className="text-zinc-400 hover:text-white transition-colors text-sm">Terms of Service</Link>
+                  <Link href="/opt-out" className="text-zinc-400 hover:text-white transition-colors text-sm">Creator Opt-Out</Link>
                   <Link href="/cookies" className="text-zinc-400 hover:text-white transition-colors text-sm">Cookie Policy</Link>
                   <Link href="/security" className="text-zinc-400 hover:text-white transition-colors text-sm">Security</Link>
                 </nav>

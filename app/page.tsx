@@ -121,19 +121,19 @@ export default function LandingPage() {
         
         {/* --- FULL-WIDTH GLASS HEADER --- */}
         <header className="absolute top-0 left-0 right-0 z-50 py-6 px-6 md:px-12">
-          <div className="max-w-7xl mx-auto grid grid-cols-3 items-center">
+          <div className="max-w-7xl mx-auto grid grid-cols-[auto_1fr_auto] items-center gap-6">
             {/* Logo */}
             <div className="text-2xl font-bold tracking-tight text-white font-mono cursor-pointer" onClick={handleReset}>
               Audia<span className="text-[#FF6600]">.</span>
             </div>
             
             {/* Center Navigation */}
-            <nav className="hidden md:flex items-center justify-center gap-8">
-              <Link href="/#features" className="text-sm text-white/70 hover:text-white transition-colors">Features</Link>
-              <Link href="/#pricing" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</Link>
-              <Link href="/#how-it-works" className="text-sm text-white/70 hover:text-white transition-colors">How it Works</Link>
-              <Link href="/partners" className="text-sm font-medium text-amber-500/90 hover:text-amber-400 transition-colors">Partner Program</Link>
-              <Link href="/contact" className="text-sm text-white/70 hover:text-white transition-colors">Contact</Link>
+            <nav className="hidden md:flex flex-nowrap items-center justify-center gap-8">
+              <Link href="/#features" className="text-sm text-white/70 hover:text-white transition-colors whitespace-nowrap">Features</Link>
+              <Link href="/#pricing" className="text-sm text-white/70 hover:text-white transition-colors whitespace-nowrap">Pricing</Link>
+              <Link href="/#how-it-works" className="text-sm text-white/70 hover:text-white transition-colors whitespace-nowrap">How it Works</Link>
+              <Link href="/partners" className="text-sm font-medium text-amber-500/90 hover:text-amber-400 transition-colors whitespace-nowrap">Partner Program</Link>
+              <Link href="/contact" className="text-sm text-white/70 hover:text-white transition-colors whitespace-nowrap">Contact</Link>
             </nav>
             
             {/* Right Actions */}

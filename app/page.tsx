@@ -152,7 +152,7 @@ export default function LandingPage() {
         </header>
 
         {/* --- COMMAND CENTER HERO --- */}
-        <section id="hero" className="relative min-h-screen w-full flex flex-col items-center justify-center pt-40 md:pt-52 lg:pt-60 pb-24 md:pb-32 overflow-hidden">
+        <section id="hero" className="relative min-h-screen w-full flex flex-col items-center justify-center pt-24 md:pt-32 lg:pt-40 pb-24 md:pb-32 overflow-hidden">
           
           {/* Video Backdrop with Mask */}
           <div className="absolute inset-0 z-0 overflow-hidden">

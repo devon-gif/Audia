@@ -8,20 +8,25 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export async function POST(req: Request) {
   try {
     
+    
     const { url, length } = await req.json();
     
-    let wordTarget = 450;
-    let depthInstructions = "Focus on a high-level executive summary.";
+    let wordTarget, depthMode;
     
-    if (length === "5m") {
-      wordTarget = 800;
-      depthInstructions = "Provide a detailed narrative covering all major themes and arguments.";
-    } else if (length === "10m") {
-      wordTarget = 1500;
-      depthInstructions = "Provide an exhaustive, deep-dive narrative. Capture the nuances, the flow of the conversation, and detailed examples shared by the speakers.";
+    if (length === "3m") {
+      wordTarget = 500;
+      depthMode = "a concise executive summary focusing only on the 3 biggest 'signals'.";
+    } else if (length === "5m") {
+      wordTarget = 900;
+      depthMode = "a detailed narrative that captures the flow of the conversation and all primary arguments.";
+    } else {
+      // 10m Mode - The "Deep Signal Masterpiece"
+      wordTarget = 1800;
+      depthMode = "an immersive, exhaustive narrative transcript. You must expand on every anecdote, recount specific dialogues in a storytelling fashion, and capture the host's nuances. This is a 10-minute read—do not skip the small details. Unfold the story slowly.";
     }
 
-    console.log(`🚀 Generating ${length} brief (~ ${wordTarget} words) for:`, url);
+    console.log(`🎙️ Force-feeding ${length} target (${wordTarget} words) to the engine...`);
+    
     
     console.log("🚀 Starting deep signal analysis for:", url);
 
@@ -40,7 +45,7 @@ export async function POST(req: Request) {
       messages: [
         { 
           role: "system", 
-          content: `You are an elite podcast narrator. Create a 'Deep Signal Brief' that is purely narrative and highly engaging. ${depthInstructions} Target length is approximately ${wordTarget} words. Do not use bullet points or headers.` 
+          content: `You are a world-class long-form narrator. Your goal is to produce a 'Deep Signal Brief' that reads like a high-end magazine feature. For this request, you must provide ${depthMode} You are strictly required to write approximately ${wordTarget} words. If you are too brief, the production fails. Use vivid descriptions and conversational transitions. No headers, no bullets—just pure, flowing narrative.` 
         },
         { role: "user", content: `Summarize this transcript: ${transcript.text}` }
       ],

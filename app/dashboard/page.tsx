@@ -804,7 +804,7 @@ try {
                         onClick={() => router.push("/dashboard/billing")}
                         className="w-full py-3 px-6 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl font-bold text-white text-sm shadow-[0_0_30px_rgba(255,120,0,0.35)] hover:scale-[1.02] transition-all"
                       >
-                        Upgrade Now — $4.99/mo
+                        Upgrade Now — $9.99/mo
                       </button>
                     </div>
                   </div>

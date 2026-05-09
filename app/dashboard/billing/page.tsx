@@ -77,7 +77,7 @@ export default function BillingPage({ userId = null, userEmail = null }: Billing
               </span>
             </div>
             <h2 className="text-2xl font-black tracking-tighter text-white">Starter Plan</h2>
-            <p className="text-xs text-zinc-500 mt-1">$0 / month — up to 1 summary per week</p>
+            <p className="text-xs text-zinc-500 mt-1">Free Trial — renews at $4.99/month</p>
           </div>
           <div className="w-10 h-10 bg-zinc-800 border border-white/10 rounded-xl flex items-center justify-center">
             <CreditCard size={18} className="text-zinc-400" />
@@ -120,7 +120,7 @@ export default function BillingPage({ userId = null, userEmail = null }: Billing
               <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Pro Plan</span>
             </div>
             <h2 className="text-2xl font-black tracking-tighter text-white mb-1">
-              $4.99<span className="text-sm font-normal text-zinc-400">/mo</span>
+              $9.99<span className="text-sm font-normal text-zinc-400">/mo</span>
             </h2>
             <p className="text-xs text-zinc-400 mb-4">Everything you need for daily knowledge distillation.</p>
 
@@ -174,7 +174,7 @@ export default function BillingPage({ userId = null, userEmail = null }: Billing
               </div>
 
               <h2 className="text-2xl font-black tracking-tighter text-white mb-1">
-                $9.99<span className="text-sm font-normal text-zinc-400">/mo</span>
+                $19.99<span className="text-sm font-normal text-zinc-400">/mo</span>
               </h2>
               <p className="text-xs text-zinc-400 mb-4">For extreme knowledge synthesis.</p>
 

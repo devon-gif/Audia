@@ -961,7 +961,7 @@ const formatTime = (s: number) => {
                           <X size={11} />
                           Close Brief
                         </button>
-                        <span className="text-[10px] text-zinc-500 font-mono">{(briefResult.transcriptLength / 5 / 60).toFixed(0)} min transcript</span>
+                        <span className="text-[10px] text-zinc-500 font-mono">{((briefResult.transcriptLength || 0) / 5 / 60).toFixed(0)} min transcript</span>
                       </div>
                     </div>
 

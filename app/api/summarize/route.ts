@@ -1,39 +1,43 @@
+import { AssemblyAI } from 'assemblyai';
 import { OpenAI } from 'openai';
 import { NextResponse } from 'next/server';
 
+const aai = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY! });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    const { url } = await req.json();
-    console.log("1. 🚀 Request received for:", url);
+    const { url, voiceId } = await req.json();
+    console.log("🚀 Starting deep signal analysis for:", url);
 
-    // This is where we simulate the transcript fetch
-    // If you are using AssemblyAI, ensure that logic is here.
-    // For now, let's ensure we aren't passing 'undefined'
-    const transcriptText = "This is a placeholder transcript. If you see this, the transcript fetch logic is missing.";
+    // 1. Transcription - This 'transcribe' method waits for completion
+    const transcript = await aai.transcripts.transcribe({ audio: url });
     
-    console.log("2. 📝 Transcript Length:", transcriptText?.length);
-
-    if (!transcriptText || transcriptText === "undefined") {
-      throw new Error("Transcript is empty or undefined. Check AssemblyAI keys.");
+    if (!transcript.text) {
+      throw new Error("Transcription completed but returned no text.");
     }
 
+    console.log("✅ Transcript captured. Length:", transcript.text.length);
+
+    // 2. Summarization
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        { role: "system", content: "Summarize this podcast transcript in a narrative style." },
-        { role: "user", content: transcriptText }
+        { 
+          role: "system", 
+          content: "You are a professional podcast narrator. Create a 'Deep Signal Brief' that is narrative, high-level, and engaging. Avoid bullet points. Max 400 words." 
+        },
+        { role: "user", content: `Summarize this transcript: ${transcript.text}` }
       ],
     });
 
-    const brief = response.choices[0].message.content;
-    console.log("3. ✅ Summary Generated!");
+    const briefContent = response.choices[0].message.content;
 
+    // 3. Return both keys to satisfy the Dashboard UI
     return NextResponse.json({ 
-      brief: brief, 
-      summary: brief, 
-      transcriptLength: transcriptText.length 
+      brief: briefContent, 
+      summary: briefContent, 
+      transcriptLength: transcript.text.length 
     });
 
   } catch (err) {

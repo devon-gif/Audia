@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, ArrowRight, ArrowLeft, Layout, Sparkles,
   Crown, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
-  Globe, Volume2, Star, X,
+  Globe, Volume2, Star, X, ExternalLink,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -818,7 +818,8 @@ try {
                   const atCreditLimit = planTier !== "max" && !bypassCredits && monthlyGenerations >= (caps2[planTier] ?? 3);
                   const isWorking = isSummarizing || isSearching || trialExpired || atCreditLimit;
                   return (
-                <div className="flex gap-3 mb-4">
+                <div className="flex flex-col">
+                <div className="flex gap-3 mb-0">
                   <div className="flex-1 relative">
                     <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
                     <input
@@ -861,6 +862,10 @@ try {
                       Cancel
                     </button>
                   )}
+                </div>
+                <p className="text-[10px] text-zinc-600 uppercase tracking-wider mt-2 mb-4 px-0.5">
+                  Audia generates transformative, independent summaries for educational purposes under Fair Use. Audia is not affiliated with or endorsed by original creators.
+                </p>
                 </div>
                   );
                 })()}
@@ -994,6 +999,17 @@ try {
                           Generating neural audio…
                         </div>
                       ) : null}
+                      {urlInput.trim() && (
+                        <a
+                          href={urlInput.trim()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-zinc-400 hover:text-white text-xs font-medium transition-colors ml-auto"
+                        >
+                          <ExternalLink size={12} />
+                          Listen to Full Episode
+                        </a>
+                      )}
                     </div>
                   </div>
             ) : (

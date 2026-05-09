@@ -5,9 +5,19 @@ import { NextResponse } from 'next/server';
 const aai = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY || '' });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Opt-out list — add domain strings here to block processing (e.g. 'example.com')
+const RESTRICTED_DOMAINS: string[] = [];
+
 export async function POST(req: Request) {
   try {
     const { url, length } = await req.json();
+
+    if (RESTRICTED_DOMAINS.some((domain) => url?.includes(domain))) {
+      return NextResponse.json(
+        { error: 'The creator of this podcast has opted out of AI processing.' },
+        { status: 403 }
+      );
+    }
     const wordTarget = length === '10m' ? 2200 : length === '5m' ? 950 : length === '3m' ? 500 : 150;
     const depth = length === '10m' ? 'a massive narrative masterpiece' : length === '1m' ? 'a rapid-fire, ultra-concise executive summary designed for a 60-second read' : 'a detailed narrative';
 

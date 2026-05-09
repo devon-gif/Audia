@@ -6,6 +6,7 @@ import { Crown, CreditCard, ArrowRight, Check, Sparkles } from "lucide-react";
 
 const PRO_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY;
 const ELITE_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_ELITE_MONTHLY;
+const STARTER_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_STARTER_MONTHLY;
 
 async function startCheckout(
   priceId: string,

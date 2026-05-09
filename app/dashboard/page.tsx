@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, ArrowRight, ArrowLeft, Layout, Sparkles,
   Crown, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
-  Globe, Volume2, Star, X, ExternalLink,
+  Globe, Volume2, Star, X, ExternalLink, CheckCircle,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -93,7 +93,9 @@ export default function DashboardPage() {
 
   // Summarize state
   const [urlInput, setUrlInput] = useState("");
-  const [briefLength, setBriefLength] = useState<"1m" | "3m" | "5m" | "10m">("5m");
+  const [briefLength, setBriefLength] = useState<"1m" | "3m" | "5m" | "8m">("5m");
+  // TODO: derive from DB partner flag on loaded URL
+  const isPartnerContent = false;
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [stageIndex, setStageIndex] = useState(0);
   const [briefResult, setBriefResult] = useState<BriefResult | null>(null);
@@ -875,8 +877,8 @@ try {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Length:</span>
                     <div className="bg-black/60 border border-white/10 rounded-full p-0.5 flex items-center">
-                      {(["1m", "3m", "5m", "10m"] as const).map((l) => {
-                        const locked = l === "10m" && !isPro;
+                      {(["1m", "3m", "5m", "8m"] as const).map((l) => {
+                        const locked = l === "8m" && !isPro;
                         return (
                           <button
                             key={l}
@@ -953,7 +955,14 @@ try {
             {briefResult ? (
               <div className={`space-y-3 transition-all duration-700 ${briefResult ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deep Signal Brief</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Deep Signal Brief</span>
+                        {isPartnerContent && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                            <CheckCircle className="w-3.5 h-3.5" /> Official Partner
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-4">
                         <button
                           onClick={() => { setBriefResult(null); setUrlInput(""); setGeneratingAudio(false); router.push("/dashboard"); }}

@@ -18,8 +18,8 @@ export async function POST(req: Request) {
         { status: 403 }
       );
     }
-    const wordTarget = length === '10m' ? 2200 : length === '5m' ? 950 : length === '3m' ? 500 : 150;
-    const depth = length === '10m' ? 'a massive narrative masterpiece' : length === '1m' ? 'a rapid-fire, ultra-concise executive summary designed for a 60-second read' : 'a detailed narrative';
+    const wordTarget = length === '8m' ? 1600 : length === '5m' ? 950 : length === '3m' ? 500 : 150;
+    const depth = length === '1m' ? 'a rapid-fire, ultra-concise executive summary designed for a 60-second read' : 'a detailed narrative';
 
     const transcript = await aai.transcripts.transcribe({ 
       audio: url, 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     let brief: string | null;
 
-    if (length === '10m') {
+    if (length === '8m') {
       // Split transcript at the nearest sentence boundary to the midpoint
       const mid = Math.floor(transcript.text.length / 2);
       const periodIndex = transcript.text.indexOf('.', mid);
@@ -42,14 +42,14 @@ export async function POST(req: Request) {
         openai.chat.completions.create({
           model: 'gpt-4o',
           messages: [
-            { role: 'system', content: 'You are an elite narrator. Create Part 1 of a narrative Deep Signal Brief. Target 1100 words. No bullets.' },
+            { role: 'system', content: 'You are an expert analyst creating Part 1 of a comprehensive executive summary for educational purposes. Target 800 words. Write in clear, informative prose — no bullets. Prioritise key insights, data, and arguments.' },
             { role: 'user', content: part1 },
           ],
         }),
         openai.chat.completions.create({
           model: 'gpt-4o',
           messages: [
-            { role: 'system', content: 'You are an elite narrator. Create Part 2 of a narrative Deep Signal Brief. Target 1100 words. No bullets.' },
+            { role: 'system', content: 'You are an expert analyst creating Part 2 of a comprehensive executive summary for educational purposes. Target 800 words. Write in clear, informative prose — no bullets. Prioritise key insights, data, and arguments.' },
             { role: 'user', content: part2 },
           ],
         }),

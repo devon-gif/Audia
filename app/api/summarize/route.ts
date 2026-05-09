@@ -21,8 +21,8 @@ export async function POST(req: Request) {
       depthMode = "a detailed narrative that captures the flow of the conversation and all primary arguments.";
     } else {
       // 10m Mode - The "Deep Signal Masterpiece"
-      wordTarget = 1800;
-      depthMode = "an immersive, exhaustive narrative transcript. You must expand on every anecdote, recount specific dialogues in a storytelling fashion, and capture the host's nuances. This is a 10-minute read—do not skip the small details. Unfold the story slowly.";
+      wordTarget = 2200; // Aiming high to ensure 10+ minutes
+      depthMode = "a massive, five-part narrative masterpiece. You must recount the podcast chronologically. Act 1: The Setup (400 words), Act 2: The Core Arguments (500 words), Act 3: The Deep Dive (500 words), Act 4: The Counterpoints (400 words), Act 5: The Conclusion (400 words). Use slow, descriptive prose." You must expand on every anecdote, recount specific dialogues in a storytelling fashion, and capture the host's nuances. This is a 10-minute read—do not skip the small details. Unfold the story slowly.";
     }
 
     console.log(`🎙️ Force-feeding ${length} target (${wordTarget} words) to the engine...`);

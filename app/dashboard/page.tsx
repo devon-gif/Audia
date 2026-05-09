@@ -900,17 +900,25 @@ const formatTime = (s: number) => {
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-widest mr-1">Voice</span>
                     {voices.map(v => (
-                      <button
-                        key={v.id}
-                        onClick={() => setSelectedVoice(v.id)}
-                        title={v.desc}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
-                          selectedVoice === v.id
-                            ? "bg-orange-500/20 border-orange-500/50 text-orange-300 shadow-[0_0_10px_rgba(255,102,0,0.2)]"
-                            : "bg-white/[0.03] border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-200"
-                        }`}
-                      >
-                        {v.label}</button><button onClick={(e) => { e.stopPropagation(); playVoicePreview(v.id); }} className="text-[9px] text-zinc-600 hover:text-orange-400 mt-1 font-bold uppercase tracking-tighter">Listen</button>
+                      <div key={v.id} className="flex flex-col items-center gap-0.5">
+                        <button
+                          onClick={() => setSelectedVoice(v.id)}
+                          title={v.desc}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
+                            selectedVoice === v.id
+                              ? "bg-orange-500/20 border-orange-500/50 text-orange-300 shadow-[0_0_10px_rgba(255,102,0,0.2)]"
+                              : "bg-white/[0.03] border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-200"
+                          }`}
+                        >
+                          {v.label}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); playVoicePreview(v.id); }}
+                          className="text-[9px] text-zinc-600 hover:text-orange-400 font-bold uppercase tracking-tighter"
+                        >
+                          Listen
+                        </button>
+                      </div>
                     ))}
                   </div>
 

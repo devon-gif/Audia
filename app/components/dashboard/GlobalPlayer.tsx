@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePlayer } from "@/contexts/PlayerContext";
 import {
   Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Headphones, X,

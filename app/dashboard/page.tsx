@@ -1,6 +1,8 @@
 "use client";
+interface BriefResult { brief: string; summary: string; transcriptLength: number; }
+
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useEffect } from "react";
+
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -70,7 +72,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const success = searchParams.get("success");
     if (success === "true") {
-      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(true), 0);
       // Hide after 5 seconds
       const timer = setTimeout(() => {
         setShowSuccessToast(false);

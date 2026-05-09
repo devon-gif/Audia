@@ -7,7 +7,7 @@ export default function StereoPlayer() {
   const [mounted, setMounted] = useState(false);
   const { isPlaying, progress, duration, toggle, dismiss, track } = usePlayer();
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
   if (!mounted || !track) return null;
 

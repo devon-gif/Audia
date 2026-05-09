@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     });
     const buffer = Buffer.from(await mp3.arrayBuffer());
     return new NextResponse(buffer, { headers: { 'Content-Type': 'audio/mpeg' } });
-  } catch (error) {
-    return NextResponse.json({ error: "Preview failed" }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

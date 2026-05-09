@@ -4,27 +4,40 @@ import { NextResponse } from 'next/server';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
-try {
-  const { transcriptText } = await req.json();
+  try {
+    const { url } = await req.json();
+    console.log("1. 🚀 Request received for:", url);
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content: "You are an expert podcast analyst. Create a 'Deep Signal Brief' that is concise, narrative, and engaging. No bullet points. Max 400 words. Focus on the core insights and profound takeaways."
-      },
-      {
-        role: "user",
-        content: `Summarize this: ${transcriptText}`
-      }
-    ],
-  });
+    // This is where we simulate the transcript fetch
+    // If you are using AssemblyAI, ensure that logic is here.
+    // For now, let's ensure we aren't passing 'undefined'
+    const transcriptText = "This is a placeholder transcript. If you see this, the transcript fetch logic is missing.";
+    
+    console.log("2. 📝 Transcript Length:", transcriptText?.length);
 
-  return NextResponse.json({ brief: response.choices[0].message.content, summary: response.choices[0].message.content, transcriptLength: transcript.length });
-}
+    if (!transcriptText || transcriptText === "undefined") {
+      throw new Error("Transcript is empty or undefined. Check AssemblyAI keys.");
+    }
 
-} catch (err) {
-  console.error("❌ API CRASH:", err);
-  return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "Summarize this podcast transcript in a narrative style." },
+        { role: "user", content: transcriptText }
+      ],
+    });
+
+    const brief = response.choices[0].message.content;
+    console.log("3. ✅ Summary Generated!");
+
+    return NextResponse.json({ 
+      brief: brief, 
+      summary: brief, 
+      transcriptLength: transcriptText.length 
+    });
+
+  } catch (err) {
+    console.error("❌ API ERROR:", err.message);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }

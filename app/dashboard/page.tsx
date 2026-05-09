@@ -976,7 +976,7 @@ try {
                         ? 'border-orange-500/20 shadow-[0_0_30px_rgba(255,102,0,0.08)]'
                         : 'border-white/5'
                     }`}>
-                      <pre className="text-[12px] text-zinc-300 leading-relaxed whitespace-pre-wrap font-sans">{(briefResult.brief || briefResult.summary)}</pre>
+                      <pre className="text-[12px] text-zinc-300 leading-relaxed whitespace-pre-wrap font-sans">{briefResult.brief}</pre>
                     </div>
 
                     {/* Listen / audio status row */}

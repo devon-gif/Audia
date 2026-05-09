@@ -705,23 +705,9 @@ export default function LandingPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center mt-12">
               
-              {/* Free Tier - Deep Glass */}
+              {/* Starter Tier - Deep Glass */}
               <div className="p-10 rounded-[2.5rem] bg-white/5 backdrop-blur-[45px] border border-white/10 flex flex-col h-full">
                 <div className="text-orange-500 font-bold tracking-widest uppercase text-xs mb-4">Starter</div>
-                <div className="text-5xl font-bold mb-4 font-mono tracking-tighter">$0<span className="text-lg text-orange-100/50 font-normal font-sans">/mo</span></div>
-                <p className="text-orange-100/60 mb-8 text-sm">Perfect for trying out the Bento Brief format.</p>
-                <div className="flex-1 flex flex-col gap-4 mb-8">
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> 1 Summary per week</div>
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Text-only Bento layouts</div>
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Web app access</div>
-                </div>
-                <Link href="/signup" className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10 transition-all font-semibold text-white border border-white/5 text-center block">Start Free</Link>
-              </div>
-
-              {/* Pro Tier (Highlighted) - Deep Glass */}
-              <div className="p-10 rounded-[2.5rem] bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-[45px] border border-orange-500/50 flex flex-col h-full transform md:-translate-y-4 shadow-[0_0_40px_rgba(249,115,22,0.15)] relative">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-orange-500 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-orange-500/30">Popular</div>
-                <div className="text-orange-400 font-bold tracking-widest uppercase text-xs mb-4 flex items-center gap-2"><Sparkles size={14}/> Pro</div>
                 {/* Price with Animation */}
                 <div className="flex items-baseline gap-1 mb-1">
                   <AnimatePresence mode="wait">
@@ -731,7 +717,7 @@ export default function LandingPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="text-5xl font-bold text-white font-mono tracking-tighter tabular-nums"
+                      className="text-5xl font-bold font-mono tracking-tighter tabular-nums"
                     >
                       ${billingCycle === "monthly" ? "4.99" : "3.99"}
                     </motion.span>
@@ -753,33 +739,33 @@ export default function LandingPage() {
                   )}
                 </AnimatePresence>
                 {billingCycle === "monthly" && <div className="h-5 mb-8" />}
-                <p className="text-orange-100/60 mb-8 text-sm">The sweet spot for daily commuters and builders.</p>
+                <p className="text-orange-100/60 mb-8 text-sm">Step up your signal.</p>
                 <div className="flex-1 flex flex-col gap-4 mb-8">
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> 5 Summaries per month</div>
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> AI Voice Generation (Fish Model)</div>
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Export to Notion / Obsidian</div>
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Mobile PWA integration</div>
+                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> 15 AI summaries per month</div>
+                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Neural Audio Briefs</div>
+                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Mobile PWA access</div>
                 </div>
-                <button 
+                <button
                   onClick={() => {
-                    const priceId = billingCycle === "monthly" 
-                      ? process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY 
-                      : process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY;
+                    const priceId = billingCycle === "monthly"
+                      ? process.env.NEXT_PUBLIC_STRIPE_STARTER_MONTHLY
+                      : process.env.NEXT_PUBLIC_STRIPE_STARTER_YEARLY;
                     if (priceId) {
                       router.push(`/api/checkout?priceId=${priceId}&billingCycle=${billingCycle}`);
                     } else {
                       router.push("/signup");
                     }
                   }}
-                  className="w-full py-4 rounded-xl bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/40 transition-all font-semibold text-white shadow-lg shadow-orange-500/25 text-center block"
+                  className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10 transition-all font-semibold text-white border border-white/5 text-center block"
                 >
-                  {billingCycle === "yearly" ? "START YEARLY PLAN" : "Upgrade to Pro"}
+                  Start Starter Plan
                 </button>
               </div>
 
-              {/* Elite Tier - Deep Glass */}
-              <div className="p-10 rounded-[2.5rem] bg-white/5 backdrop-blur-[45px] border border-white/10 flex flex-col h-full">
-                <div className="text-orange-500 font-bold tracking-widest uppercase text-xs mb-4">Elite</div>
+              {/* Pro Tier (Highlighted) - Deep Glass */}
+              <div className="p-10 rounded-[2.5rem] bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-[45px] border border-orange-500/50 flex flex-col h-full transform md:-translate-y-4 shadow-[0_0_40px_rgba(249,115,22,0.15)] relative">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-orange-500 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-orange-500/30">Popular</div>
+                <div className="text-orange-400 font-bold tracking-widest uppercase text-xs mb-4 flex items-center gap-2"><Sparkles size={14}/> Pro</div>
                 {/* Price with Animation */}
                 <div className="flex items-baseline gap-1 mb-1">
                   <AnimatePresence mode="wait">
@@ -789,7 +775,7 @@ export default function LandingPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="text-5xl font-bold font-mono tracking-tighter tabular-nums"
+                      className="text-5xl font-bold text-white font-mono tracking-tighter tabular-nums"
                     >
                       ${billingCycle === "monthly" ? "9.99" : "7.99"}
                     </motion.span>
@@ -811,16 +797,73 @@ export default function LandingPage() {
                   )}
                 </AnimatePresence>
                 {billingCycle === "monthly" && <div className="h-5 mb-8" />}
-                <p className="text-orange-100/60 mb-8 text-sm">For power users who need infinite signal.</p>
+                <p className="text-orange-100/60 mb-8 text-sm">The sweet spot for daily commuters and builders.</p>
                 <div className="flex-1 flex flex-col gap-4 mb-8">
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Unlimited Summaries</div>
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Custom AI Voice Clones</div>
-                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Priority iMac Server Queue</div>
+                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> 50 AI summaries per month</div>
+                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Export to Notion / Obsidian</div>
+                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Automated Email Delivery</div>
                 </div>
-                <button 
+                <button
                   onClick={() => {
-                    const priceId = billingCycle === "monthly" 
-                      ? process.env.NEXT_PUBLIC_STRIPE_ELITE_MONTHLY 
+                    const priceId = billingCycle === "monthly"
+                      ? process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY
+                      : process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY;
+                    if (priceId) {
+                      router.push(`/api/checkout?priceId=${priceId}&billingCycle=${billingCycle}`);
+                    } else {
+                      router.push("/signup");
+                    }
+                  }}
+                  className="w-full py-4 rounded-xl bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] hover:shadow-xl hover:shadow-orange-500/40 transition-all font-semibold text-white shadow-lg shadow-orange-500/25 text-center block"
+                >
+                  Start Pro Plan
+                </button>
+              </div>
+
+              {/* Max Tier - Deep Glass */}
+              <div className="p-10 rounded-[2.5rem] bg-white/5 backdrop-blur-[45px] border border-white/10 flex flex-col h-full">
+                <div className="text-orange-500 font-bold tracking-widest uppercase text-xs mb-4">Max</div>
+                {/* Price with Animation */}
+                <div className="flex items-baseline gap-1 mb-1">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={billingCycle}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="text-5xl font-bold font-mono tracking-tighter tabular-nums"
+                    >
+                      ${billingCycle === "monthly" ? "19.99" : "15.99"}
+                    </motion.span>
+                  </AnimatePresence>
+                  <span className="text-lg text-orange-100/50 font-normal font-sans">/mo</span>
+                </div>
+                {/* Billed annually subtext */}
+                <AnimatePresence>
+                  {billingCycle === "yearly" && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-orange-100/40 text-xs mb-8"
+                    >
+                      Billed as $191.88/yr
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+                {billingCycle === "monthly" && <div className="h-5 mb-8" />}
+                <p className="text-orange-100/60 mb-8 text-sm">For extreme knowledge synthesis.</p>
+                <div className="flex-1 flex flex-col gap-4 mb-8">
+                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Unlimited AI summaries (100/mo fair use)</div>
+                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Private RSS Feed integration</div>
+                  <div className="flex items-center gap-3 text-sm"><Check size={16} className="text-orange-500"/> Priority Audio Processing</div>
+                </div>
+                <button
+                  onClick={() => {
+                    const priceId = billingCycle === "monthly"
+                      ? process.env.NEXT_PUBLIC_STRIPE_ELITE_MONTHLY
                       : process.env.NEXT_PUBLIC_STRIPE_ELITE_YEARLY;
                     if (priceId) {
                       router.push(`/api/checkout?priceId=${priceId}&billingCycle=${billingCycle}`);
@@ -830,7 +873,7 @@ export default function LandingPage() {
                   }}
                   className="w-full py-4 rounded-xl bg-white/10 hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10 transition-all font-semibold text-white border border-white/5 text-center block"
                 >
-                  {billingCycle === "yearly" ? "START YEARLY PLAN" : "Get Elite"}
+                  Start Max Plan
                 </button>
               </div>
 

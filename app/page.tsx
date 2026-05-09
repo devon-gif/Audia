@@ -311,8 +311,9 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-          </section>
-  {/* --- HOW IT WORKS --- */}
+          </div>
+        </section>
+        {/* --- HOW IT WORKS --- */}
         <section className="py-8 relative overflow-hidden">
           <div className="text-center mb-6">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em]">Trusted Signal: Compatible with 2.5M+ Feeds</span>

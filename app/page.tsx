@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -74,6 +74,20 @@ export default function LandingPage() {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
+
+  // Hero video synced caption
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [activeText, setActiveText] = useState("1. Paste any podcast link or RSS feed.");
+  const videoStages = [
+    { until: 3,  text: "1. Paste any podcast link or RSS feed." },
+    { until: 6,  text: "2. AI instantly extracts the core signal." },
+    { until: Infinity, text: "3. Listen to your neural audio brief." },
+  ];
+  const handleTimeUpdate = () => {
+    const t = videoRef.current?.currentTime ?? 0;
+    const stage = videoStages.find((s) => t < s.until);
+    if (stage) setActiveText(stage.text);
+  };
   const router = useRouter();
 
   const handleSummarize = () => {
@@ -237,17 +251,67 @@ export default function LandingPage() {
               </p>
             </div>
             
-            {/* Dashboard Preview - Scaled Down */}
-            <div className="relative w-full max-w-6xl">
-              {/* Film Grain Overlay */}
-              <div className="absolute inset-0 z-[2] pointer-events-none opacity-[0.03] rounded-3xl" 
+            {/* Hero Video Player */}
+            <div className="relative w-full max-w-5xl mx-auto">
+              {/* Glow halo */}
+              <div className="absolute -inset-px rounded-3xl bg-gradient-to-b from-orange-500/20 via-orange-500/5 to-transparent blur-2xl pointer-events-none" />
+
+              {/* Film-grain overlay */}
+              <div
+                className="absolute inset-0 z-[2] rounded-3xl pointer-events-none opacity-[0.03]"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
                 }}
               />
-              
-              {/* Scaled Dashboard Container */}
-              <div className="bg-white/[0.03] backdrop-blur-[60px] border border-white/10 rounded-3xl overflow-hidden shadow-2xl transform scale-[0.88] origin-top">
+
+              {/* Video container */}
+              <div className="relative z-[1] bg-white/[0.03] backdrop-blur-[60px] border border-white/10 rounded-3xl overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)]">
+                <video
+                  ref={videoRef}
+                  src="/videos/audia-demo.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  onTimeUpdate={handleTimeUpdate}
+                  className="w-full aspect-video object-cover block"
+                />
+
+                {/* Bottom gradient fade */}
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-[3]" />
+              </div>
+
+              {/* Synced caption strip */}
+              <div className="relative mt-5 flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={activeText}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                    className="text-base md:text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 tracking-tight"
+                  >
+                    {activeText}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+
+              {/* Step dots */}
+              <div className="flex items-center justify-center gap-2 mt-3">
+                {videoStages.map((s) => (
+                  <div
+                    key={s.text}
+                    className={`h-1 rounded-full transition-all duration-500 ${
+                      activeText === s.text
+                        ? "w-6 bg-orange-500"
+                        : "w-1.5 bg-white/15"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
                 {/* Dashboard Content - Simplified Preview */}
                 <div className="flex min-h-[500px]">
                   

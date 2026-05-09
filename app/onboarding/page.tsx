@@ -1,4 +1,5 @@
 "use client";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Check, Loader2, Sparkles } from "lucide-react";
@@ -28,9 +29,36 @@ export default function Onboarding() {
     }
   };
 
+  
   const finish = async () => {
-    // Here you would save to Supabase
-    console.log("Saving your Big 3:", selected);
+    const supabase = createClientComponentClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    // 1. Save the Big 3
+    const { error: favError } = await supabase
+      .from('user_favorites')
+      .insert(selected.map(p => ({
+        user_id: user.id,
+        podcast_name: p.name,
+        artist_name: p.artist,
+        image_url: p.image,
+        rss_url: p.feed,
+        itunes_id: String(p.id)
+      })));
+
+    if (favError) {
+      console.error("Error saving favorites:", favError);
+      return;
+    }
+
+    // 2. Mark onboarding as complete
+    await supabase
+      .from('profiles')
+      .update({ has_completed_onboarding: true })
+      .eq('id', user.id);
+
     router.push("/dashboard");
   };
 

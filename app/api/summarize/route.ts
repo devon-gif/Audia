@@ -8,8 +8,8 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export async function POST(req: Request) {
   try {
     const { url, length } = await req.json();
-    const wordTarget = length === '10m' ? 2200 : (length === '5m' ? 950 : 500);
-    const depth = length === '10m' ? 'a massive narrative masterpiece' : 'a detailed narrative';
+    const wordTarget = length === '10m' ? 2200 : length === '5m' ? 950 : length === '3m' ? 500 : 150;
+    const depth = length === '10m' ? 'a massive narrative masterpiece' : length === '1m' ? 'a rapid-fire, ultra-concise executive summary designed for a 60-second read' : 'a detailed narrative';
 
     const transcript = await aai.transcripts.transcribe({ 
       audio: url, 
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
     const brief = response.choices[0].message.content;
     return NextResponse.json({ brief, summary: brief, transcriptLength: transcript.text.length });
-  } catch (err: unknown) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
 }

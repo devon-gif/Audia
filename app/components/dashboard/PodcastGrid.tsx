@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@supabase/supabase-js";
 import { Play, Sparkles } from "lucide-react";
 
 export default function PodcastGrid() {
   const [favorites, setFavorites] = useState([]);
-  const supabase = createClientComponentClient();
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || "", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "");
 
   useEffect(() => {
     const fetchFavs = async () => {

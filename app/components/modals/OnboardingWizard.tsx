@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@supabase/supabase-js";
 import { Search, Check, Sparkles, ArrowRight, PlayCircle, BookOpen, Zap, X, Loader2 } from "lucide-react";
 
 export default function OnboardingWizard() {
@@ -10,7 +10,7 @@ export default function OnboardingWizard() {
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
-  const supabase = createClientComponentClient();
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || "", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "");
 
   useEffect(() => {
     const checkStatus = async () => {

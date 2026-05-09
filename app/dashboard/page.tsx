@@ -1,14 +1,12 @@
 "use client";
-interface BriefResult { summary?: string; brief: string; summary: string; transcriptLength: number; }
-
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import OnboardingWizard from "../components/modals/OnboardingWizard";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Search, ArrowRight, ArrowLeft, Play, Layout, Sparkles,
-  Crown, Speaker, Check, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
-  Globe, Compass, Volume2, Star, X,
+  Search, ArrowRight, ArrowLeft, Layout, Sparkles,
+  Crown, LogOut, CreditCard, Terminal, Lock, Settings, Bell, LifeBuoy,
+  Globe, Volume2, Star, X,
 } from "lucide-react";
 import { supabase } from "@/utils/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -56,6 +54,7 @@ const LOADING_STAGES = [
 type BriefResult = {
   id: string | null;
   brief: string;
+  summary?: string;
   audioUrl: string;
   briefAudioUrl: string | null;
   transcriptLength: number;
@@ -82,7 +81,6 @@ export default function DashboardPage() {
   }, [searchParams]);
   const [selectedVoice, setSelectedVoice] = useState<VoiceName>("onyx");
   const [outputLanguage, setOutputLanguage] = useState<TargetLanguage>("en");
-  const [outputLangOpen, setOutputLangOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
@@ -95,13 +93,13 @@ export default function DashboardPage() {
 
   // Summarize state
   const [urlInput, setUrlInput] = useState("");
-  const [briefLength, setBriefLength] = useState<"3m" | "5m" | "10m">("5m");
+  const [briefLength, setBriefLength] = useState<"1m" | "3m" | "5m" | "10m">("5m");
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [stageIndex, setStageIndex] = useState(0);
   const [briefResult, setBriefResult] = useState<BriefResult | null>(null);
   const [generatingAudio, setGeneratingAudio] = useState(false);
   // Global audio player — via PlayerContext (persists across view/route changes)
-  const { load: loadTrack, isPlaying, progress: audioProgress, duration: audioDuration, toggle: toggleAudio, dismiss: dismissAudio } = usePlayer();
+  const { load: loadTrack, isPlaying } = usePlayer();
 
   // Search results (when input is a text query, not a URL)
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
@@ -118,10 +116,6 @@ export default function DashboardPage() {
 
   // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
-const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-  };
   const toastCounter = useRef(0);
 
   // PASTE THE CODE BELOW THIS LINE:
@@ -257,7 +251,7 @@ const formatTime = (s: number) => {
       let data;
 try {
   data = await res.json();
-} catch (e) {
+} catch {
   throw new Error("The server sent a blank response. Check your API keys.");
 }
       const results: SearchResult[] = (data.results ?? []).filter((r: SearchResult) => r.feedUrl);
@@ -301,6 +295,7 @@ try {
   const devLog = (msg: string) =>
     setDevLogs((l) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...l].slice(0, 100));
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSubscribe = async (subscribed: boolean) => {
     if (!vaultShow?.feedUrl) return;
     const { data: { user } } = await supabase.auth.getUser();
@@ -396,7 +391,7 @@ try {
     loadTrack({ url, title });
   };
 
-  const handleEpisodeSummarize = (audioUrl: string, _title: string) => {
+  const handleEpisodeSummarize = (audioUrl: string) => {
     // Close vault
     setVaultShow(null);
     setVaultEpisodes([]);
@@ -875,7 +870,7 @@ try {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Length:</span>
                     <div className="bg-black/60 border border-white/10 rounded-full p-0.5 flex items-center">
-                      {(["3m", "5m", "10m"] as const).map((l) => {
+                      {(["1m", "3m", "5m", "10m"] as const).map((l) => {
                         const locked = l === "10m" && !isPro;
                         return (
                           <button

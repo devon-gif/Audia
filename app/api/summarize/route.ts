@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
+try {
   const { transcriptText } = await req.json();
 
   const response = await openai.chat.completions.create({
@@ -21,4 +22,9 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({ brief: response.choices[0].message.content, summary: response.choices[0].message.content, transcriptLength: transcript.length });
+}
+
+} catch (err) {
+  console.error("❌ API CRASH:", err);
+  return new Response(JSON.stringify({ error: err.message }), { status: 500 });
 }

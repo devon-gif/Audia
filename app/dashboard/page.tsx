@@ -251,7 +251,12 @@ const formatTime = (s: number) => {
       const res = await fetch(
         `https://itunes.apple.com/search?term=${encodeURIComponent(urlInput.trim())}&media=podcast&entity=podcast&limit=9`
       );
-      const data = await res.json();
+      let data;
+try {
+  data = await res.json();
+} catch (e) {
+  throw new Error("The server sent a blank response. Check your API keys.");
+}
       const results: SearchResult[] = (data.results ?? []).filter((r: SearchResult) => r.feedUrl);
       if (results.length === 0) showToast("No podcasts found. Try a different search.", "info");
       setSearchResults(results);

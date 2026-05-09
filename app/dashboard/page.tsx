@@ -237,11 +237,6 @@ const formatTime = (s: number) => {
     router.push("/");
   };
 
-    const m = Math.floor(s / 60);
-    return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-  };
-  const toastCounter = useRef(0);
-
   const showToast = (message: string, type: Toast["type"] = "error") => {
     const id = ++toastCounter.current;
     setToasts((t) => [...t, { id, message, type }]);

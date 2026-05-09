@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     console.log("🚀 Starting deep signal analysis for:", url);
 
     // 1. Transcription - This 'transcribe' method waits for completion
-    const transcript = await aai.transcripts.transcribe({ audio: url, speech_model: "universal-3-pro", speech_model: "universal-3-pro" });
+    const transcript = await aai.transcripts.transcribe({ audio: url, speech_model: "universal-3-pro", speech_model: "universal-3-pro", speech_model: "universal-3-pro" });
     
     if (!transcript.text) {
       throw new Error("Transcription completed but returned no text.");

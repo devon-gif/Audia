@@ -13,6 +13,8 @@ function fmt(s: number) {
 }
 
 export default function StereoPlayer() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   
   
   
@@ -24,7 +26,8 @@ export default function StereoPlayer() {
 
   /* ── Idle / empty state ─────────────────────────────────────────── */
   if (!track) {
-    return (
+    if (!mounted) return null;
+  return (
       <div className="fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-center px-4 pb-3 pt-1 pointer-events-none">
         <div className="relative w-full max-w-3xl bg-black/50 backdrop-blur-xl border border-white/[0.06] border-t-white/[0.09] rounded-2xl pointer-events-auto min-h-[68px]">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent rounded-t-2xl" />

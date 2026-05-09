@@ -526,7 +526,8 @@ try {
   if (!profileReady) {
     return (
       <main className="min-h-screen bg-black text-white font-sans antialiased flex items-center justify-center">
-        <div className="fixed top-[-15%] left-[-10%] w-[50vw] h-[50vw] bg-[#FF6600]/15 rounded-full blur-[150px] pointer-events-none" />
+        <OnboardingWizard />
+      <div className="fixed top-[-15%] left-[-10%] w-[50vw] h-[50vw] bg-[#FF6600]/15 rounded-full blur-[150px] pointer-events-none" />
         <div className="fixed bottom-[-20%] right-[-15%] w-[45vw] h-[45vw] bg-[#FF6600]/10 rounded-full blur-[150px] pointer-events-none" />
         <div className="relative z-10 flex flex-col items-center gap-6 text-center">
           <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center">

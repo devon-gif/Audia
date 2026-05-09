@@ -21,14 +21,23 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { priceId, userEmail, userId: bodyUserId } = body;
+    const { tier, priceId: explicitPriceId, userEmail, userId: bodyUserId } = body;
 
-    // 1. Check for Missing Price ID
+    // 1. Resolve price ID — prefer server-side tier mapping over client-supplied priceId
+    const TIER_PRICE_MAP: Record<string, string | undefined> = {
+      starter: process.env.NEXT_PUBLIC_STRIPE_STARTER_MONTHLY,
+      pro:     process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY,
+      max:     process.env.NEXT_PUBLIC_STRIPE_ELITE_MONTHLY,
+    };
+
+    const priceId = tier ? TIER_PRICE_MAP[tier] : explicitPriceId;
+
     if (!priceId) {
-      console.error(
-        "[STRIPE ERROR] Missing priceId. Check if your NEXT_PUBLIC_STRIPE_ variables are loaded."
-      );
-      return NextResponse.json({ error: "Missing priceId" }, { status: 400 });
+      const msg = tier
+        ? `Missing Stripe Price ID for tier "${tier}". Add the env var to .env.local and restart.`
+        : "Missing priceId — pass a valid tier ('starter', 'pro', 'max') or explicit priceId.";
+      console.error("[STRIPE ERROR]", msg);
+      return NextResponse.json({ error: msg }, { status: 400 });
     }
 
     // 2. Resolve authenticated user so we can attach client_reference_id

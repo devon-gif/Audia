@@ -4,40 +4,38 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Crown, CreditCard, ArrowRight, Check, Sparkles, X, Zap } from "lucide-react";
 
-const PRO_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY;
-const ELITE_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_ELITE_MONTHLY;
-const STARTER_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_STARTER_MONTHLY;
+type Tier = "starter" | "pro" | "max";
 
 async function startCheckout(
-  priceId: string,
+  tier: Tier,
   userId: string | null,
   userEmail: string | null,
   setLoading: (v: boolean) => void,
   router: ReturnType<typeof useRouter>
 ) {
   if (!userId) {
-    console.warn("[billing] No userId available — redirecting to login.");
+    console.warn("[billing] No userId — redirecting to login.");
     router.push("/login?returnTo=/dashboard/billing");
     return;
   }
 
-  console.log("[billing] Starting checkout. User:", userId, "Price:", priceId);
+  console.log("[billing] Starting checkout. User:", userId, "Tier:", tier);
   setLoading(true);
 
   try {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId, userEmail, userId }),
+      body: JSON.stringify({ tier, userEmail, userId }),
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      console.error("[billing] /api/checkout returned", res.status, errData);
-      throw new Error(errData.error || `Checkout API error ${res.status}`);
+      console.error("[billing] /api/checkout returned", res.status, data);
+      throw new Error(data.error || `Checkout API error ${res.status}`);
     }
 
-    const data = await res.json();
     if (data.url) {
       window.location.assign(data.url);
     } else {
@@ -255,13 +253,10 @@ export default function BillingPage({ userId = null, userEmail = null, activePla
               </div>
             ))}
           </div>
-          {!STARTER_PRICE_ID && (
-            <p className="text-[11px] text-red-400/80 mb-2 text-center">⚠ Configuration Error</p>
-          )}
           <button
             type="button"
-            disabled={starterLoading || !STARTER_PRICE_ID}
-            onClick={() => STARTER_PRICE_ID && startCheckout(STARTER_PRICE_ID, userId, userEmail, setStarterLoading, router)}
+            disabled={starterLoading}
+            onClick={() => startCheckout("starter", userId, userEmail, setStarterLoading, router)}
             className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl text-white font-bold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {starterLoading ? "Redirecting…" : <><span>Get Starter</span> <ArrowRight size={14} /></>}
@@ -298,13 +293,10 @@ export default function BillingPage({ userId = null, userEmail = null, activePla
                 </div>
               ))}
             </div>
-            {!PRO_PRICE_ID && (
-              <p className="text-[11px] text-red-400/80 mb-2 text-center">⚠ Configuration Error</p>
-            )}
             <button
               type="button"
-              disabled={proLoading || !PRO_PRICE_ID}
-              onClick={() => PRO_PRICE_ID && startCheckout(PRO_PRICE_ID, userId, userEmail, setProLoading, router)}
+              disabled={proLoading}
+              onClick={() => startCheckout("pro", userId, userEmail, setProLoading, router)}
               className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-[#FF7A00] to-[#E05A00] rounded-xl text-white font-bold text-sm hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,120,0,0.3)] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {proLoading ? "Redirecting…" : <><span>Upgrade to Pro</span> <ArrowRight size={14} /></>}
@@ -345,13 +337,10 @@ export default function BillingPage({ userId = null, userEmail = null, activePla
                   </div>
                 ))}
               </div>
-              {!ELITE_PRICE_ID && (
-                <p className="text-[11px] text-red-400/80 mb-2 text-center">⚠ Configuration Error</p>
-              )}
               <button
                 type="button"
-                disabled={eliteLoading || !ELITE_PRICE_ID}
-                onClick={() => ELITE_PRICE_ID && startCheckout(ELITE_PRICE_ID, userId, userEmail, setEliteLoading, router)}
+                disabled={eliteLoading}
+                onClick={() => startCheckout("max", userId, userEmail, setEliteLoading, router)}
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/[0.06] hover:bg-white/[0.10] border border-orange-500/40 hover:border-orange-500/70 rounded-xl text-white font-bold text-sm transition-all hover:shadow-[0_0_24px_rgba(255,120,0,0.25)] hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {eliteLoading ? "Redirecting…" : <><span>Upgrade to Max</span> <ArrowRight size={14} /></>}

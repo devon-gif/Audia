@@ -389,24 +389,16 @@ const formatTime = (s: number) => {
   };
 
   const handleEpisodeSummarize = (audioUrl: string, _title: string) => {
-    // Capture vault show before closing it
-    const show = vaultShow;
     // Close vault
     setVaultShow(null);
     setVaultEpisodes([]);
     setSearchResults(null);
     // Set URL so the input reflects what's being processed
     setUrlInput(audioUrl);
-    // Auto-favorite this show silently (no quota error shown — best effort)
-    if (show?.feedUrl && !favoriteShows.has(show.feedUrl)) {
-      handleFavoriteToggle({
-        trackId: 0,
-        name: show.name,
-        artwork: show.artwork ?? "",
-        feedUrl: show.feedUrl,
-      });
-    }
-    // Fire summarization immediately
+    // Fire summarization immediately. Auto-favoriting the parent show
+    // used to happen here but produced confusing toasts on Summarize and
+    // the underlying user_favorites insert was failing — favoriting is now
+    // an explicit user action via the star button on Discover / search.
     handleSummarize(audioUrl);
   };
 

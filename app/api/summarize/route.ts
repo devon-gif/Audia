@@ -20,5 +20,5 @@ export async function POST(req: Request) {
     ],
   });
 
-  return NextResponse.json({ summary: response.choices[0].message.content });
+  return NextResponse.json({ brief: response.choices[0].message.content });
 }

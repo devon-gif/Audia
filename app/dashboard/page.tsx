@@ -461,7 +461,7 @@ const formatTime = (s: number) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            text: data.brief,
+            text: data.summary || data.brief,
             voice: selectedVoice,
             recordId: data.id,
           }),

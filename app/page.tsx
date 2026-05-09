@@ -118,6 +118,7 @@ export default function LandingPage() {
               <Link href="/#features" className="text-sm text-white/70 hover:text-white transition-colors">Features</Link>
               <Link href="/#pricing" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</Link>
               <Link href="/#how-it-works" className="text-sm text-white/70 hover:text-white transition-colors">How it Works</Link>
+              <Link href="/partners" className="text-sm font-medium text-amber-500/90 hover:text-amber-400 transition-colors">Partner Program</Link>
               <Link href="/contact" className="text-sm text-white/70 hover:text-white transition-colors">Contact</Link>
             </nav>
             
@@ -887,6 +888,11 @@ export default function LandingPage() {
             <Link href="/" className="dock-icon flex flex-col items-center gap-1.5 p-3 rounded-2xl hover:bg-white/10 transition-colors min-w-[64px]">
               <Search size={22} className="text-orange-500" />
               <span className="text-[11px] font-medium text-orange-100/80">Search</span>
+            </Link>
+            <div className="w-px h-10 bg-white/10"></div>
+            <Link href="/partners" className="dock-icon flex flex-col items-center gap-1.5 p-3 rounded-2xl hover:bg-white/10 transition-colors min-w-[64px]">
+              <Users size={22} className="text-amber-400/80" />
+              <span className="text-[11px] font-medium text-amber-400/80">Partners</span>
             </Link>
             <div className="w-px h-10 bg-white/10"></div>
             <Link href="/help" className="dock-icon flex flex-col items-center gap-1.5 p-3 rounded-2xl hover:bg-white/10 transition-colors min-w-[64px]">

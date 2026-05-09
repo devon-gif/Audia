@@ -152,7 +152,7 @@ export default function LandingPage() {
         </header>
 
         {/* --- COMMAND CENTER HERO --- */}
-        <section id="hero" className="relative h-screen w-full flex flex-col items-center justify-center pt-52 pb-8 overflow-hidden">
+        <section id="hero" className="relative min-h-screen w-full flex flex-col items-center justify-center pt-40 md:pt-52 lg:pt-60 pb-24 md:pb-32 overflow-hidden">
           
           {/* Video Backdrop with Mask */}
           <div className="absolute inset-0 z-0 overflow-hidden">
@@ -175,21 +175,21 @@ export default function LandingPage() {
           </div>
           
           {/* Main Content Container */}
-          <div className="relative z-10 w-full max-w-6xl mx-auto px-6 flex flex-col items-center">
+          <div className="relative z-10 w-full max-w-6xl mx-auto px-6 flex flex-col items-center gap-6">
             
             {/* Hero Headline */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter pb-4 mb-4 text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tighter text-center bg-gradient-to-b from-white via-[#FFE8D6] to-[#FF8A00] bg-clip-text text-transparent">
               Turn Hours of Audio<br />
               Into Minutes of Insight<span className="text-[#FF6600]" style={{WebkitTextFillColor:"#FF6600"}}>.</span>
             </h1>
             
-            <p className="text-base md:text-lg text-zinc-400 max-w-xl mx-auto mb-6 text-center leading-relaxed">
+            <p className="text-base md:text-lg text-zinc-400 max-w-xl mx-auto text-center leading-relaxed">
               Audia is your personal AI curator for the world&apos;s longest conversations.<br />
               Transform dense podcasts into clear, actionable briefs.
             </p>
             
             {/* Social Proof */}
-            <div className="flex items-center justify-center gap-6 mb-6">
+            <div className="flex items-center justify-center gap-6">
               {/* Avatars + 50K+ */}
               <div className="flex items-center">
                 <div className="flex -space-x-2">
@@ -226,7 +226,7 @@ export default function LandingPage() {
             </div>
             
             {/* CTA Buttons */}
-            <div className="flex flex-col items-center gap-3 mb-8">
+            <div className="flex flex-col items-center gap-3">
               <div className="flex items-center justify-center gap-4">
                 <button 
                   onClick={() => router.push("/signup")}

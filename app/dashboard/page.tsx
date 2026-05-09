@@ -1,5 +1,5 @@
 "use client";
-interface BriefResult { brief: string; summary: string; transcriptLength: number; }
+interface BriefResult { summary?: string; brief: string; summary: string; transcriptLength: number; }
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 

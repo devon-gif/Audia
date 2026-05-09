@@ -237,7 +237,6 @@ const formatTime = (s: number) => {
     router.push("/");
   };
 
-  const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
   };
@@ -916,8 +915,7 @@ const formatTime = (s: number) => {
                             : "bg-white/[0.03] border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-200"
                         }`}
                       >
-                        {v.label}
-                      </button>
+                        {v.label}</button><button onClick={(e) => { e.stopPropagation(); playVoicePreview(v.id); }} className="text-[9px] text-zinc-600 hover:text-orange-400 mt-1 font-bold uppercase tracking-tighter">Listen</button>
                     ))}
                   </div>
 

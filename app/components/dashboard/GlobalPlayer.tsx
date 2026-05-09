@@ -46,7 +46,7 @@ export default function StereoPlayer() {
 
             {/* Idle transport */}
             <div className="flex items-center gap-1.5 shrink-0 mx-auto">
-              <button disabled className="p-2 rounded-xl text-zinc-800 cursor-default"><RotateCcw size={15} /></button>
+              <button disabled suppressHydrationWarning={true} className="p-2 rounded-xl text-zinc-800 cursor-default"><RotateCcw size={15} /></button>
               <div className="w-11 h-11 rounded-full bg-white/[0.04] border border-white/[0.07] flex items-center justify-center">
                 <Play size={15} className="text-zinc-700 ml-0.5" />
               </div>

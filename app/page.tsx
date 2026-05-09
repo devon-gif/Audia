@@ -1093,6 +1093,7 @@ export default function LandingPage() {
                 <nav className="flex flex-col gap-3">
                   <Link href="/privacy" className="text-zinc-400 hover:text-white transition-colors text-sm">Privacy Policy</Link>
                   <Link href="/terms" className="text-zinc-400 hover:text-white transition-colors text-sm">Terms of Service</Link>
+                  <Link href="/dmca" className="text-zinc-400 hover:text-white transition-colors text-sm">DMCA Policy</Link>
                   <Link href="/opt-out" className="text-zinc-400 hover:text-white transition-colors text-sm">Creator Opt-Out</Link>
                   <Link href="/cookies" className="text-zinc-400 hover:text-white transition-colors text-sm">Cookie Policy</Link>
                   <Link href="/security" className="text-zinc-400 hover:text-white transition-colors text-sm">Security</Link>
